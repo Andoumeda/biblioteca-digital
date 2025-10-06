@@ -1,0 +1,200 @@
+openapi: 3.0.1
+info:
+  title: Biblioteca Digital API
+  version: v1
+  description: API Documentation for Biblioteca Digital DTOs
+
+components:
+  schemas:
+    BaseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: Identificador único del registro
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación del registro
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización del registro
+        isDeleted:
+          type: boolean
+          description: Indica si el registro fue eliminado lógicamente (soft delete)
+
+    RoleDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre del rol (e.g., ADMIN, USER)
+        description:
+          type: string
+
+    UserDTO:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Correo electrónico del usuario
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+        role:
+          $ref: '#/components/schemas/RoleDTO'
+
+    UserProfileRequestDTO:
+      type: object
+      required:
+        - userId
+        - displayName
+      properties:
+        userId:
+          type: integer
+          format: int32
+          description: ID del usuario asociado al perfil
+        displayName:
+          type: string
+          description: Nombre visible del usuario en la plataforma
+        bio:
+          type: string
+          description: Biografía o información adicional del usuario
+        profilePic:
+          type: string
+          description: URL de la foto de perfil del usuario
+
+    UserProfileResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/UserProfileRequestDTO'
+        - type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserDTO'
+
+    PublicationRequestDTO:
+        type: object
+        required:
+          - userProfileId
+          - title
+          - authorName
+          - bookUrl
+          - language
+          - numPages
+          - fileSize
+        properties:
+          userProfileId:
+            type: integer
+            format: int32
+            description: ID del perfil de usuario que crea la publicación
+          title:
+            type: string
+            description: Título de la publicación
+          authorName:
+            type: string
+            description: Nombre del autor de la publicación
+          description:
+            type: string
+            description: Resumen o descripción de la publicación
+          state:
+            type: string
+            enum:
+              - pending
+              - approved
+              - rejected
+            description: Estado de la publicación (pending, approved, rejected)
+            default: pending
+          bookUrl:
+            type: string
+            description: URL del archivo de la publicación
+          coverImg:
+            type: string
+            description: URL de la imagen de portada de la publicación
+          language:
+            type: string
+            description: Idioma de la publicación
+          numPages:
+            type: integer
+            format: int32
+            description: Número de páginas de la publicación
+          fileSize:
+            type: integer
+            format: int32
+            description: Tamaño del archivo en bytes
+
+    PublicationResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/PublicationRequestDTO'
+        - type: object
+          properties:
+            userProfile:
+              $ref: '#/components/schemas/UserProfileResponseDTO'
+
+    RatingRequestDTO:
+      type: object
+      required:
+        - userProfileId
+        - publicationId
+        - valoration
+      properties:
+        userProfileId:
+          type: integer
+          format: int32
+          description: ID del perfil de usuario que realiza la valoración
+        publicationId:
+          type: integer
+          format: int32
+          description: ID de la publicación que se está valorando
+        valoration:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+          description: Puntuación otorgada (1-5)
+        comment:
+          type: string
+          description: Comentario adicional sobre la publicación
+
+    RatingResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/RatingRequestDTO'
+        - type: object
+          properties:
+            userProfile:
+              $ref: '#/components/schemas/UserProfileResponseDTO'
+            publication:
+              $ref: '#/components/schemas/PublicationResponseDTO'
+
+    FavoriteRequestDTO:
+      type: object
+      required:
+        - userProfileId
+        - publicationId
+      properties:
+        userProfileId:
+          type: integer
+          format: int32
+          description: ID del perfil de usuario que marca la publicación como favorita
+        publicationId:
+          type: integer
+          format: int32
+          description: ID de la publicación marcada como favorita
+
+    FavoriteResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/FavoriteRequestDTO'
+        - type: object
+          properties:
+            userProfile:
+              $ref: '#/components/schemas/UserProfileResponseDTO'
+            publication:
+              $ref: '#/components/schemas/PublicationResponseDTO'
+
+paths: {}

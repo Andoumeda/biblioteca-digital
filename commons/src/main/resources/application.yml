@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: commons
+
+  # ===============================
+  # Configuración de la Base de Datos
+  # ===============================
+  datasource:
+    url: jdbc:${DB_URL}/library?ssl-mode=REQUIRED
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ===============================
+  # Configuración JPA / Hibernate
+  # ===============================
+  jpa:
+    # Dialecto de Hibernate (optimizado para MySQL 8)
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+    # Mostrar las queries en consola (para desarrollo)
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+
+    # Estrategia de generación del esquema
+    # "validate" = valida contra la BD existente
+    # "update"   = crea/actualiza automaticamente las tablas
+    # "none"     = desactiva la autogeneración
+    hibernate:
+      ddl-auto: none
+
+  # ===============================
+  # Configuración Liquibase
+  # ===============================
+  liquibase:
+    # Liquibase se usará para manejar migraciones de la BD
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+# ===============================
+# Configuración OpenAPI
+# ===============================
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  packages-to-scan: com.library.dtos
