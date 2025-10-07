@@ -20,6 +20,7 @@ public class Author extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String bio;
 
+    @Column(nullable = false)
     private LocalDate birthDate;
 
     @Column(length = 100)

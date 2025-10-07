@@ -7,15 +7,15 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "user_favorites")
+@Table(name = "favorites")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UserFavorite extends BaseEntity {
-    @ManyToOne(fetch = FetchType.LAZY)
+public class Favorite extends BaseEntity {
+    @ManyToOne
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "publication_id", nullable = false)
     private Publication publication;
 }

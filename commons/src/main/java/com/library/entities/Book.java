@@ -1,6 +1,8 @@
 package com.library.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class Book extends BaseEntity {
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "publication_id", nullable = false)
     private Publication publication;
 
@@ -30,10 +32,14 @@ public class Book extends BaseEntity {
     private String coverImg;
 
     @Column(nullable = false)
+    @Min(1)
+    @Max(2000)
     private Integer numPages;
 
     @Column(nullable = false)
-    private Integer fileSize;
+    @Min(1)
+    @Max(100000000) // Máximo 100 MB permitido, 100.000.000 bytes
+    private Integer fileSize; // representado en bytes
 
     @ManyToMany
     @JoinTable(
@@ -43,6 +49,6 @@ public class Book extends BaseEntity {
     )
     private List<Author> authors;
 
-    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "book")
     private List<Rating> ratings;
 }

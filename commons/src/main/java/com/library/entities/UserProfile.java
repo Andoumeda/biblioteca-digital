@@ -18,7 +18,7 @@ public class UserProfile extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 50)
     private String displayName;
 
     @Column(columnDefinition = "TEXT")
@@ -27,15 +27,15 @@ public class UserProfile extends BaseEntity {
     @Column(length = 255)
     private String profilePicture;
 
-    @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "userProfile")
     private List<Publication> publications;
 
-    @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "userProfile")
     private List<Rating> ratings;
 
-    @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY)
-    private List<UserFavorite> favorites;
+    @OneToMany(mappedBy = "userProfile")
+    private List<Favorite> favorites;
 
-    @ManyToMany(mappedBy = "recipients")
+    @ManyToMany(mappedBy = "users")
     private List<Announcement> announcements;
 }

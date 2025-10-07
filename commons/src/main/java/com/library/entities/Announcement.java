@@ -41,5 +41,5 @@ public class Announcement extends BaseEntity {
             joinColumns = @JoinColumn(name = "announcement_id"),
             inverseJoinColumns = @JoinColumn(name = "user_profile_id")
     )
-    private List<UserProfile> recipients;
+    private List<UserProfile> users;
 }

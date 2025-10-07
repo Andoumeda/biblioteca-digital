@@ -20,6 +20,6 @@ public class Role extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "role")
     private List<User> users;
 }

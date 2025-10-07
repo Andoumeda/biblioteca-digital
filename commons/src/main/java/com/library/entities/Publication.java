@@ -17,11 +17,11 @@ public class Publication extends BaseEntity {
         APPROVED, PENDING, REJECTED
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_profile_id", nullable = false)
     private UserProfile userProfile;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(length = 255, nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -29,10 +29,13 @@ public class Publication extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private PublicationState state = PublicationState.PENDING;
+    private PublicationState state;
 
-    @OneToMany(mappedBy = "publication", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "publication")
     private List<Book> books;
+
+    @OneToMany(mappedBy = "publication")
+    private List<Favorite> favorites;
 
     @ManyToMany
     @JoinTable(
