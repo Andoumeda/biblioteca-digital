@@ -1,2 +1,2 @@
-# Commons
-contiene utilidades y funciones compartidas usadas por todos los demás módulos del proyecto.
+## Commons
+Este módulo contiene utilidades y funciones compartidas usadas por todos los demás módulos del proyecto.
