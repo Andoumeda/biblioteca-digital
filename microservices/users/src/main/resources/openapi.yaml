@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: Biblioteca Digital API
   version: v1.0
-  description: API Documentation for Biblioteca Digital - Módulo de Usuarios
+  description: API Documentation for Biblioteca Digital - Complete System
 
 servers:
   - url: http://localhost:8081/api
