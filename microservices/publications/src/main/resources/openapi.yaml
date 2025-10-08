@@ -486,65 +486,6 @@ paths:
   # PUBLICATION ENDPOINTS (Puerto 8082)
   # ==========================================
   /publications:
-    get:
-      tags:
-        - Publications
-      summary: Obtener todas las publicaciones
-      description: Lista paginada de publicaciones con filtro opcional por estado
-      operationId: getAllPublications
-      parameters:
-        - name: state
-          in: query
-          description: Filtrar por estado de publicación
-          schema:
-            type: string
-            enum: [pending, approved, rejected]
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-      responses:
-        '200':
-          description: Lista de publicaciones
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    title: "Publicación 1"
-                    description: "Descripción de la publicación 1"
-                    state: "approved"
-                    userProfileId: 1
-                    categoryIds: [1, 2]
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    title: "Publicación 2"
-                    description: "Descripción de la publicación 2"
-                    state: "pending"
-                    userProfileId: 2
-                    categoryIds: [2, 3]
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
-
     post:
       tags:
         - Publications
@@ -585,6 +526,105 @@ paths:
           $ref: '#/components/responses/BadRequestError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
+  /publications/page/{page}/size/{size}:
+    get:
+      tags:
+        - Publications
+      summary: Obtener todas las publicaciones
+      description: Lista paginada de publicaciones con filtro opcional por estado
+      operationId: getAllPublications
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+      responses:
+        '200':
+          description: Lista de publicaciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    title: "Publicación 1"
+                    description: "Descripción de la publicación 1"
+                    state: "approved"
+                    userProfileId: 1
+                    categoryIds: [1, 2]
+                    createdAt: "2024-10-06T10:30:00Z"
+                    updatedAt: "2024-10-06T10:30:00Z"
+                  - id: 2
+                    title: "Publicación 2"
+                    description: "Descripción de la publicación 2"
+                    state: "pending"
+                    userProfileId: 2
+                    categoryIds: [2, 3]
+                    createdAt: "2024-10-05T09:15:00Z"
+                    updatedAt: "2024-10-05T09:15:00Z"
+                page: 0
+                size: 20
+                total: 2
+                currentPage: 0
+                totalPages: 1
+                next: false
+                prev: false
+
+  /publications/state/{state}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Publications
+      summary: Obtener publicaciones por estado
+      description: Lista paginada de publicaciones filtradas por estado
+      operationId: getPublicationsByState
+      parameters:
+        - name: state
+          in: path
+          required: true
+          description: Estado de la publicación
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+          example: approved
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+      responses:
+        '200':
+          description: Lista de publicaciones filtradas por estado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
 
   /publications/{id}:
     get:
@@ -759,63 +799,6 @@ paths:
   # FAVORITE ENDPOINTS (Puerto 8082)
   # ==========================================
   /favorites:
-    get:
-      tags:
-        - Favorites
-      summary: Obtener todos los favoritos
-      description: Lista paginada de favoritos con filtro opcional por usuario
-      operationId: getAllFavorites
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: userProfileId
-          in: query
-          description: Filtrar favoritos por ID de perfil de usuario
-          schema:
-            type: integer
-            format: int32
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-      responses:
-        '200':
-          description: Lista de favoritos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    userProfileId: 1
-                    publicationId: 101
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    userProfileId: 1
-                    publicationId: 102
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
     post:
       tags:
         - Favorites
@@ -851,6 +834,109 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
+  /favorites/page/{page}/size/{size}:
+    get:
+      tags:
+        - Favorites
+      summary: Obtener todos los favoritos
+      description: Lista paginada de todos los favoritos
+      operationId: getAllFavorites
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+      responses:
+        '200':
+          description: Lista de favoritos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    userProfileId: 1
+                    publicationId: 101
+                    createdAt: "2024-10-06T10:30:00Z"
+                    updatedAt: "2024-10-06T10:30:00Z"
+                  - id: 2
+                    userProfileId: 1
+                    publicationId: 102
+                    createdAt: "2024-10-05T09:15:00Z"
+                    updatedAt: "2024-10-05T09:15:00Z"
+                page: 0
+                size: 20
+                total: 2
+                currentPage: 0
+                totalPages: 1
+                next: false
+                prev: false
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /favorites/user/{userProfileId}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Favorites
+      summary: Obtener favoritos de un usuario
+      description: Lista paginada de todas las publicaciones favoritas de un usuario específico
+      operationId: getUserFavorites
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userProfileId
+          in: path
+          required: true
+          description: ID del perfil de usuario
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+      responses:
+        '200':
+          description: Favoritos del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
   /favorites/{id}:
     get:
       tags:
@@ -858,7 +944,7 @@ paths:
       summary: Obtener favorito por ID
       operationId: getFavoriteById
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -886,7 +972,7 @@ paths:
       description: Elimina una publicación de los favoritos del usuario
       operationId: removeFavorite
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -898,49 +984,6 @@ paths:
       responses:
         '204':
           description: Favorito eliminado
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /favorites/user/{userProfileId}:
-    get:
-      tags:
-        - Favorites
-      summary: Obtener favoritos de un usuario
-      description: Lista paginada de todas las publicaciones favoritas de un usuario específico
-      operationId: getUserFavorites
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: userProfileId
-          in: path
-          required: true
-          description: ID del perfil de usuario
-          schema:
-            type: integer
-            format: int32
-          example: 1
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-      responses:
-        '200':
-          description: Favoritos del usuario
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
