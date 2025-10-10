@@ -5,7 +5,7 @@ info:
   description: API Documentation for Biblioteca Digital
 
 servers:
-  - url: http://localhost:8083/api
+  - url: http://localhost:8083
     description: Módulo de Libros
 
 tags:
@@ -16,461 +16,8 @@ tags:
   - name: Ratings
     description: Gestión de valoraciones
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    BaseDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        isDeleted:
-          type: boolean
-
-    RoleDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        name:
-          type: string
-        description:
-          type: string
-
-    UserDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        username:
-          type: string
-        email:
-          type: string
-          format: email
-        role:
-          $ref: '#/components/schemas/RoleDTO'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-
-    UserRegistrationRequestDTO:
-      type: object
-      required:
-        - username
-        - email
-        - password
-        - roleId
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 50
-        email:
-          type: string
-          format: email
-          maxLength: 100
-        password:
-          type: string
-        roleId:
-          type: integer
-          format: int32
-
-    UserLoginRequestDTO:
-      type: object
-      required:
-        - email
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 100
-        password:
-          type: string
-          format: password
-
-    AuthResponseDTO:
-      type: object
-      properties:
-        token:
-          type: string
-          description: JWT token
-        user:
-          $ref: '#/components/schemas/UserDTO'
-
-    UserProfileRequestDTO:
-      type: object
-      required:
-        - userId
-        - displayName
-      properties:
-        userId:
-          type: integer
-          format: int32
-          description: ID del usuario asociado al perfil
-        displayName:
-          type: string
-          maxLength: 100
-          description: Nombre visible del usuario en la plataforma
-        bio:
-          type: string
-          description: Biografía o información adicional del usuario
-        profilePicture:
-          type: string
-          maxLength: 255
-          description: URL de la foto de perfil del usuario
-
-    UserProfileResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/UserProfileRequestDTO'
-        - type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/UserDTO'
-
-    AnnouncementRequestDTO:
-      type: object
-      required:
-        - title
-        - type
-        - targetAudience
-      properties:
-        title:
-          type: string
-          maxLength: 255
-          description: Título del anuncio
-        message:
-          type: string
-          description: Mensaje o cuerpo del anuncio
-        type:
-          type: string
-          enum:
-            - alert
-            - info
-            - warning
-            - promo
-          description: Tipo de anuncio
-        targetAudience:
-          type: string
-          enum:
-            - all
-            - new_users
-            - admins
-          description: Audiencia objetivo del anuncio
-
-    AnnouncementResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/AnnouncementRequestDTO'
-        - type: object
-
-    FavoriteRequestDTO:
-      type: object
-      required:
-        - userProfileId
-        - publicationId
-      properties:
-        userProfileId:
-          type: integer
-          format: int32
-          description: ID del perfil de usuario
-        publicationId:
-          type: integer
-          format: int32
-          description: ID de la publicación favorita
-
-    FavoriteResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            publication:
-              $ref: '#/components/schemas/PublicationResponseDTO'
-
-    PublicationRequestDTO:
-      type: object
-      required:
-        - userProfileId
-        - title
-        - state
-      properties:
-        userProfileId:
-          type: integer
-          format: int32
-          description: ID del perfil de usuario que crea la publicación
-        title:
-          type: string
-          description: Título de la publicación
-        description:
-          type: string
-          description: Descripción de la publicación
-        state:
-          type: string
-          enum:
-            - pending
-            - approved
-            - rejected
-          description: Estado de la publicación
-        categoryIds:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: IDs de las categorías asociadas
-
-    PublicationResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/PublicationRequestDTO'
-        - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            categories:
-              type: array
-              items:
-                $ref: '#/components/schemas/CategoryResponseDTO'
-            books:
-              type: array
-              items:
-                $ref: '#/components/schemas/BookResponseDTO'
-
-    CategoryRequestDTO:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          maxLength: 100
-          description: Nombre de la categoría
-
-    CategoryResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/CategoryRequestDTO'
-        - type: object
-
-    BookRequestDTO:
-      type: object
-      required:
-        - publicationId
-        - title
-        - bookUrl
-        - numPages
-        - fileSize
-        - authorIds
-      properties:
-        publicationId:
-          type: integer
-          format: int32
-          description: ID de la publicación asociada
-        title:
-          type: string
-          maxLength: 255
-          description: Título del libro
-        description:
-          type: string
-          description: Descripción del libro
-        bookUrl:
-          type: string
-          maxLength: 255
-          description: URL del archivo del libro
-        coverImg:
-          type: string
-          maxLength: 255
-          description: URL de la imagen de portada
-        numPages:
-          type: integer
-          format: int32
-          minimum: 1
-          description: Número de páginas del libro
-        fileSize:
-          type: integer
-          format: int32
-          minimum: 1
-          description: Tamaño del archivo en bytes
-        authorIds:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: IDs de los autores del libro
-
-    BookResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/BookRequestDTO'
-        - type: object
-          properties:
-            authors:
-              type: array
-              items:
-                $ref: '#/components/schemas/AuthorResponseDTO'
-            ratingAverage:
-              type: number
-              format: float
-              description: Puntuación promedio del libro
-            ratingsCount:
-              type: integer
-              format: int32
-              description: Número total de valoraciones del libro
-
-    AuthorRequestDTO:
-      type: object
-      required:
-        - fullName
-        - bio
-      properties:
-        fullName:
-          type: string
-          maxLength: 150
-          description: Nombre completo del autor
-        bio:
-          type: string
-          description: Biografía del autor
-        birthDate:
-          type: string
-          format: date
-          description: Fecha de nacimiento del autor
-        nationality:
-          type: string
-          maxLength: 100
-          description: Nacionalidad del autor
-
-    AuthorResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/AuthorRequestDTO'
-        - type: object
-
-    RatingRequestDTO:
-      type: object
-      required:
-        - userProfileId
-        - bookId
-        - valoration
-      properties:
-        userProfileId:
-          type: integer
-          format: int32
-          description: ID del perfil de usuario que realiza la valoración
-        bookId:
-          type: integer
-          format: int32
-          description: ID del libro que se está valorando
-        valoration:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 5
-          description: Puntuación otorgada (1-5)
-        comment:
-          type: string
-          description: Comentario adicional sobre el libro
-
-    RatingResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/RatingRequestDTO'
-        - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            book:
-              $ref: '#/components/schemas/BookResponseDTO'
-
-    PaginatedResponseDTO:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            type: object
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-        total:
-          type: integer
-          format: int32
-        currentPage:
-          type: integer
-          format: int32
-        totalPages:
-          type: integer
-          format: int32
-        next:
-          type: boolean
-        prev:
-          type: boolean
-
-    ErrorResponseDTO:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-        status:
-          type: integer
-          format: int32
-        error:
-          type: string
-        message:
-          type: string
-        path:
-          type: string
-
-  responses:
-    UnauthorizedError:
-      description: No autorizado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-    ForbiddenError:
-      description: Prohibido
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-    NotFoundError:
-      description: Recurso no encontrado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-    BadRequestError:
-      description: Petición inválida
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-
-security:
-  - bearerAuth: []
+# security:
+  # - bearerAuth: []
 
 paths:
 
@@ -478,89 +25,51 @@ paths:
   # BOOKS
   # ===========================
   /books:
-    get:
-      tags: [Books]
-      summary: Obtener todos los libros
-      operationId: getAllBooks
-      responses:
-        '200':
-          description: Lista de libros
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    title: "El Quijote"
-                    description: "Novela de caballería escrita por Miguel de Cervantes"
-                    bookUrl: "https://example.com/libros/el_quijote.pdf"
-                    numPages: 500
-                    fileSize: 1500000
-                    authorIds: [1, 2]
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    title: "1984"
-                    description: "Novela distópica de George Orwell"
-                    bookUrl: "https://example.com/libros/1984.pdf"
-                    numPages: 328
-                    fileSize: 800000
-                    authorIds: [3]
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
-
     post:
       tags: [Books]
       summary: Crear libro
       operationId: createBook
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BookRequestDTO'
-            example:
-              publicationId: 1
-              title: "El Quijote"
-              description: "Novela de caballería escrita por Miguel de Cervantes"
-              bookUrl: "https://example.com/libros/el_quijote.pdf"
-              numPages: 500
-              fileSize: 1500000
-              authorIds: [1, 2]
+              $ref: './models/openapi.yaml#/components/schemas/BookRequestDTO'
       responses:
         '201':
           description: Libro creado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookResponseDTO'
-              example:
-                id: 3
-                publicationId: 1
-                title: "El Quijote"
-                description: "Novela de caballería escrita por Miguel de Cervantes"
-                bookUrl: "https://example.com/libros/el_quijote.pdf"
-                numPages: 500
-                fileSize: 1500000
-                authorIds: [1, 2]
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+                $ref: './models/openapi.yaml#/components/schemas/BookResponseDTO'
 
-  /books/{id}:
+  /books/page/{page}/size/{size}:
+    get:
+      tags: [Books]
+      summary: Obtener todos los libros
+      operationId: getAllBooks
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de libros
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
+
+  /books/{id}/page/{page}/size/{size}:
     get:
       tags: [Books]
       summary: Obtener libro por ID
@@ -572,25 +81,155 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         '200':
           description: Libro encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookResponseDTO'
-              example:
-                id: 1
-                title: "El Quijote"
-                description: "Novela de caballería escrita por Miguel de Cervantes"
-                bookUrl: "https://example.com/libros/el_quijote.pdf"
-                numPages: 500
-                fileSize: 1500000
-                authorIds: [1, 2]
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+                $ref: './models/openapi.yaml#/components/schemas/BookResponseDTO'
+
+  /books/{id}/authors/page/{page}/size/{size}:
+    get:
+      tags: [Books]
+      summary: Obtener autores de un libro
+      operationId: getAuthorsByBookId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de autores de un libro
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
+
+  /books/{id}/ratings/page/{page}/size/{size}:
+    get:
+      tags: [Books]
+      summary: Obtener ratings de un libro
+      operationId: getRatingsByBookId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de valoraciones de un libro
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
+
+  /books/title/{title}/page/{page}/size/{size}:
+    get:
+      tags: [Books]
+      summary: Obtener libros por título
+      operationId: getBooksByTitle
+      parameters:
+        - name: title
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de libros filtrados por título
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
+
+  /books/publication/{publicationId}/page/{page}/size/{size}:
+    get:
+      tags: [Books]
+      summary: Obtener libros de una publicación
+      operationId: getBooksByPublicationId
+      parameters:
+        - name: publicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: ID de la publicación
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de libros de una publicación
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
+
+  /books/{id}:
     put:
       tags: [Books]
       summary: Actualizar libro
@@ -609,45 +248,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BookRequestDTO'
-            example:
-              publicationId: 1
-              title: "El Quijote - Edición Actualizada"
-              description: "Novela de caballería escrita por Miguel de Cervantes. Edición conmemorativa."
-              bookUrl: "https://example.com/libros/el_quijote_actualizado.pdf"
-              numPages: 520
-              fileSize: 1550000
-              authorIds: [1, 2]
+              $ref: './models/openapi.yaml#/components/schemas/BookRequestDTO'
       responses:
         '200':
           description: Libro actualizado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookResponseDTO'
-              example:
-                id: 1
-                title: "El Quijote - Edición Actualizada"
-                description: "Novela de caballería escrita por Miguel de Cervantes. Edición conmemorativa."
-                bookUrl: "https://example.com/libros/el_quijote_actualizado.pdf"
-                numPages: 520
-                fileSize: 1550000
-                authorIds: [1, 2]
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
+                $ref: './models/openapi.yaml#/components/schemas/BookResponseDTO'
     delete:
       tags: [Books]
       summary: Eliminar libro (soft delete)
       operationId: deleteBook
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -658,17 +270,42 @@ paths:
       responses:
         '204':
           description: Libro marcado como eliminado
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
 
-  /authors/{authorId}/books:
+  # ===========================
+  # AUTHORS
+  # ===========================
+  /authors:
+    post:
+      tags: [Authors]
+      summary: Crear autor
+      operationId: createAuthor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/AuthorRequestDTO'
+      responses:
+        '201':
+          description: Autor creado
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/AuthorResponseDTO'
+
+  /authors/page/{page}/size/{size}:
     get:
-      tags: [Books]
-      summary: Obtener libros de un autor
+      tags: [Authors]
+      summary: Obtener todos los autores
+      operationId: getAllAuthors
       parameters:
-        - name: authorId
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
           in: path
           required: true
           schema:
@@ -676,94 +313,31 @@ paths:
             format: int32
       responses:
         '200':
-          description: Libros filtrados por autor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-
-  # ===========================
-  # AUTHORS
-  # ===========================
-  /authors:
-    get:
-      tags: [Authors]
-      summary: Obtener todos los autores
-      operationId: getAllAuthors
-      responses:
-        '200':
           description: Lista de autores
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    fullName: "Miguel de Cervantes"
-                    bio: "Escritor español, autor de 'Don Quijote'"
-                    birthDate: "1547-09-29"
-                    nationality: "Española"
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    fullName: "George Orwell"
-                    bio: "Escritor británico, autor de '1984' y 'Rebelión en la granja'"
-                    birthDate: "1903-06-25"
-                    nationality: "Británica"
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
 
-    post:
-      tags: [Authors]
-      summary: Crear autor
-      operationId: createAuthor
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthorRequestDTO'
-            example:
-              fullName: "Gabriel García Márquez"
-              bio: "Escritor colombiano, autor de 'Cien años de soledad'"
-              birthDate: "1927-03-06"
-              nationality: "Colombiana"
-      responses:
-        '201':
-          description: Autor creado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthorResponseDTO'
-              example:
-                id: 3
-                fullName: "Gabriel García Márquez"
-                bio: "Escritor colombiano, autor de 'Cien años de soledad'"
-                birthDate: "1927-03-06"
-                nationality: "Colombiana"
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /authors/{id}:
+  /authors/{id}/page/{page}/size/{size}:
     get:
       tags: [Authors]
       summary: Obtener autor por ID
+      operationId: getAuthorById
       parameters:
         - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
           in: path
           required: true
           schema:
@@ -775,17 +349,135 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthorResponseDTO'
-              example:
-                id: 1
-                fullName: "Miguel de Cervantes"
-                bio: "Escritor español, autor de 'Don Quijote'"
-                birthDate: "1547-09-29"
-                nationality: "Española"
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+                $ref: './models/openapi.yaml#/components/schemas/AuthorResponseDTO'
+
+  /authors/{id}/books/page/{page}/size/{size}:
+    get:
+      tags: [Authors]
+      summary: Obtener los libros de un autor
+      operationId: getBooksByAuthorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de libros de un autor
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
+
+  /authors/fullname/{fullName}/page/{page}/size/{size}:
+    get:
+      tags: [Authors]
+      summary: Obtener autores por nombre completo
+      operationId: getAuthorsByFullName
+      parameters:
+        - name: fullName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de autores filtrados por nombre completo
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
+
+  /authors/birthdate/{birthdate}/page/{page}/size/{size}:
+    get:
+      tags: [Authors]
+      summary: Obtener autores por fecha de nacimiento
+      operationId: getAuthorsByBirthdate
+      parameters:
+        - name: birthdate
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de autores filtrados por fecha de nacimiento
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
+
+  /authors/nationality/{nationality}/page/{page}/size/{size}:
+    get:
+      tags: [Authors]
+      summary: Obtener autores por nacionalidad
+      operationId: getAuthorsByNationality
+      parameters:
+        - name: nationality
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de autores filtrados por la nacionalidad
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
+
+  /authors/{id}:
     put:
       tags: [Authors]
       summary: Actualizar autor
@@ -804,7 +496,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthorRequestDTO'
+              $ref: './models/openapi.yaml#/components/schemas/AuthorRequestDTO'
             example:
               fullName: "Miguel de Cervantes Saavedra"
               bio: "Escritor español, autor de 'Don Quijote'. Nació en Alcalá de Henares."
@@ -816,22 +508,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthorResponseDTO'
-              example:
-                id: 1
-                fullName: "Miguel de Cervantes Saavedra"
-                bio: "Escritor español, autor de 'Don Quijote'. Nació en Alcalá de Henares."
-                birthDate: "1547-09-29"
-                nationality: "Española"
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
+                $ref: './models/openapi.yaml#/components/schemas/AuthorResponseDTO'
     delete:
       tags: [Authors]
       summary: Eliminar autor (soft delete)
@@ -848,111 +525,74 @@ paths:
       responses:
         '204':
           description: Autor marcado como eliminado
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /authors/nationality/{country}:
-    get:
-      tags: [Authors]
-      summary: Obtener autores por nacionalidad
-      parameters:
-        - name: country
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Lista de autores filtrados
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
 
   # ===========================
   # RATINGS
   # ===========================
   /ratings:
-    get:
-      tags: [Ratings]
-      summary: Obtener todas las valoraciones
-      operationId: getAllRatings
-      responses:
-        '200':
-          description: Lista de valoraciones
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    userProfileId: 1
-                    bookId: 101
-                    valoration: 5
-                    comment: "Excelente libro, muy recomendable."
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    userProfileId: 2
-                    bookId: 102
-                    valoration: 4
-                    comment: "Buena lectura, aunque un poco larga."
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
-
     post:
       tags: [Ratings]
       summary: Crear valoración
       operationId: createRating
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RatingRequestDTO'
-            example:
-              userProfileId: 1
-              bookId: 101
-              valoration: 5
-              comment: "Excelente libro, muy recomendable."
+              $ref: './models/openapi.yaml#/components/schemas/RatingRequestDTO'
       responses:
         '201':
           description: Valoración creada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RatingResponseDTO'
-              example:
-                id: 3
-                userProfileId: 1
-                bookId: 101
-                valoration: 5
-                comment: "Excelente libro, muy recomendable."
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+                $ref: './models/openapi.yaml#/components/schemas/RatingResponseDTO'
 
-  /ratings/{id}:
+  /ratings/page/{page}/size/{size}:
+    get:
+      tags: [Ratings]
+      summary: Obtener todas las valoraciones
+      operationId: getAllRatings
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de valoraciones
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
+
+  /ratings/{id}/page/{page}/size/{size}:
     get:
       tags: [Ratings]
       summary: Obtener valoración por ID
+      operationId: getRatingById
       parameters:
         - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
           in: path
           required: true
           schema:
@@ -964,16 +604,81 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RatingResponseDTO'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+                $ref: './models/openapi.yaml#/components/schemas/RatingResponseDTO'
 
+  /ratings/valoration/{min}/{max}/page/{page}/size/{size}:
+    get:
+      tags: [Ratings]
+      summary: Obtener valoraciones por rango de puntuación
+      operationId: getRatingsByScoreRange
+      parameters:
+        - name: min
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: max
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Valoraciones filtradas por puntuación
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
+
+  /ratings/userprofile/{userProfileId}/page/{page}/size/{size}:
+    get:
+      tags: [Ratings]
+      summary: Obtener valoraciones de un usuario
+      operationId: getRatingsByUserProfileId
+      parameters:
+        - name: userProfileId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Lista de valoraciones de un usuario
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
+
+  /ratings/{id}:
     put:
       tags: [Ratings]
       summary: Actualizar valoración
       operationId: updateRating
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -986,20 +691,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RatingRequestDTO'
+              type: object
+              description: RatingRequestDTO
       responses:
         '200':
           description: Valoración actualizada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RatingResponseDTO'
+                type: object
+                description: RatingResponseDTO
     delete:
       tags: [Ratings]
       summary: Eliminar valoración (soft delete)
       operationId: deleteRating
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1010,65 +715,3 @@ paths:
       responses:
         '204':
           description: Valoración marcada como eliminada
-
-  # ======= FILTROS REST PUROS =======
-  /books/{bookId}/ratings:
-    get:
-      tags: [Ratings]
-      summary: Obtener valoraciones de un libro
-      parameters:
-        - name: bookId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de valoraciones de un libro
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-
-  /userprofiles/{userProfileId}/ratings:
-    get:
-      tags: [Ratings]
-      summary: Obtener valoraciones de un usuario
-      parameters:
-        - name: userProfileId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de valoraciones de un usuario
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-
-  /ratings/score/{min}/{max}:
-    get:
-      tags: [Ratings]
-      summary: Obtener valoraciones por rango de puntuación
-      parameters:
-        - name: min
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: max
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Valoraciones filtradas por puntuación
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'

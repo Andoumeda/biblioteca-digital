@@ -141,6 +141,62 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- Plugin para limpiar el directorio de modelos antes de copiar el openapi.yaml -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.2</version>
+                <executions>
+                    <execution>
+                        <id>clean-old-openapi</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}/src/main/resources/static/models</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Plugin para copiar el openapi.yaml del módulo commons -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-commons-openapi</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.library</groupId>
+                                    <artifactId>commons</artifactId>
+                                    <version>0.0.1-SNAPSHOT</version>
+                                    <classifier>dtos</classifier>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.basedir}/src/main/resources/static/models</outputDirectory>
+                                    <includes>openapi.yaml</includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Plugin para generar las interfaces a partir del openapi.yaml copiado -->
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -161,7 +217,7 @@
                                 <useSpringBoot3>true</useSpringBoot3>
                                 <interfaceOnly>true</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>
-                                <apiPackage>com.library.api</apiPackage>
+                                <apiPackage>com.library.books.api</apiPackage>
                                 <modelPackage>com.library.dtos</modelPackage>
                             </configOptions>
                             <generateModels>false</generateModels>
