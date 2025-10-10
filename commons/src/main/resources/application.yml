@@ -39,11 +39,3 @@ spring:
     # Liquibase se usará para manejar migraciones de la BD
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
-
-# ===============================
-# Configuración OpenAPI
-# ===============================
-springdoc:
-  swagger-ui:
-    path: /swagger
-    url: /openapi.yaml

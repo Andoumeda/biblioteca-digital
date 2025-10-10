@@ -1,8 +1,7 @@
 openapi: 3.0.1
 info:
-  title: Biblioteca Digital API
+  title: Modelado de DTOs para el Servicio de Biblioteca
   version: v1.0
-  description: API Documentation for Biblioteca Digital - Complete System
 
 components:
   schemas:
@@ -417,6 +416,96 @@ components:
           type: boolean
         prev:
           type: boolean
+
+    PaginatedUserProfileResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserProfileResponseDTO'
+
+    PaginatedAnnouncementResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AnnouncementResponseDTO'
+
+    PaginatedFavoriteResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/FavoriteResponseDTO'
+
+    PaginatedPublicationResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PublicationResponseDTO'
+
+    PaginatedCategoryResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+
+    PaginatedBookResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/BookResponseDTO'
+
+    PaginatedAuthorResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuthorResponseDTO'
+
+    PaginatedRatingResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/RatingResponseDTO'
+
+    PaginatedUserResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserDTO'
 
     ErrorResponseDTO:
       type: object
