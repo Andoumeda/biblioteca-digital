@@ -196,6 +196,7 @@
                                 <interfaceOnly>true</interfaceOnly>
                                 <modelPackage>com.library.dtos</modelPackage>
                                 <apiPackage>com.library.api</apiPackage>
+                                <dateLibrary>java8-localdatetime</dateLibrary>
                             </configOptions>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
