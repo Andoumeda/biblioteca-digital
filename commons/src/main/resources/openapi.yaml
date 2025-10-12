@@ -390,9 +390,6 @@ components:
           type: array
           items:
             type: object
-        page:
-          type: integer
-          format: int32
         size:
           type: integer
           format: int32
