@@ -390,10 +390,10 @@ components:
           type: array
           items:
             type: object
-        size:
+        pageSize:
           type: integer
           format: int32
-        total:
+        totalItems:
           type: integer
           format: int32
         currentPage:
@@ -402,9 +402,9 @@ components:
         totalPages:
           type: integer
           format: int32
-        next:
-          type: boolean
         prev:
+          type: boolean
+        next:
           type: boolean
 
     PaginatedUserProfileResponseDTO:
