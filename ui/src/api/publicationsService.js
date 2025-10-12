@@ -1,0 +1,87 @@
+import apiClient from './apiClient';
+
+export const publicationsAPI = {
+  // Obtener publicaciones paginadas
+  getPublications(page = 0, size = 20) {
+    return apiClient.get(`/publications/page/${page}/size/${size}`);
+  },
+
+  // Buscar por título
+  searchByTitle(title, page = 0, size = 20) {
+    return apiClient.get(`/publications/title/${title}/page/${page}/size/${size}`);
+  },
+
+  // Buscar por descripción
+  searchByDescription(description, page = 0, size = 20) {
+    return apiClient.get(`/publications/description/${description}/page/${page}/size/${size}`);
+  },
+
+  // Buscar por estado (APPROVED, PENDING, REJECTED)
+  getByState(state, page = 0, size = 20) {
+    return apiClient.get(`/publications/state/${state}/page/${page}/size/${size}`);
+  },
+
+  // Buscar por usuario
+  getByUser(userId, page = 0, size = 20) {
+    return apiClient.get(`/publications/user/${userId}/page/${page}/size/${size}`);
+  },
+
+  // Buscar por categoría
+  getByCategory(categoryId, page = 0, size = 20) {
+    return apiClient.get(`/publications/category/${categoryId}/page/${page}/size/${size}`);
+  },
+
+  // Crear nueva publicación
+  createPublication(publicationData) {
+    return apiClient.post('/publications', publicationData);
+  },
+};
+
+export const categoriesAPI = {
+  // Obtener todas las categorías
+  getAll() {
+    return apiClient.get('/categories');
+  },
+
+  // Obtener categoría por ID
+  getById(id) {
+    return apiClient.get(`/categories/${id}`);
+  },
+
+  // Buscar por nombre
+  searchByName(name) {
+    return apiClient.get(`/categories/name/${name}`);
+  },
+
+  // Crear categoría
+  create(categoryData) {
+    return apiClient.post('/categories', categoryData);
+  },
+
+  // Actualizar categoría
+  update(id, categoryData) {
+    return apiClient.put(`/categories/${id}`, categoryData);
+  },
+
+  // Eliminar categoría
+  delete(id) {
+    return apiClient.delete(`/categories/${id}`);
+  },
+};
+
+export const favoritesAPI = {
+  // Obtener favoritos de un usuario
+  getByUser(userId) {
+    return apiClient.get(`/favorites/user/${userId}`);
+  },
+
+  // Agregar a favoritos
+  addFavorite(favoriteData) {
+    return apiClient.post('/favorites', favoriteData);
+  },
+
+  // Eliminar de favoritos
+  removeFavorite(id) {
+    return apiClient.delete(`/favorites/${id}`);
+  },
+};
