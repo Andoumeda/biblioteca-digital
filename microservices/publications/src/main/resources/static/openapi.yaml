@@ -5,7 +5,7 @@ info:
   description: API Documentation for Biblioteca Digital - Módulo de Publicaciones
 
 servers:
-  - url: http://localhost:8082/api
+  - url: http://localhost:8082
     description: Módulo de Publicaciones
 
 tags:
@@ -41,7 +41,7 @@ components:
           description: Fecha de última actualización del registro
         isDeleted:
           type: boolean
-          description: Indica si el registro fue eliminado lógicamente (soft delete)
+          description: Indica si el registro fue eliminado lógicamente (borrado lógico)
 
     RoleDTO:
       type: object
@@ -504,8 +504,7 @@ paths:
               userProfileId: 1
               title: "Nueva publicación sobre libros"
               description: "Descripción detallada de la publicación sobre libros."
-              state: "pending"
-              categoryIds: [1, 3]
+              categoryIds: [ 1, 3 ]
       responses:
         '201':
           description: Publicación creada
@@ -519,9 +518,9 @@ paths:
                 title: "Nueva publicación sobre libros"
                 description: "Descripción detallada de la publicación sobre libros."
                 state: "pending"
-                categoryIds: [1, 3]
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
+                categoryIds: [ 1, 3 ]
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -531,8 +530,8 @@ paths:
     get:
       tags:
         - Publications
-      summary: Obtener todas las publicaciones
-      description: Lista paginada de publicaciones con filtro opcional por estado
+      summary: Obtener todas las publicaciones (paginado)
+      description: Lista paginada de publicaciones. Los parámetros page y size son opcionales en la URL
       operationId: getAllPublications
       parameters:
         - name: page
@@ -543,6 +542,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
+          description: Número de página (opcional, por defecto 0)
         - name: size
           in: path
           required: true
@@ -552,6 +552,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
+          description: Tamaño de página (opcional, por defecto 20)
       responses:
         '200':
           description: Lista de publicaciones
@@ -567,30 +568,145 @@ paths:
                     state: "approved"
                     userProfileId: 1
                     categoryIds: [1, 2]
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
                   - id: 2
                     title: "Publicación 2"
                     description: "Descripción de la publicación 2"
                     state: "pending"
                     userProfileId: 2
                     categoryIds: [2, 3]
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
+                    createdAt: "2025-10-05T09:15:00"
+                    updatedAt: "2025-10-05T09:15:00"
+                pageSize: 20
+                totalItems: 2
                 currentPage: 0
                 totalPages: 1
-                next: false
                 prev: false
+                next: false
+
+  /publications/title/{title}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Publications
+      summary: Obtener publicaciones por título (paginado)
+      description: Lista paginada de publicaciones filtradas por título. Los parámetros page y size son opcionales en la URL
+      operationId: getPublicationsByTitle
+      parameters:
+        - name: title
+          in: path
+          required: true
+          description: Título de la publicación a buscar
+          schema:
+            type: string
+          example: "libros"
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+          description: Número de página (opcional, por defecto 0)
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+          description: Tamaño de página (opcional, por defecto 20)
+      responses:
+        '200':
+          description: Lista de publicaciones filtradas por título
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    title: "Publicación sobre libros clásicos"
+                    description: "Descripción de la publicación 1"
+                    state: "approved"
+                    userProfileId: 1
+                    categoryIds: [1]
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
+                pageSize: 20
+                totalItems: 1
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
+
+  /publications/description/{desc}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Publications
+      summary: Obtener publicaciones por descripción (paginado)
+      description: Lista paginada de publicaciones filtradas por descripción. Los parámetros page y size son opcionales en la URL
+      operationId: getPublicationsByDescription
+      parameters:
+        - name: desc
+          in: path
+          required: true
+          description: Descripción de la publicación a buscar
+          schema:
+            type: string
+          example: "ciencia ficción"
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+          description: Número de página (opcional, por defecto 0)
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+          description: Tamaño de página (opcional, por defecto 20)
+      responses:
+        '200':
+          description: Lista de publicaciones filtradas por descripción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 2
+                    title: "Publicación sobre el futuro"
+                    description: "Una exploración de ciencia ficción"
+                    state: "approved"
+                    userProfileId: 2
+                    categoryIds: [3]
+                    createdAt: "2025-10-05T09:15:00"
+                    updatedAt: "2025-10-05T09:15:00"
+                pageSize: 20
+                totalItems: 1
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
 
   /publications/state/{state}/page/{page}/size/{size}:
     get:
       tags:
         - Publications
-      summary: Obtener publicaciones por estado
-      description: Lista paginada de publicaciones filtradas por estado
+      summary: Obtener publicaciones por estado (paginado)
+      description: Lista paginada de publicaciones filtradas por estado. Los parámetros page y size son opcionales en la URL
       operationId: getPublicationsByState
       parameters:
         - name: state
@@ -609,6 +725,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
+          description: Número de página (opcional, por defecto 0)
         - name: size
           in: path
           required: true
@@ -618,6 +735,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
+          description: Tamaño de página (opcional, por defecto 20)
       responses:
         '200':
           description: Lista de publicaciones filtradas por estado
@@ -625,6 +743,148 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    title: "Publicación aprobada 1"
+                    description: "Descripción de la publicación aprobada"
+                    state: "approved"
+                    userProfileId: 1
+                    categoryIds: [1, 2]
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
+                  - id: 3
+                    title: "Publicación aprobada 2"
+                    description: "Otra publicación aprobada"
+                    state: "approved"
+                    userProfileId: 3
+                    categoryIds: [2]
+                    createdAt: "2025-10-04T14:20:00"
+                    updatedAt: "2025-10-04T14:20:00"
+                pageSize: 20
+                totalItems: 2
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
+
+  /publications/user/{user}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Publications
+      summary: Obtener publicaciones por usuario (paginado)
+      description: Lista paginada de publicaciones filtradas por usuario. Los parámetros page y size son opcionales en la URL
+      operationId: getPublicationsByUser
+      parameters:
+        - name: user
+          in: path
+          required: true
+          description: ID del perfil de usuario
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+          description: Número de página (opcional, por defecto 0)
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+          description: Tamaño de página (opcional, por defecto 20)
+      responses:
+        '200':
+          description: Lista de publicaciones filtradas por usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    title: "Publicación del usuario 1"
+                    description: "Descripción de la publicación"
+                    state: "approved"
+                    userProfileId: 1
+                    categoryIds: [1, 2]
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
+                pageSize: 20
+                totalItems: 1
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
+
+  /publications/category/{cat}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Publications
+      summary: Obtener publicaciones por categoría (paginado)
+      description: Lista paginada de publicaciones filtradas por categoría. Los parámetros page y size son opcionales en la URL
+      operationId: getPublicationsByCategory
+      parameters:
+        - name: cat
+          in: path
+          required: true
+          description: ID de la categoría
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+          description: Número de página (opcional, por defecto 0)
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+          description: Tamaño de página (opcional, por defecto 20)
+      responses:
+        '200':
+          description: Lista de publicaciones filtradas por categoría
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    title: "Publicación de la categoría"
+                    description: "Descripción de la publicación"
+                    state: "approved"
+                    userProfileId: 1
+                    categoryIds: [1]
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
+                pageSize: 20
+                totalItems: 1
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
 
   /publications/{id}:
     get:
@@ -654,8 +914,8 @@ paths:
                 description: "Descripción de la publicación 1"
                 state: "approved"
                 categoryIds: [1, 2]
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
         '404':
           $ref: '#/components/responses/NotFoundError'
 
@@ -684,7 +944,6 @@ paths:
               userProfileId: 1
               title: "Publicación actualizada"
               description: "Descripción actualizada de la publicación."
-              state: "approved"
               categoryIds: [1, 2, 3]
       responses:
         '200':
@@ -698,10 +957,10 @@ paths:
                 userProfileId: 1
                 title: "Publicación actualizada"
                 description: "Descripción actualizada de la publicación."
-                state: "approved"
+                state: "pending"
                 categoryIds: [1, 2, 3]
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -712,7 +971,7 @@ paths:
     delete:
       tags:
         - Publications
-      summary: Eliminar publicación (soft delete)
+      summary: Eliminar publicación (borrado lógico)
       description: Marca la publicación como eliminada sin borrarla físicamente
       operationId: deletePublication
       security:
@@ -752,11 +1011,22 @@ paths:
           example: 2
       responses:
         '200':
-          description: Publicación aprobada
+          description: Publicación aprobada exitosamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicationResponseDTO'
+              example:
+                id: 2
+                userProfileId: 1
+                title: "Publicación aprobada"
+                description: "Esta publicación fue aprobada por el administrador"
+                state: "approved"
+                categoryIds: [1, 2]
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-11T15:45:00"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -783,11 +1053,232 @@ paths:
           example: 3
       responses:
         '200':
-          description: Publicación rechazada
+          description: Publicación rechazada exitosamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicationResponseDTO'
+              example:
+                id: 3
+                userProfileId: 2
+                title: "Publicación rechazada"
+                description: "Esta publicación fue rechazada por el administrador"
+                state: "rejected"
+                categoryIds: [1]
+                createdAt: "2025-10-05T09:15:00"
+                updatedAt: "2025-10-11T15:45:00"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # ==========================================
+  # CATEGORY ENDPOINTS (Puerto 8082)
+  # ==========================================
+  /categories:
+    post:
+      tags:
+        - Categories
+      summary: Crear categoría
+      description: Crea una nueva categoría (requiere permisos de administrador)
+      operationId: createCategory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequestDTO'
+            example:
+              name: "Ciencia Ficción"
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+              example:
+                id: 3
+                name: "Ciencia Ficción"
+                isDeleted: false
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    get:
+      tags:
+        - Categories
+      summary: Obtener todas las categorías
+      description: Lista completa de categorías disponibles (sin paginación)
+      operationId: getAllCategories
+      responses:
+        '200':
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryResponseDTO'
+              example:
+                - id: 1
+                  name: "Ficción"
+                  isDeleted: false
+                  createdAt: "2025-10-06T10:30:00"
+                  updatedAt: "2025-10-06T10:30:00"
+                - id: 2
+                  name: "No Ficción"
+                  isDeleted: false
+                  createdAt: "2025-10-05T09:15:00"
+                  updatedAt: "2025-10-05T09:15:00"
+                - id: 3
+                  name: "Ciencia Ficción"
+                  isDeleted: false
+                  createdAt: "2025-10-04T14:20:00"
+                  updatedAt: "2025-10-04T14:20:00"
+
+  /categories/name/{name}:
+    get:
+      tags:
+        - Categories
+      summary: Obtener categorías por nombre
+      description: Busca categorías por nombre (puede retornar múltiples resultados)
+      operationId: getCategoriesByName
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Nombre de la categoría a buscar
+          schema:
+            type: string
+          example: "Ficción"
+      responses:
+        '200':
+          description: Categorías encontradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryResponseDTO'
+              example:
+                - id: 1
+                  name: "Ficción"
+                  isDeleted: false
+                  createdAt: "2025-10-06T10:30:00"
+                  updatedAt: "2025-10-06T10:30:00"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /categories/{id}:
+    get:
+      tags:
+        - Categories
+      summary: Obtener categoría por ID
+      operationId: getCategoryById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la categoría
+          schema:
+            type: integer
+            format: int32
+          example: 1
+      responses:
+        '200':
+          description: Categoría encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+              example:
+                id: 1
+                name: "Ficción"
+                isDeleted: false
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags:
+        - Categories
+      summary: Actualizar categoría
+      description: Actualiza una categoría existente por ID
+      operationId: updateCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la categoría a actualizar
+          schema:
+            type: integer
+            format: int32
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequestDTO'
+            example:
+              name: "Ficción Científica"
+      responses:
+        '200':
+          description: Categoría actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+              example:
+                id: 1
+                name: "Ficción Científica"
+                isDeleted: false
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-10T15:45:00"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Categories
+      summary: Eliminar categoría (borrado lógico)
+      description: Marca la categoría como eliminada sin borrarla físicamente
+      operationId: deleteCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la categoría a eliminar
+          schema:
+            type: integer
+            format: int32
+          example: 1
+      responses:
+        '204':
+          description: Categoría marcada como eliminada
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -827,8 +1318,8 @@ paths:
                 id: 1
                 userProfileId: 1
                 publicationId: 101
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -838,8 +1329,8 @@ paths:
     get:
       tags:
         - Favorites
-      summary: Obtener todos los favoritos
-      description: Lista paginada de todos los favoritos
+      summary: Obtener todos los favoritos (paginado)
+      description: Lista paginada de todos los favoritos. Los parámetros page y size son opcionales en la URL
       operationId: getAllFavorites
       security:
         - bearerAuth: []
@@ -852,6 +1343,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
+          description: Número de página (opcional, por defecto 0)
         - name: size
           in: path
           required: true
@@ -861,6 +1353,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
+          description: Tamaño de página (opcional, por defecto 20)
       responses:
         '200':
           description: Lista de favoritos
@@ -873,34 +1366,33 @@ paths:
                   - id: 1
                     userProfileId: 1
                     publicationId: 101
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
                   - id: 2
                     userProfileId: 1
                     publicationId: 102
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
+                    createdAt: "2025-10-05T09:15:00"
+                    updatedAt: "2025-10-05T09:15:00"
+                pageSize: 20
+                totalItems: 2
                 currentPage: 0
                 totalPages: 1
-                next: false
                 prev: false
+                next: false
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  /favorites/user/{userProfileId}/page/{page}/size/{size}:
+  /favorites/user/{user}/page/{page}/size/{size}:
     get:
       tags:
         - Favorites
-      summary: Obtener favoritos de un usuario
-      description: Lista paginada de todas las publicaciones favoritas de un usuario específico
-      operationId: getUserFavorites
+      summary: Obtener favoritos de un usuario (paginado)
+      description: Lista paginada de todas las publicaciones favoritas de un usuario específico. Los parámetros page y size son opcionales en la URL
+      operationId: getFavoritesByUser
       security:
         - bearerAuth: []
       parameters:
-        - name: userProfileId
+        - name: user
           in: path
           required: true
           description: ID del perfil de usuario
@@ -916,6 +1408,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
+          description: Número de página (opcional, por defecto 0)
         - name: size
           in: path
           required: true
@@ -925,6 +1418,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
+          description: Tamaño de página (opcional, por defecto 20)
       responses:
         '200':
           description: Favoritos del usuario
@@ -932,6 +1426,91 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    userProfileId: 1
+                    publicationId: 101
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
+                  - id: 2
+                    userProfileId: 1
+                    publicationId: 105
+                    createdAt: "2025-10-05T09:15:00"
+                    updatedAt: "2025-10-05T09:15:00"
+                pageSize: 20
+                totalItems: 2
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /favorites/publication/{pub}/page/{page}/size/{size}:
+    get:
+      tags:
+        - Favorites
+      summary: Obtener favoritos de una publicación (paginado)
+      description: Lista paginada de todos los usuarios que marcaron una publicación como favorita. Los parámetros page y size son opcionales en la URL
+      operationId: getFavoritesByPublication
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: pub
+          in: path
+          required: true
+          description: ID de la publicación
+          schema:
+            type: integer
+            format: int32
+          example: 101
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+          description: Número de página (opcional, por defecto 0)
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+          description: Tamaño de página (opcional, por defecto 20)
+      responses:
+        '200':
+          description: Favoritos de la publicación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseDTO'
+              example:
+                data:
+                  - id: 1
+                    userProfileId: 1
+                    publicationId: 101
+                    createdAt: "2025-10-06T10:30:00"
+                    updatedAt: "2025-10-06T10:30:00"
+                  - id: 5
+                    userProfileId: 3
+                    publicationId: 101
+                    createdAt: "2025-10-04T11:20:00"
+                    updatedAt: "2025-10-04T11:20:00"
+                pageSize: 20
+                totalItems: 2
+                currentPage: 0
+                totalPages: 1
+                prev: false
+                next: false
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
@@ -944,7 +1523,7 @@ paths:
       summary: Obtener favorito por ID
       operationId: getFavoriteById
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -960,6 +1539,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FavoriteResponseDTO'
+              example:
+                id: 1
+                userProfileId: 1
+                publicationId: 101
+                createdAt: "2025-10-06T10:30:00"
+                updatedAt: "2025-10-06T10:30:00"
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
@@ -968,11 +1553,11 @@ paths:
     delete:
       tags:
         - Favorites
-      summary: Eliminar de favoritos
-      description: Elimina una publicación de los favoritos del usuario
+      summary: Eliminar de favoritos (borrado lógico)
+      description: Marca el favorito como eliminado sin borrarlo físicamente
       operationId: removeFavorite
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -986,159 +1571,6 @@ paths:
           description: Favorito eliminado
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  # ==========================================
-  # CATEGORY ENDPOINTS (Puerto 8082)
-  # ==========================================
-  /categories:
-    get:
-      tags:
-        - Categories
-      summary: Obtener todas las categorías
-      description: Lista completa de categorías disponibles (sin paginación)
-      operationId: getAllCategories
-      responses:
-        '200':
-          description: Lista de categorías
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CategoryResponseDTO'
-                example:
-                  - id: 1
-                    name: "Ficción"
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    name: "No Ficción"
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-
-    post:
-      tags:
-        - Categories
-      summary: Crear categoría
-      description: Crea una nueva categoría (requiere permisos de administrador)
-      operationId: createCategory
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryRequestDTO'
-            example:
-              name: "Ciencia Ficción"
-      responses:
-        '201':
-          description: Categoría creada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponseDTO'
-              example:
-                id: 3
-                name: "Ciencia Ficción"
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-
-  /categories/{id}:
-    get:
-      tags:
-        - Categories
-      summary: Obtener categoría por ID
-      operationId: getCategoryById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-          example: 1
-      responses:
-        '200':
-          description: Categoría encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponseDTO'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-    put:
-      tags:
-        - Categories
-      summary: Actualizar categoría
-      operationId: updateCategory
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-          example: 1
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryRequestDTO'
-            example:
-              name: "Ficción Científica"
-      responses:
-        '200':
-          description: Categoría actualizada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-    delete:
-      tags:
-        - Categories
-      summary: Eliminar categoría (soft delete)
-      description: Marca la categoría como eliminada sin borrarla físicamente
-      operationId: deleteCategory
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-          example: 1
-      responses:
-        '204':
-          description: Categoría marcada como eliminada
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
 
