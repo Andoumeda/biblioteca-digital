@@ -60,7 +60,7 @@ import { usePublicationsStore } from "./stores/publicationsStore";
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
 import BookGrid from "./components/BookGrid.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 export default {
   name: "App",
@@ -71,6 +71,16 @@ export default {
     const currentFilter = ref("all");
     let searchTimeout = null;
 
+    // Sincronizar campo de búsqueda con el store
+    watch(
+      () => store.searchQuery,
+      (newQuery) => {
+        if (newQuery !== searchQuery.value) {
+          searchQuery.value = newQuery;
+        }
+      }
+    );
+
     // Mapear publicaciones de la API al formato esperado por BookGrid
     const mappedPublications = computed(() => {
       return store.filteredPublications.map((pub) => ({
@@ -79,10 +89,10 @@ export default {
         autor: pub.userProfile?.displayName || "Desconocido",
         descripcion: pub.description || "Sin descripción",
         categoria: pub.categories?.[0]?.name || "Sin categoría",
-        imagen: "/programming-book-cover.jpg", // Puedes agregar lógica para imágenes dinámicas
-        rating: 0, // Puedes agregar lógica para ratings si está disponible
+        imagen: "/programming-book-cover.jpg",
+        rating: 0,
         votos: 0,
-        favoritos: store.favoritesCount[pub.id] || 0, // Obtener del store
+        favoritos: store.favoritesCount[pub.id] || 0,
         comentarios: 0,
         usuario: `@${pub.userProfile?.user?.username || "usuario"}`,
         fecha: new Date(pub.createdAt).toLocaleDateString() || "Fecha desconocida",

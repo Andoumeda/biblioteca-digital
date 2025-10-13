@@ -50,6 +50,7 @@ export const usePublicationsStore = defineStore('publications', {
       this.loading = true;
       this.error = null;
       this.selectedCategory = null; // Limpiar filtro de categoría
+      this.searchQuery = ''; // Limpiar búsqueda
 
       try {
         const response = await publicationsAPI.getPublications(page, size);
@@ -72,7 +73,6 @@ export const usePublicationsStore = defineStore('publications', {
       this.loading = true;
       this.error = null;
       this.searchQuery = query;
-      this.selectedCategory = null; // Limpiar filtro de categoría al buscar
 
       try {
         const response = await publicationsAPI.searchByTitle(query, page, size);
@@ -93,6 +93,7 @@ export const usePublicationsStore = defineStore('publications', {
     async fetchPublicationsByState(state, page = 0, size = 20) {
       this.loading = true;
       this.error = null;
+      this.searchQuery = ''; // Limpiar búsqueda al cambiar de estado
 
       try {
         const response = await publicationsAPI.getByState(state, page, size);
