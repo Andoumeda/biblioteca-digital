@@ -1,6 +1,6 @@
 <template>
   <div class="topbar">
-    <h1>Mi Biblioteca Digital</h1>
+    <h1>Biblioteca Digital</h1>
   </div>
 </template>
 
