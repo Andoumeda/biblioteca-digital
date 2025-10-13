@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia';
-import { publicationsAPI, categoriesAPI } from '../api/publicationsService';
+import { publicationsAPI, categoriesAPI, favoritesAPI } from '../api/publicationsService';
 
 export const usePublicationsStore = defineStore('publications', {
   state: () => ({
     publications: [],
     categories: [],
+    favoritesCount: {},
     currentPage: 0,
     pageSize: 20,
     totalPages: 0,
@@ -48,17 +49,17 @@ export const usePublicationsStore = defineStore('publications', {
     async fetchPublications(page = 0, size = 20) {
       this.loading = true;
       this.error = null;
+      this.selectedCategory = null; // Limpiar filtro de categoría
 
       try {
         const response = await publicationsAPI.getPublications(page, size);
-        console.log('API Response:', response.data); // Debug
 
         // La API devuelve { data: [...], pageSize, totalItems, currentPage, totalPages }
         this.publications = response.data.data || [];
         this.currentPage = response.data.currentPage || 0;
         this.pageSize = response.data.pageSize || size;
         this.totalPages = response.data.totalPages || 0;
-        this.totalElements = response.data.totalItems || 0;
+        this.totalItems = response.data.totalItems || 0;
       } catch (error) {
         this.error = error.message || 'Error al cargar las publicaciones';
         console.error('Error fetching publications:', error);
@@ -71,6 +72,7 @@ export const usePublicationsStore = defineStore('publications', {
       this.loading = true;
       this.error = null;
       this.searchQuery = query;
+      this.selectedCategory = null; // Limpiar filtro de categoría al buscar
 
       try {
         const response = await publicationsAPI.searchByTitle(query, page, size);
@@ -79,7 +81,7 @@ export const usePublicationsStore = defineStore('publications', {
         this.currentPage = response.data.currentPage || 0;
         this.pageSize = response.data.pageSize || size;
         this.totalPages = response.data.totalPages || 0;
-        this.totalElements = response.data.totalItems || 0;
+        this.totalItems = response.data.totalItems || 0;
       } catch (error) {
         this.error = error.message || 'Error al buscar publicaciones';
         console.error('Error searching publications:', error);
@@ -99,7 +101,7 @@ export const usePublicationsStore = defineStore('publications', {
         this.currentPage = response.data.currentPage || 0;
         this.pageSize = response.data.pageSize || size;
         this.totalPages = response.data.totalPages || 0;
-        this.totalElements = response.data.totalItems || 0;
+        this.totalItems = response.data.totalItems || 0;
       } catch (error) {
         this.error = error.message || 'Error al cargar publicaciones por estado';
         console.error('Error fetching publications by state:', error);
@@ -153,6 +155,34 @@ export const usePublicationsStore = defineStore('publications', {
         this.categories = response.data || [];
       } catch (error) {
         console.error('Error fetching categories:', error);
+      }
+    },
+
+    // Obtener conteo de favoritos para múltiples publicaciones
+    async fetchFavoritesCount(publicationIds) {
+      try {
+        // Obtener favoritos para cada publicación en paralelo
+        const counts = await Promise.all(
+          publicationIds.map(async (pubId) => {
+            const count = await favoritesAPI.countByPublication(pubId);
+            return { pubId, count };
+          })
+        );
+
+        // Actualizar el estado con los conteos
+        counts.forEach(({ pubId, count }) => {
+          this.favoritesCount[pubId] = count;
+        });
+      } catch (error) {
+        console.error('Error fetching favorites count:', error);
+      }
+    },
+
+    // Obtener favoritos para las publicaciones actuales
+    async fetchCurrentPublicationsFavorites() {
+      const publicationIds = this.publications.map(pub => pub.id);
+      if (publicationIds.length > 0) {
+        await this.fetchFavoritesCount(publicationIds);
       }
     },
 

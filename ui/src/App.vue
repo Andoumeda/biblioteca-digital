@@ -76,41 +76,46 @@ export default {
       return store.filteredPublications.map((pub) => ({
         id: pub.id,
         titulo: pub.title || "Sin título",
-        autor: pub.userProfile?.name || "Desconocido",
+        autor: pub.userProfile?.displayName || "Desconocido",
         descripcion: pub.description || "Sin descripción",
         categoria: pub.categories?.[0]?.name || "Sin categoría",
         imagen: "/programming-book-cover.jpg", // Puedes agregar lógica para imágenes dinámicas
         rating: 0, // Puedes agregar lógica para ratings si está disponible
         votos: 0,
-        likes: pub.favorites?.length || 0,
+        favoritos: store.favoritesCount[pub.id] || 0, // Obtener del store
         comentarios: 0,
-        usuario: `@${pub.userProfile?.username || "usuario"}`,
+        usuario: `@${pub.userProfile?.user?.username || "usuario"}`,
         fecha: new Date(pub.createdAt).toLocaleDateString() || "Fecha desconocida",
         state: pub.state,
       }));
     });
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
       // Debounce para evitar múltiples llamadas
       clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
+      searchTimeout = setTimeout(async () => {
         if (searchQuery.value.trim()) {
-          store.searchPublications(searchQuery.value);
+          await store.searchPublications(searchQuery.value);
         } else {
-          store.fetchPublications();
+          await store.fetchPublications();
         }
+        // Cargar favoritos después de buscar
+        await store.fetchCurrentPublicationsFavorites();
       }, 500);
     };
 
-    const handleFilterChange = (filter) => {
+    const handleFilterChange = async (filter) => {
       currentFilter.value = filter;
-      store.setFilter(filter);
+      await store.setFilter(filter);
+      // Cargar favoritos después de cambiar filtro
+      await store.fetchCurrentPublicationsFavorites();
     };
 
     // Cargar datos al montar el componente
     onMounted(async () => {
       await store.fetchCategories();
       await store.fetchPublications();
+      await store.fetchCurrentPublicationsFavorites(); // Cargar favoritos después de las publicaciones
     });
 
     return {

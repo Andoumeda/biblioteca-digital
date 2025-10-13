@@ -71,8 +71,24 @@ export const categoriesAPI = {
 
 export const favoritesAPI = {
   // Obtener favoritos de un usuario
-  getByUser(userId) {
-    return apiClient.get(`/favorites/user/${userId}`);
+  getByUser(userId, page = 0, size = 20) {
+    return apiClient.get(`/favorites/user/${userId}/page/${page}/size/${size}`);
+  },
+
+  // Obtener favoritos de una publicación
+  getByPublication(publicationId, page = 0, size = 20) {
+    return apiClient.get(`/favorites/publication/${publicationId}/page/${page}/size/${size}`);
+  },
+
+  // Contar favoritos de una publicación (solo obtiene totalItems)
+  async countByPublication(publicationId) {
+    try {
+      const response = await apiClient.get(`/favorites/publication/${publicationId}/page/0/size/1`);
+      return response.data.totalItems || 0;
+    } catch (error) {
+      console.error(`Error counting favorites for publication ${publicationId}:`, error);
+      return 0;
+    }
   },
 
   // Agregar a favoritos

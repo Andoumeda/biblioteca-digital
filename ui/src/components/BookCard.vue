@@ -11,7 +11,7 @@
 
     <div class="meta">
       <span>⭐ {{ book.rating }} ({{ book.votos }})</span>
-      <span>❤️ {{ book.likes }}</span>
+      <span>❤️ {{ book.favoritos }}</span>
       <span>💬 {{ book.comentarios }}</span>
     </div>
 

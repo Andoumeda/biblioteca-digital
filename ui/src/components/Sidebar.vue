@@ -45,14 +45,17 @@ const { categories, loading, error } = useCategories();
 const store = usePublicationsStore();
 const selectedCategory = ref(null);
 
-const selectCategory = (categoryId) => {
+const selectCategory = async (categoryId) => {
   selectedCategory.value = categoryId;
 
   if (categoryId) {
-    store.fetchPublicationsByCategory(categoryId);
+    await store.fetchPublicationsByCategory(categoryId);
   } else {
-    store.fetchPublications();
+    await store.fetchPublications();
   }
+
+  // Cargar favoritos después de obtener las publicaciones
+  await store.fetchCurrentPublicationsFavorites();
 };
 </script>
 
