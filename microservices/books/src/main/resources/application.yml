@@ -26,6 +26,15 @@ spring:
     enabled: false
     change-log: classpath:db/changelog/db.changelog-master.xml
 
+# Pagination Configuration
+pagination:
+  page-size: 10
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 # OpenAPI Configuration
 springdoc:
   swagger-ui:

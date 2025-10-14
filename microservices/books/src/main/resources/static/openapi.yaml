@@ -42,19 +42,13 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/BookResponseDTO'
 
-  /books/page/{page}/size/{size}:
+  /books/page/{page}:
     get:
       tags: [Books]
       summary: Obtener todos los libros
       operationId: getAllBooks
       parameters:
         - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: size
           in: path
           required: true
           schema:
@@ -68,7 +62,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
 
-  /books/title/{title}/page/{page}/size/{size}:
+  /books/title/{title}/page/{page}:
     get:
       tags: [Books]
       summary: Obtener libros por título
@@ -85,12 +79,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Lista de libros filtrados por título
@@ -99,7 +87,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
 
-  /books/publication/{publicationId}/page/{page}/size/{size}:
+  /books/publication/{publicationId}/page/{page}:
     get:
       tags: [Books]
       summary: Obtener libros de una publicación
@@ -118,12 +106,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Lista de libros de una publicación
@@ -132,11 +114,11 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
 
-  /books/{id}/authors/page/{page}/size/{size}:
+  /books/author/{id}/page/{page}:
     get:
       tags: [Books]
-      summary: Obtener autores de un libro
-      operationId: getAuthorsByBookId
+      summary: Obtener los libros de un autor
+      operationId: getBooksByAuthorId
       parameters:
         - name: id
           in: path
@@ -150,51 +132,13 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
-          description: Lista de autores de un libro
+          description: Lista de libros de un autor
           content:
             application/json:
               schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
-
-  /books/{id}/ratings/page/{page}/size/{size}:
-    get:
-      tags: [Books]
-      summary: Obtener ratings de un libro
-      operationId: getRatingsByBookId
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de valoraciones de un libro
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
 
   /books/{id}:
     get:
@@ -278,19 +222,13 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/AuthorResponseDTO'
 
-  /authors/page/{page}/size/{size}:
+  /authors/page/{page}:
     get:
       tags: [Authors]
       summary: Obtener todos los autores
       operationId: getAllAuthors
       parameters:
         - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: size
           in: path
           required: true
           schema:
@@ -304,7 +242,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
 
-  /authors/fullname/{fullName}/page/{page}/size/{size}:
+  /authors/fullname/{fullName}/page/{page}:
     get:
       tags: [Authors]
       summary: Obtener autores por nombre completo
@@ -321,12 +259,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Lista de autores filtrados por nombre completo
@@ -335,7 +267,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
 
-  /authors/birthdate/{birthdate}/page/{page}/size/{size}:
+  /authors/birthdate/{birthdate}/page/{page}:
     get:
       tags: [Authors]
       summary: Obtener autores por fecha de nacimiento
@@ -353,12 +285,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Lista de autores filtrados por fecha de nacimiento
@@ -367,7 +293,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
 
-  /authors/nationality/{nationality}/page/{page}/size/{size}:
+  /authors/nationality/{nationality}/page/{page}:
     get:
       tags: [Authors]
       summary: Obtener autores por nacionalidad
@@ -384,12 +310,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Lista de autores filtrados por la nacionalidad
@@ -398,11 +318,11 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
 
-  /authors/{id}/books/page/{page}/size/{size}:
+  /authors/book/{id}/page/{page}:
     get:
       tags: [Authors]
-      summary: Obtener los libros de un autor
-      operationId: getBooksByAuthorId
+      summary: Obtener autores de un libro
+      operationId: getAuthorsByBookId
       parameters:
         - name: id
           in: path
@@ -416,19 +336,13 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
-          description: Lista de libros de un autor
+          description: Lista de autores de un libro
           content:
             application/json:
               schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
 
   /authors/{id}:
     get:
@@ -519,19 +433,13 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/RatingResponseDTO'
 
-  /ratings/page/{page}/size/{size}:
+  /ratings/page/{page}:
     get:
       tags: [Ratings]
       summary: Obtener todas las valoraciones
       operationId: getAllRatings
       parameters:
         - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: size
           in: path
           required: true
           schema:
@@ -545,7 +453,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
 
-  /ratings/valoration/{min}/{max}/page/{page}/size/{size}:
+  /ratings/valoration/{min}/{max}/page/{page}:
     get:
       tags: [Ratings]
       summary: Obtener valoraciones por rango de puntuación
@@ -567,12 +475,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Valoraciones filtradas por puntuación
@@ -581,7 +483,7 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
 
-  /ratings/userprofile/{userProfileId}/page/{page}/size/{size}:
+  /ratings/userprofile/{userProfileId}/page/{page}:
     get:
       tags: [Ratings]
       summary: Obtener valoraciones de un usuario
@@ -599,12 +501,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: Lista de valoraciones de un usuario
@@ -613,11 +509,11 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
 
-  /ratings/{id}:
+  /ratings/book/{id}/page/{page}:
     get:
       tags: [Ratings]
-      summary: Obtener valoración por ID
-      operationId: getRatingById
+      summary: Obtener valoraciones de un libro
+      operationId: getRatingsByBookId
       parameters:
         - name: id
           in: path
@@ -631,7 +527,21 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: size
+      responses:
+        '200':
+          description: Lista de valoraciones de un libro
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
+
+  /ratings/{id}:
+    get:
+      tags: [Ratings]
+      summary: Obtener valoración por ID
+      operationId: getRatingById
+      parameters:
+        - name: id
           in: path
           required: true
           schema:
