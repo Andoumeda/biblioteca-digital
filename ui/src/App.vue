@@ -6,100 +6,173 @@
       <Topbar />
 
       <div class="content">
-        <h2>Explorar Libros</h2>
+        <h2>Explorar Publicaciones</h2>
 
         <!-- Barra de búsqueda -->
         <div class="explore-header">
           <input
             type="text"
-            v-model="query"
+            v-model="searchQuery"
+            @input="handleSearch"
             placeholder="Buscar por título, autor o usuario..."
           />
           <div class="filters">
-            <button @click="filter = 'all'" :class="{ active: filter === 'all' }">
+            <button @click="handleFilterChange('all')" :class="{ active: currentFilter === 'all' }">
               Todos
             </button>
             <button
-              @click="filter = 'trend'"
-              :class="{ active: filter === 'trend' }"
+              @click="handleFilterChange('approved')"
+              :class="{ active: currentFilter === 'approved' }"
             >
-              Tendencia
+              Aprobados
             </button>
           </div>
-          <div class="results">{{ filteredBooks.length }} libros encontrados</div>
+          <div class="results">
+            {{ store.loading ? 'Cargando...' : `${store.filteredPublications.length} publicaciones encontradas` }}
+          </div>
         </div>
 
-        <!-- Grid de libros -->
-        <BookGrid :books="filteredBooks" />
+        <!-- Mensaje de error -->
+        <div v-if="store.error" class="error-message">
+          {{ store.error }}
+        </div>
+
+        <!-- Grid de publicaciones -->
+        <BookGrid :books="mappedPublications" :loading="store.loading" />
+
+        <!-- Paginación -->
+        <div class="pagination" v-if="!store.loading && store.totalPages > 1">
+          <button @click="store.previousPage()" :disabled="store.currentPage === 0">
+            Anterior
+          </button>
+          <span>Página {{ store.currentPage + 1 }} de {{ store.totalPages }}</span>
+          <button @click="store.nextPage()" :disabled="!store.hasMore">
+            Siguiente
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { usePublicationsStore } from "./stores/publicationsStore";
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
 import BookGrid from "./components/BookGrid.vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 export default {
   name: "App",
   components: { Sidebar, Topbar, BookGrid },
-  data() {
-    return {
-      query: "",
-      filter: "all",
-      books: [
-        {
-          id: 1,
-          titulo: "Cocina Vegana Moderna",
-          autor: "María Chef",
-          descripcion: "Recetas innovadoras y deliciosas...",
-          categoria: "Cocina",
-          imagen: "/vegan-cooking-book-cover.png",
-          rating: 4.9,
-          votos: 203,
-          likes: 234,
-          comentarios: 67,
-          usuario: "@maria_chef",
-          fecha: "9/3/2024",
-        },
-        {
-          id: 2,
-          titulo: "Mindfulness y Bienestar",
-          autor: "Dr. Paz Mental",
-          descripcion: "Técnicas de meditación y mindfulness...",
-          categoria: "Salud",
-          imagen: "/mindfulness-book-cover.png",
-          rating: 4.7,
-          votos: 156,
-          likes: 198,
-          comentarios: 34,
-          usuario: "@dr_paz",
-          fecha: "7/3/2024",
-        },
-        {
-          id: 3,
-          titulo: "El Arte de la Programación",
-          autor: "Ana Desarrolladora",
-          descripcion: "Una guía completa para dominar fundamentos...",
-          categoria: "Tecnología",
-          imagen: "/programming-book-cover.jpg",
-          rating: 4.8,
-          votos: 124,
-          likes: 89,
-          comentarios: 23,
-          usuario: "@ana_dev",
-          fecha: "14/3/2024",
-        },
-      ],
+  setup() {
+    const store = usePublicationsStore();
+    const searchQuery = ref("");
+    const currentFilter = ref("all");
+    let searchTimeout = null;
+
+    // Sincronizar campo de búsqueda con el store
+    watch(
+      () => store.searchQuery,
+      (newQuery) => {
+        if (newQuery !== searchQuery.value) {
+          searchQuery.value = newQuery;
+        }
+      }
+    );
+
+    // Mapear publicaciones de la API al formato esperado por BookGrid
+    const mappedPublications = computed(() => {
+      return store.filteredPublications.map((pub) => ({
+        id: pub.id,
+        titulo: pub.title || "Sin título",
+        autor: pub.userProfile?.displayName || "Desconocido",
+        descripcion: pub.description || "Sin descripción",
+        categoria: pub.categories?.[0]?.name || "Sin categoría",
+        imagen: "/programming-book-cover.jpg",
+        rating: 0,
+        votos: 0,
+        favoritos: store.favoritesCount[pub.id] || 0,
+        comentarios: 0,
+        usuario: `@${pub.userProfile?.user?.username || "usuario"}`,
+        fecha: new Date(pub.createdAt).toLocaleDateString() || "Fecha desconocida",
+        state: pub.state,
+      }));
+    });
+
+    const handleSearch = async () => {
+      // Debounce para evitar múltiples llamadas
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async () => {
+        if (searchQuery.value.trim()) {
+          await store.searchPublications(searchQuery.value);
+        } else {
+          await store.fetchPublications();
+        }
+        // Cargar favoritos después de buscar
+        await store.fetchCurrentPublicationsFavorites();
+      }, 500);
     };
-  },
-  computed: {
-    filteredBooks() {
-      return this.books.filter((b) =>
-        b.titulo.toLowerCase().includes(this.query.toLowerCase())
-      );
-    },
+
+    const handleFilterChange = async (filter) => {
+      currentFilter.value = filter;
+      await store.setFilter(filter);
+      // Cargar favoritos después de cambiar filtro
+      await store.fetchCurrentPublicationsFavorites();
+    };
+
+    // Cargar datos al montar el componente
+    onMounted(async () => {
+      await store.fetchCategories();
+      await store.fetchPublications();
+      await store.fetchCurrentPublicationsFavorites(); // Cargar favoritos después de las publicaciones
+    });
+
+    return {
+      store,
+      searchQuery,
+      currentFilter,
+      mappedPublications,
+      handleSearch,
+      handleFilterChange,
+    };
   },
 };
 </script>
+
+<style scoped>
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  font-weight: 500;
+}
+</style>

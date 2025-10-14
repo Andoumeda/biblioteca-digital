@@ -1,18 +1,14 @@
 openapi: 3.0.1
 info:
-  title: Biblioteca Digital API
+  title: Biblioteca Digital API - Users Microservice
   version: v1.0
-  description: API Documentation for Biblioteca Digital - Complete System
+  description: API Documentation for Users Microservice
 
 servers:
   - url: http://localhost:8081/api
     description: Módulo de Perfiles de usuarios
 
 tags:
-  - name: Authentication
-    description: Endpoints de autenticación y registro
-  - name: Users
-    description: Gestión de usuarios
   - name: User Profiles
     description: Gestión de perfiles de usuario
   - name: Announcements
@@ -70,14 +66,17 @@ components:
           type: string
           format: email
           description: Correo electrónico del usuario
-        role:
-          $ref: '#/components/schemas/RoleDTO'
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+        enabled:
+          type: boolean
+          description: Indica si el usuario está activo
+
+
 
     UserRegistrationRequestDTO:
       type: object
@@ -102,6 +101,11 @@ components:
         roleId:
           type: integer
           format: int32
+      example:
+        username: "Zarza"
+        email: "zzz.perez@example.com"
+        password: "password123"
+        roleId: 1
 
     UserLoginRequestDTO:
       type: object
@@ -411,13 +415,48 @@ components:
             book:
               $ref: '#/components/schemas/BookResponseDTO'
 
+    ErrorDTO:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Código de error
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+        details:
+          type: array
+          items:
+            type: string
+          description: Detalles adicionales del error
+    ErrorResponseDTO:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo del error
+        status:
+          type: integer
+          format: int32
+          description: Código de estado HTTP
+        error:
+          type: string
+          description: Tipo de error HTTP
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+        path:
+          type: string
+          description: Ruta de la solicitud que causó el error
+
     PaginatedResponseDTO:
       type: object
       properties:
         data:
           type: array
           items:
-            type: object
+            $ref: '#/components/schemas/UserDTO'
         page:
           type: integer
           format: int32
@@ -427,57 +466,33 @@ components:
         total:
           type: integer
           format: int32
-        currentPage:
-          type: integer
-          format: int32
         totalPages:
           type: integer
           format: int32
-        next:
+        last:
           type: boolean
-        prev:
-          type: boolean
-
-    ErrorResponseDTO:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-        status:
-          type: integer
-          format: int32
-        error:
-          type: string
-        message:
-          type: string
-        path:
-          type: string
 
   responses:
     UnauthorizedError:
-      description: No autorizado - Token inválido o no proporcionado
+      description: No autorizado
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponseDTO'
-
-    ForbiddenError:
-      description: Prohibido - No tiene permisos para realizar esta acción
+    BadRequestError:
+      description: Solicitud inválida
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponseDTO'
-
     NotFoundError:
       description: Recurso no encontrado
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponseDTO'
-
-    BadRequestError:
-      description: Petición inválida
+    ForbiddenError:
+      description: Acceso prohibido
       content:
         application/json:
           schema:
@@ -485,275 +500,33 @@ components:
 
 paths:
   # ==========================================
-  # AUTHENTICATION ENDPOINTS (Puerto 8081)
+  # USER PROFILES ENDPOINTS
   # ==========================================
-  /auth/register:
-    post:
-      tags:
-        - Authentication
-      summary: Registrar nuevo usuario
-      description: Crea una cuenta de usuario en el sistema con rol asignado
-      operationId: registerUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserRegistrationRequestDTO'
-            example:
-              username: "juanperez"
-              email: "juan.perez@example.com"
-              password: "SecurePass123!"
-              roleId: 2
-      responses:
-        '201':
-          description: Usuario registrado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDTO'
-              example:
-                id: 1
-                username: "juanperez"
-                email: "juan.perez@example.com"
-                role:
-                  id: 2
-                  name: "USER"
-                  description: "Usuario regular del sistema"
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-
-  /auth/login:
-    post:
-      tags:
-        - Authentication
-      summary: Iniciar sesión
-      description: Autentica un usuario y devuelve un token JWT
-      operationId: loginUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserLoginRequestDTO'
-            example:
-              email: "juan.perez@example.com"
-              password: "SecurePass123!"
-      responses:
-        '200':
-          description: Inicio de sesión exitoso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponseDTO'
-              example:
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                user:
-                  id: 1
-                  username: "juanperez"
-                  email: "juan.perez@example.com"
-                  role:
-                    id: 2
-                    name: "USER"
-                    description: "Usuario regular del sistema"
-                  createdAt: "2024-10-06T10:30:00Z"
-                  updatedAt: "2024-10-06T10:30:00Z"
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  # ==========================================
-  # USER ENDPOINTS (Puerto 8081)
-  # ==========================================
-  /users/page/{page}/size/{size}:
-    get:
-      tags:
-        - Users
-      summary: Obtener todos los usuarios
-      description: Lista paginada de todos los usuarios del sistema (requiere autenticación)
-      operationId: getAllUsers
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: path
-          required: true
-          description: Número de página (comienza en 0)
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          example: 0
-        - name: size
-          in: path
-          required: true
-          description: Cantidad de elementos por página
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-          example: 20
-      responses:
-        '200':
-          description: Lista de usuarios
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    username: "juanperez"
-                    email: "juan.perez@example.com"
-                    role:
-                      id: 2
-                      name: "USER"
-                      description: "Usuario regular"
-                    createdAt: "2024-10-06T10:30:00Z"
-                    updatedAt: "2024-10-06T10:30:00Z"
-                  - id: 2
-                    username: "marialopez"
-                    email: "maria.lopez@example.com"
-                    role:
-                      id: 1
-                      name: "ADMIN"
-                      description: "Administrador del sistema"
-                    createdAt: "2024-10-05T09:15:00Z"
-                    updatedAt: "2024-10-05T09:15:00Z"
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /users/{id}:
-    get:
-      tags:
-        - Users
-      summary: Obtener usuario por ID
-      description: Retorna los detalles de un usuario específico
-      operationId: getUserById
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID del usuario
-          schema:
-            type: integer
-            format: int32
-          example: 1
-      responses:
-        '200':
-          description: Usuario encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDTO'
-              example:
-                id: 1
-                username: "juanperez"
-                email: "juan.perez@example.com"
-                role:
-                  id: 2
-                  name: "USER"
-                  description: "Usuario regular del sistema"
-                createdAt: "2024-10-06T10:30:00Z"
-                updatedAt: "2024-10-06T10:30:00Z"
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  # ==========================================
-  # USER PROFILE ENDPOINTS (Puerto 8081)
-  # ==========================================
-  /user-profiles/page/{page}/size/{size}:
+  /user-profiles:
     get:
       tags:
         - User Profiles
-      summary: Obtener todos los perfiles
-      description: Lista paginada de perfiles de usuario (endpoint público)
+      summary: Obtener todos los perfiles de usuario
       operationId: getAllUserProfiles
-      parameters:
-        - name: page
-          in: path
-          required: true
-          description: Número de página (comienza en 0)
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          example: 0
-        - name: size
-          in: path
-          required: true
-          description: Cantidad de elementos por página
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-          example: 10
       responses:
         '200':
-          description: Lista de perfiles
+          description: Lista de perfiles encontrada
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    userId: 1
-                    displayName: "Juan Pérez"
-                    bio: "Amante de la literatura clásica y ciencia ficción"
-                    profilePicture: "https://example.com/avatars/juan.jpg"
-                    user:
-                      id: 1
-                      username: "juanperez"
-                      email: "juan.perez@example.com"
-                      role:
-                        id: 2
-                        name: "USER"
-                    createdAt: "2024-10-06T10:35:00Z"
-                    updatedAt: "2024-10-06T14:20:00Z"
-                    isDeleted: false
-                page: 0
-                size: 10
-                total: 1
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
 
-  /user-profiles:
     post:
       tags:
         - User Profiles
       summary: Crear perfil de usuario
-      description: Crea un perfil asociado a un usuario existente
       operationId: createUserProfile
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UserProfileRequestDTO'
-            example:
-              userId: 1
-              displayName: "Juan Pérez"
-              bio: "Amante de la literatura clásica y ciencia ficción. Me gusta compartir mis libros favoritos."
-              profilePicture: "https://example.com/avatars/juan.jpg"
       responses:
         '201':
           description: Perfil creado exitosamente
@@ -761,43 +534,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponseDTO'
-              example:
-                id: 1
-                userId: 1
-                displayName: "Juan Pérez"
-                bio: "Amante de la literatura clásica y ciencia ficción. Me gusta compartir mis libros favoritos."
-                profilePicture: "https://example.com/avatars/juan.jpg"
-                user:
-                  id: 1
-                  username: "juanperez"
-                  email: "juan.perez@example.com"
-                  role:
-                    id: 2
-                    name: "USER"
-                createdAt: "2024-10-06T10:35:00Z"
-                updatedAt: "2024-10-06T10:35:00Z"
-                isDeleted: false
         '400':
           $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
 
   /user-profiles/{id}:
     get:
       tags:
         - User Profiles
       summary: Obtener perfil por ID
-      description: Retorna los detalles de un perfil específico
       operationId: getUserProfileById
       parameters:
         - name: id
           in: path
           required: true
-          description: ID del perfil
           schema:
             type: integer
             format: int32
-          example: 1
       responses:
         '200':
           description: Perfil encontrado
@@ -805,22 +557,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponseDTO'
-              example:
-                id: 1
-                userId: 1
-                displayName: "Juan Pérez"
-                bio: "Amante de la literatura clásica y ciencia ficción"
-                profilePicture: "https://example.com/avatars/juan.jpg"
-                user:
-                  id: 1
-                  username: "juanperez"
-                  email: "juan.perez@example.com"
-                  role:
-                    id: 2
-                    name: "USER"
-                createdAt: "2024-10-06T10:35:00Z"
-                updatedAt: "2024-10-06T14:20:00Z"
-                isDeleted: false
         '404':
           $ref: '#/components/responses/NotFoundError'
 
@@ -828,84 +564,50 @@ paths:
       tags:
         - User Profiles
       summary: Actualizar perfil
-      description: Actualiza la información de un perfil existente
       operationId: updateUserProfile
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          description: ID del perfil a actualizar
           schema:
             type: integer
             format: int32
-          example: 1
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UserProfileRequestDTO'
-            example:
-              userId: 1
-              displayName: "Juan Pérez García"
-              bio: "Escritor aficionado y bibliófilo empedernido. Siempre en busca de buenas historias."
-              profilePicture: "https://example.com/avatars/juan-updated.jpg"
       responses:
         '200':
-          description: Perfil actualizado
+          description: Perfil actualizado exitosamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfileResponseDTO'
-              example:
-                id: 1
-                userId: 1
-                displayName: "Juan Pérez García"
-                bio: "Escritor aficionado y bibliófilo empedernido. Siempre en busca de buenas historias."
-                profilePicture: "https://example.com/avatars/juan-updated.jpg"
-                user:
-                  id: 1
-                  username: "juanperez"
-                  email: "juan.perez@example.com"
-                createdAt: "2024-10-06T10:35:00Z"
-                updatedAt: "2024-10-06T16:45:00Z"
-                isDeleted: false
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFoundError'
 
     delete:
       tags:
         - User Profiles
-      summary: Eliminar perfil (soft delete)
-      description: Marca el perfil como eliminado sin borrarlo físicamente de la base de datos
+      summary: Eliminar perfil
       operationId: deleteUserProfile
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          description: ID del perfil a eliminar
           schema:
             type: integer
             format: int32
-          example: 1
       responses:
         '204':
-          description: Perfil marcado como eliminado exitosamente
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+          description: Perfil eliminado exitosamente
         '404':
           $ref: '#/components/responses/NotFoundError'
 
   # ==========================================
-  # ANNOUNCEMENT ENDPOINTS (Puerto 8081)
+  # ANNOUNCEMENT ENDPOINTS
   # ==========================================
   /announcements/page/{page}/size/{size}:
     get:
@@ -939,31 +641,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    title: "Nuevas funcionalidades disponibles"
-                    message: "Ahora puedes crear listas de lectura personalizadas"
-                    type: "info"
-                    targetAudience: "all"
-                    createdAt: "2024-10-05T08:00:00Z"
-                    updatedAt: "2024-10-05T08:00:00Z"
-                    isDeleted: false
-                  - id: 2
-                    title: "Mantenimiento programado"
-                    message: "El sistema estará en mantenimiento el sábado de 2am a 6am"
-                    type: "warning"
-                    targetAudience: "all"
-                    createdAt: "2024-10-04T15:30:00Z"
-                    updatedAt: "2024-10-04T15:30:00Z"
-                    isDeleted: false
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
+        '400':
+          $ref: '#/components/responses/BadRequestError'
 
   /announcements:
     post:
@@ -980,11 +659,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AnnouncementRequestDTO'
-            example:
-              title: "¡Bienvenido a Biblioteca Digital!"
-              message: "Explora miles de libros y comparte tus favoritos con la comunidad"
-              type: "info"
-              targetAudience: "new_users"
       responses:
         '201':
           description: Anuncio creado
@@ -992,15 +666,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnnouncementResponseDTO'
-              example:
-                id: 3
-                title: "¡Bienvenido a Biblioteca Digital!"
-                message: "Explora miles de libros y comparte tus favoritos con la comunidad"
-                type: "info"
-                targetAudience: "new_users"
-                createdAt: "2024-10-06T10:00:00Z"
-                updatedAt: "2024-10-06T10:00:00Z"
-                isDeleted: false
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -1023,7 +688,6 @@ paths:
           schema:
             type: string
             enum: [alert, info, warning, promo]
-          example: info
         - name: page
           in: path
           required: true
@@ -1048,23 +712,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    title: "Nuevas funcionalidades disponibles"
-                    message: "Ahora puedes crear listas de lectura personalizadas"
-                    type: "info"
-                    targetAudience: "all"
-                    createdAt: "2024-10-05T08:00:00Z"
-                    updatedAt: "2024-10-05T08:00:00Z"
-                    isDeleted: false
-                page: 0
-                size: 20
-                total: 1
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
         '400':
           $ref: '#/components/responses/BadRequestError'
 
@@ -1083,7 +730,6 @@ paths:
           schema:
             type: string
             enum: [all, new_users, admins]
-          example: all
         - name: page
           in: path
           required: true
@@ -1108,31 +754,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedResponseDTO'
-              example:
-                data:
-                  - id: 1
-                    title: "Nuevas funcionalidades disponibles"
-                    message: "Ahora puedes crear listas de lectura personalizadas"
-                    type: "info"
-                    targetAudience: "all"
-                    createdAt: "2024-10-05T08:00:00Z"
-                    updatedAt: "2024-10-05T08:00:00Z"
-                    isDeleted: false
-                  - id: 2
-                    title: "Mantenimiento programado"
-                    message: "El sistema estará en mantenimiento el sábado de 2am a 6am"
-                    type: "warning"
-                    targetAudience: "all"
-                    createdAt: "2024-10-04T15:30:00Z"
-                    updatedAt: "2024-10-04T15:30:00Z"
-                    isDeleted: false
-                page: 0
-                size: 20
-                total: 2
-                currentPage: 0
-                totalPages: 1
-                next: false
-                prev: false
         '400':
           $ref: '#/components/responses/BadRequestError'
 
@@ -1149,7 +770,6 @@ paths:
           schema:
             type: integer
             format: int32
-          example: 1
       responses:
         '200':
           description: Anuncio encontrado
@@ -1157,15 +777,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnnouncementResponseDTO'
-              example:
-                id: 1
-                title: "Nuevas funcionalidades disponibles"
-                message: "Ahora puedes crear listas de lectura personalizadas"
-                type: "info"
-                targetAudience: "all"
-                createdAt: "2024-10-05T08:00:00Z"
-                updatedAt: "2024-10-05T08:00:00Z"
-                isDeleted: false
         '404':
           $ref: '#/components/responses/NotFoundError'
 
@@ -1183,18 +794,12 @@ paths:
           schema:
             type: integer
             format: int32
-          example: 1
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AnnouncementRequestDTO'
-            example:
-              title: "Nuevas funcionalidades disponibles [ACTUALIZADO]"
-              message: "Ahora puedes crear listas de lectura personalizadas y compartirlas con otros usuarios"
-              type: "info"
-              targetAudience: "all"
       responses:
         '200':
           description: Anuncio actualizado
@@ -1226,7 +831,6 @@ paths:
           schema:
             type: integer
             format: int32
-          example: 1
       responses:
         '204':
           description: Anuncio eliminado
