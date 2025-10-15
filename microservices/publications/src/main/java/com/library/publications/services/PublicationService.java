@@ -12,7 +12,7 @@ import com.library.entities.UserProfile;
 import com.library.publications.repositories.CategoryRepository;
 import com.library.publications.repositories.PublicationRepository;
 
-import com.library.publications.exceptions.ResourceNotFoundException;
+import com.library.publications.utils.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,8 +42,10 @@ public class PublicationService {
             // Verificar si existe el perfil de usuario
             UserProfile userProfile = publicationRepository.findUserByIdNotDeleted(dto.getUserProfileId())
                     .orElseThrow(() -> {
-                        logger.error("No se encontró el User Profile con ID " + dto.getUserProfileId());
-                        return new ResourceNotFoundException("User Profile", "ID", dto.getUserProfileId());
+                        logger.error("No se encontró el perfil de usuario con ID " + dto.getUserProfileId());
+                        return new IllegalArgumentException(
+                            String.format("Perfil de usuario no encontrado con ID: %s", dto.getUserProfileId())
+                        );
                     });
 
             Publication publication = new Publication();
@@ -73,7 +74,13 @@ public class PublicationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Publication> publicationsPage = publicationRepository.findAllNotDeleted(pageable);
 
-        return buildPaginatedResponse(publicationsPage);
+        if (publicationsPage.isEmpty()) {
+            logger.warn("No se encontraron publicaciones");
+            throw new IllegalArgumentException("No se encontraron publicaciones");
+        } else
+            logger.info("Se encontraron " + publicationsPage.getTotalElements() + " publicaciones");
+
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -81,7 +88,13 @@ public class PublicationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Publication> publicationsPage = publicationRepository.findByTitleNotDeleted(title, pageable);
 
-        return buildPaginatedResponse(publicationsPage);
+        if (publicationsPage.isEmpty()) {
+            logger.warn("No se encontraron publicaciones con el título " + title);
+            throw new IllegalArgumentException("No se encontraron publicaciones con el título " + title);
+        } else
+            logger.info("Se encontraron " + publicationsPage.getTotalElements() + " publicaciones con el título " + title);
+
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +102,13 @@ public class PublicationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Publication> publicationsPage = publicationRepository.findByDescriptionNotDeleted(desc, pageable);
 
-        return buildPaginatedResponse(publicationsPage);
+        if (publicationsPage.isEmpty()) {
+            logger.warn("No se encontraron publicaciones con la descripción " + desc);
+            throw new IllegalArgumentException("No se encontraron publicaciones con la descripción " + desc);
+        } else
+            logger.info("Se encontraron " + publicationsPage.getTotalElements() + " publicaciones con la descripción " + desc);
+
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -100,7 +119,13 @@ public class PublicationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Publication> publicationsPage = publicationRepository.findByStateNotDeleted(publicationState, pageable);
 
-        return buildPaginatedResponse(publicationsPage);
+        if (publicationsPage.isEmpty()) {
+            logger.warn("No se encontraron publicaciones con el estado " + state);
+            throw new IllegalArgumentException("No se encontraron publicaciones con el estado " + state);
+        } else
+            logger.info("Se encontraron " + publicationsPage.getTotalElements() + " publicaciones con el estado " + state);
+
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -108,7 +133,13 @@ public class PublicationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Publication> publicationsPage = publicationRepository.findByUserNotDeleted(user, pageable);
 
-        return buildPaginatedResponse(publicationsPage);
+        if (publicationsPage.isEmpty()) {
+            logger.warn("No se encontraron publicaciones con el ID de usuario " + user);
+            throw new IllegalArgumentException("No se encontraron publicaciones con el ID de usuario " + user);
+        } else
+            logger.info("Se encontraron " + publicationsPage.getTotalElements() + " publicaciones con el ID de usuario " + user);
+
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -116,7 +147,13 @@ public class PublicationService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Publication> publicationsPage = publicationRepository.findByCategoryNotDeleted(cat, pageable);
 
-        return buildPaginatedResponse(publicationsPage);
+        if (publicationsPage.isEmpty()) {
+            logger.warn("No se encontraron publicaciones con el ID de categoría " + cat);
+            throw new IllegalArgumentException("No se encontraron publicaciones con el ID de categoría " + cat);
+        } else
+            logger.info("Se encontraron " + publicationsPage.getTotalElements() + " publicaciones con el ID de categoría " + cat);
+
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -124,7 +161,9 @@ public class PublicationService {
         Publication publication = publicationRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la publicación con ID " + id);
-                    return new ResourceNotFoundException("Publicación", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Publicación no encontrada con ID: %s", id)
+                    );
                 });
 
         return modelMapper.map(publication, PublicationResponseDTO.class);
@@ -135,14 +174,18 @@ public class PublicationService {
         Publication publication = publicationRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la publicación con ID " + id);
-                    return new ResourceNotFoundException("Publicación", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Publicación no encontrada con ID: %s", id)
+                    );
                 });
 
         // Verificar si existe el perfil de usuario
         UserProfile userProfile = publicationRepository.findUserByIdNotDeleted(dto.getUserProfileId())
                 .orElseThrow(() -> {
-                    logger.error("No se encontró el User Profile con ID " + dto.getUserProfileId());
-                    return new ResourceNotFoundException("User Profile", "ID", dto.getUserProfileId());
+                    logger.error("No se encontró el perfil de usuario con ID " + dto.getUserProfileId());
+                    return new IllegalArgumentException(
+                        String.format("Perfil de usuario no encontrado con ID: %s", dto.getUserProfileId())
+                    );
                 });
 
         publication.setUserProfile(userProfile);
@@ -166,7 +209,9 @@ public class PublicationService {
         Publication publication = publicationRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la publicación con ID " + id);
-                    return new ResourceNotFoundException("Publicación", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Publicación no encontrada con ID: %s", id)
+                    );
                 });
 
         // Soft delete (borrado lógico)
@@ -180,7 +225,9 @@ public class PublicationService {
         Publication publication = publicationRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la publicación con ID " + id);
-                    return new ResourceNotFoundException("Publicación", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Publicación no encontrada con ID: %s", id)
+                    );
                 });
 
         publication.setState(PublicationState.APPROVED);
@@ -195,7 +242,9 @@ public class PublicationService {
         Publication publication = publicationRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la publicación con ID " + id);
-                    return new ResourceNotFoundException("Publicación", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Publicación no encontrada con ID: %s", id)
+                    );
                 });
 
         publication.setState(PublicationState.REJECTED);
@@ -203,24 +252,5 @@ public class PublicationService {
 
         Publication updated = publicationRepository.save(publication);
         return modelMapper.map(updated, PublicationResponseDTO.class);
-    }
-
-    // Método auxiliar para construir respuesta paginada
-    private PaginatedResponseDTO buildPaginatedResponse(Page<Publication> page) {
-        PaginatedResponseDTO response = new PaginatedResponseDTO();
-
-        List<PublicationResponseDTO> data = page.getContent().stream()
-                .map(pub -> modelMapper.map(pub, PublicationResponseDTO.class))
-                .toList();
-
-        response.setData(new ArrayList<>(data));
-        response.setPageSize(page.getSize());
-        response.setTotalItems((int) page.getTotalElements());
-        response.setCurrentPage(page.getNumber());
-        response.setTotalPages(page.getTotalPages());
-        response.setPrev(page.hasPrevious());
-        response.setNext(page.hasNext());
-
-        return response;
     }
 }

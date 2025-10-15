@@ -12,7 +12,7 @@ export function useCategories() {
 
     try {
       const response = await categoriesAPI.getAll();
-      categories.value = response.data || [];
+      categories.value = response.data.data || [];
     } catch (err) {
       error.value = err.message || 'Error al cargar categorías';
       console.error('Error fetching categories:', err);

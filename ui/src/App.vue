@@ -1,9 +1,10 @@
 <template>
+  <Topbar />
+
   <div class="layout">
     <Sidebar />
 
     <div class="main">
-      <Topbar />
 
       <div class="content">
         <h2>Explorar Publicaciones</h2>

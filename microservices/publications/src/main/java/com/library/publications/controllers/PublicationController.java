@@ -1,8 +1,10 @@
 package com.library.publications.controllers;
 
-import com.library.dtos.PaginatedResponseDTO;
+import com.library.publications.api.PublicationsApi;
+
 import com.library.dtos.PublicationRequestDTO;
 import com.library.dtos.PublicationResponseDTO;
+import com.library.dtos.PaginatedResponseDTO;
 
 import com.library.publications.services.PublicationService;
 
@@ -12,120 +14,78 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/publications")
-public class PublicationController {
+public class PublicationController implements PublicationsApi {
     @Autowired
     private PublicationService publicationService;
 
-    @PostMapping
-    public ResponseEntity<PublicationResponseDTO> create(@RequestBody PublicationRequestDTO dto) {
+    @Override
+    public ResponseEntity<PublicationResponseDTO> createPublication(PublicationRequestDTO dto) {
         PublicationResponseDTO created = publicationService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping({"/page/{page}/size/{size}", "/page/{page}", "/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginated(
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO publications = publicationService.getPaginated(pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getAllPublications(Integer page, Integer size) {
+        PaginatedResponseDTO publications = publicationService.getPaginated(page, size);
         return ResponseEntity.ok(publications);
     }
 
-    @GetMapping({"/title/{title}/page/{page}/size/{size}", "/title/{title}/page/{page}", "/title/{title}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByTitle(
-            @PathVariable String title,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO publications = publicationService.getPaginatedByTitle(title, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getPublicationsByTitle(String title, Integer page, Integer size) {
+        PaginatedResponseDTO publications = publicationService.getPaginatedByTitle(title, page, size);
         return ResponseEntity.ok(publications);
     }
 
-    @GetMapping({"/description/{desc}/page/{page}/size/{size}", "/description/{desc}/page/{page}", "/description/{desc}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByDescription(
-            @PathVariable String desc,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO publications = publicationService.getPaginatedByDescription(desc, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getPublicationsByDescription(String desc, Integer page, Integer size) {
+        PaginatedResponseDTO publications = publicationService.getPaginatedByDescription(desc, page, size);
         return ResponseEntity.ok(publications);
     }
 
-    @GetMapping({"/state/{state}/page/{page}/size/{size}", "/state/{state}/page/{page}", "/state/{state}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByState(
-            @PathVariable String state,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO publications = publicationService.getPaginatedByState(state, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getPublicationsByState(String state, Integer page, Integer size) {
+        PaginatedResponseDTO publications = publicationService.getPaginatedByState(state, page, size);
         return ResponseEntity.ok(publications);
     }
 
-    @GetMapping({"/user/{user}/page/{page}/size/{size}", "/user/{user}/page/{page}", "/user/{user}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByUser(
-            @PathVariable Integer user,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO publications = publicationService.getPaginatedByUser(user, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getPublicationsByUser(Integer user, Integer page, Integer size) {
+        PaginatedResponseDTO publications = publicationService.getPaginatedByUser(user, page, size);
         return ResponseEntity.ok(publications);
     }
 
-    @GetMapping({"/category/{cat}/page/{page}/size/{size}", "/category/{cat}/page/{page}", "/category/{cat}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByCategory(
-            @PathVariable Integer cat,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO publications = publicationService.getPaginatedByCategory(cat, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getPublicationsByCategory(Integer cat, Integer page, Integer size) {
+        PaginatedResponseDTO publications = publicationService.getPaginatedByCategory(cat, page, size);
         return ResponseEntity.ok(publications);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PublicationResponseDTO> getById(@PathVariable Integer id) {
+    @Override
+    public ResponseEntity<PublicationResponseDTO> getPublicationById(Integer id) {
         PublicationResponseDTO publication = publicationService.getById(id);
         return ResponseEntity.ok(publication);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PublicationResponseDTO> update(@PathVariable Integer id, @RequestBody PublicationRequestDTO dto) {
+    @Override
+    public ResponseEntity<PublicationResponseDTO> updatePublication(Integer id, PublicationRequestDTO dto) {
         PublicationResponseDTO updated = publicationService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    @Override
+    public ResponseEntity<Void> deletePublication(Integer id) {
         publicationService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/approve")
-    public ResponseEntity<PublicationResponseDTO> approve(@PathVariable Integer id) {
+    @Override
+    public ResponseEntity<PublicationResponseDTO> approvePublication(Integer id) {
         PublicationResponseDTO approved = publicationService.approve(id);
         return ResponseEntity.ok(approved);
     }
 
-    @PatchMapping("/{id}/reject")
-    public ResponseEntity<PublicationResponseDTO> reject(@PathVariable Integer id) {
+    @Override
+    public ResponseEntity<PublicationResponseDTO> rejectPublication(Integer id) {
         PublicationResponseDTO rejected = publicationService.reject(id);
         return ResponseEntity.ok(rejected);
     }
