@@ -222,123 +222,62 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/AuthorResponseDTO'
 
-  /authors/page/{page}:
+  /authors/book/{bookId}/fullname/{fullname}/birthdate/{min}/{max}/nationality/{nationality}/page/{page}:
     get:
       tags: [Authors]
-      summary: Obtener todos los autores
-      operationId: getAllAuthors
+      summary: Obtener autores con manejo de filtros opcionales
+      description: Busca autores aplicando filtros opcionales
+      operationId: getAuthorsByFilters
       parameters:
-        - name: page
+        - name: bookId
           in: path
           required: true
+          description: ID del libro. Use 0 para omitir este filtro
           schema:
             type: integer
             format: int32
-      responses:
-        '200':
-          description: Lista de autores
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
-
-  /authors/fullname/{fullName}/page/{page}:
-    get:
-      tags: [Authors]
-      summary: Obtener autores por nombre completo
-      operationId: getAuthorsByFullName
-      parameters:
-        - name: fullName
+          example: '0'
+        - name: fullname
           in: path
           required: true
+          description: Nombre completo del autor (búsqueda parcial). Use "-" para omitir este filtro
           schema:
             type: string
-        - name: page
+          example: '-'
+        - name: min
           in: path
           required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de autores filtrados por nombre completo
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
-
-  /authors/birthdate/{birthdate}/page/{page}:
-    get:
-      tags: [Authors]
-      summary: Obtener autores por fecha de nacimiento
-      operationId: getAuthorsByBirthdate
-      parameters:
-        - name: birthdate
-          in: path
-          required: true
+          description: Fecha mínima de nacimiento en formato AAAA-MM-DD. Use "0000-01-01" para omitir este filtro
           schema:
             type: string
             format: date
-        - name: page
+          example: '0000-01-01'
+        - name: max
           in: path
           required: true
+          description: Fecha máxima de nacimiento en formato AAAA-MM-DD. Use "0000-01-01" para omitir este filtro
           schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de autores filtrados por fecha de nacimiento
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
-
-  /authors/nationality/{nationality}/page/{page}:
-    get:
-      tags: [Authors]
-      summary: Obtener autores por nacionalidad
-      operationId: getAuthorsByNationality
-      parameters:
+            type: string
+            format: date
+          example: '0000-01-01'
         - name: nationality
           in: path
           required: true
+          description: Nacionalidad del autor (búsqueda parcial). Use "-" para omitir este filtro
           schema:
             type: string
+          example: '-'
         - name: page
           in: path
           required: true
+          description: Número de página (comienza en 0)
           schema:
             type: integer
             format: int32
+          example: '0'
       responses:
         '200':
-          description: Lista de autores filtrados por la nacionalidad
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedAuthorResponseDTO'
-
-  /authors/book/{id}/page/{page}:
-    get:
-      tags: [Authors]
-      summary: Obtener autores de un libro
-      operationId: getAuthorsByBookId
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de autores de un libro
+          description: Lista paginada de autores que cumplen los filtros
           content:
             application/json:
               schema:

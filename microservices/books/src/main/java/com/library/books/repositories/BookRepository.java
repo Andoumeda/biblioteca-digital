@@ -46,23 +46,4 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
      * Buscar libro por ID que no esté eliminado
      */
     Optional<Book> findByIdAndIsDeletedFalse(Integer id);
-
-    /**
-     * Verificar si existe el autor con la id dada
-     */
-    boolean existsByAuthorsIdAndIsDeletedFalse(Integer authorId);
-
-    /**
-     * Verificar si existe una publicación por ID (consulta personalizada)
-     */
-    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
-            "FROM Publication p " +
-            "WHERE p.id = :publicationId AND p.isDeleted = false")
-    boolean existsPublicationByIdAndIsDeletedFalse(@Param("publicationId") Integer publicationId);
-
-    /**
-     * Verificar si existe un autor por ID (consulta personalizada)
-     */
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Author a WHERE a.id = :authorId AND a.isDeleted = false")
-    boolean existsAuthorByIdAndIsDeletedFalse(@Param("authorId") Integer authorId);
 }
