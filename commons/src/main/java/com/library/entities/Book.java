@@ -31,17 +31,7 @@ public class Book extends BaseEntity {
     @Column(length = 255)
     private String coverImg;
 
-    @Column(nullable = false)
-    @Min(1)
-    @Max(2000)
-    private Integer numPages;
-
-    @Column(nullable = false)
-    @Min(1)
-    @Max(100000000) // Máximo 100 MB permitido, 100.000.000 bytes
-    private Integer fileSize; // representado en bytes
-
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "book_authors",
             joinColumns = @JoinColumn(name = "book_id"),
