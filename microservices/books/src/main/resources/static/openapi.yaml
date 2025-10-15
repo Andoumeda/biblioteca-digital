@@ -34,6 +34,13 @@ paths:
           application/json:
             schema:
               $ref: './models/openapi.yaml#/components/schemas/BookRequestDTO'
+            example:
+              publicationId: 1
+              title: "Cien Años de Soledad"
+              description: "Novela del escritor colombiano Gabriel García Márquez, publicada en 1967. Es una obra emblemática del realismo mágico y narra la historia de la familia Buendía a lo largo de varias generaciones en el pueblo ficticio de Macondo."
+              bookUrl: "http://example.com/cien-anos-de-soledad.pdf"
+              coverImg: "http://example.com/cien-anos-de-soledad.jpg"
+              authorIds: [1, 2]
       responses:
         '201':
           description: Libro creado
@@ -178,6 +185,13 @@ paths:
           application/json:
             schema:
               $ref: './models/openapi.yaml#/components/schemas/BookRequestDTO'
+            example:
+              publicationId: 1
+              title: "Cien Años de Soledad - Edición Actualizada"
+              description: "Novela del escritor colombiano Gabriel García Márquez, publicada en 1967. Es una obra emblemática del realismo mágico y narra la historia de la familia Buendía a lo largo de varias generaciones en el pueblo ficticio de Macondo."
+              bookUrl: "http://example.com/cien-anos-de-soledad.pdf"
+              coverImg: "http://example.com/cien-anos-de-soledad.jpg"
+              authorIds: [1, 2, 3]
       responses:
         '200':
           description: Libro actualizado
@@ -214,6 +228,11 @@ paths:
           application/json:
             schema:
               $ref: './models/openapi.yaml#/components/schemas/AuthorRequestDTO'
+            example:
+              fullName: "Miguel de Cervantes Saavedra"
+              bio: "Escritor español, autor de 'Don Quijote'. Nació en Alcalá de Henares."
+              birthDate: "1450-10-04"
+              nationality: "Española"
       responses:
         '201':
           description: Autor creado
@@ -371,104 +390,62 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/RatingResponseDTO'
+              example:
+                userProfileId: 10
+                bookId: 1
+                valoration: 5
+                comment: "Excelente libro, muy recomendable para todos los amantes de la literatura."
 
-  /ratings/page/{page}:
+  /ratings/book/{bookId}/userprofile/{userProfileId}/valoration/{min}/{max}/page/{page}:
     get:
       tags: [Ratings]
-      summary: Obtener todas las valoraciones
-      operationId: getAllRatings
+      summary: Obtener valoraciones con manejo de filtros opcionales
+      description: Busca valoraciones aplicando filtros opcionales
+      operationId: getRatingsByFilters
       parameters:
-        - name: page
+        - name: bookId
           in: path
           required: true
+          description: ID del libro. Use 0 para omitir este filtro
           schema:
             type: integer
             format: int32
-      responses:
-        '200':
-          description: Lista de valoraciones
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
-
-  /ratings/valoration/{min}/{max}/page/{page}:
-    get:
-      tags: [Ratings]
-      summary: Obtener valoraciones por rango de puntuación
-      operationId: getRatingsByScoreRange
-      parameters:
-        - name: min
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: max
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Valoraciones filtradas por puntuación
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
-
-  /ratings/userprofile/{userProfileId}/page/{page}:
-    get:
-      tags: [Ratings]
-      summary: Obtener valoraciones de un usuario
-      operationId: getRatingsByUserProfileId
-      parameters:
+          example: 0
         - name: userProfileId
           in: path
           required: true
+          description: ID del perfil de usuario. Use 0 para omitir este filtro
           schema:
             type: integer
             format: int32
+          example: 0
+        - name: min
+          in: path
+          required: true
+          description: Valoración mínima (1-5). Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: max
+          in: path
+          required: true
+          description: Valoración máxima (1-5). Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
         - name: page
           in: path
           required: true
+          description: Número de página (comienza en 0)
           schema:
             type: integer
             format: int32
+          example: 0
       responses:
         '200':
-          description: Lista de valoraciones de un usuario
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedRatingResponseDTO'
-
-  /ratings/book/{id}/page/{page}:
-    get:
-      tags: [Ratings]
-      summary: Obtener valoraciones de un libro
-      operationId: getRatingsByBookId
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de valoraciones de un libro
+          description: Lista paginada de valoraciones que cumplen los filtros
           content:
             application/json:
               schema:
@@ -509,16 +486,19 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              description: RatingRequestDTO
+              $ref: './models/openapi.yaml#/components/schemas/RatingRequestDTO'
+            example:
+              userProfileId: 10
+              bookId: 1
+              valoration: 4
+              comment: "Muy buen libro, aunque tiene algunas partes lentas. En general lo recomiendo."
       responses:
         '200':
           description: Valoración actualizada
           content:
             application/json:
               schema:
-                type: object
-                description: RatingResponseDTO
+                $ref: './models/openapi.yaml#/components/schemas/RatingResponseDTO'
     delete:
       tags: [Ratings]
       summary: Eliminar valoración (soft delete)

@@ -367,11 +367,6 @@ components:
         - $ref: '#/components/schemas/BaseDTO'
         - $ref: '#/components/schemas/RatingRequestDTO'
         - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            book:
-              $ref: '#/components/schemas/BookResponseDTO'
 
     PaginatedResponseDTO:
       type: object
