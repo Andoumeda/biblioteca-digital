@@ -111,7 +111,7 @@
         >
           <div class="featured-image">
             <img
-              :src="publication.coverImage || '/programming-book-cover.png'"
+              :src="publication.coverImage || '/programming-book-cover.jpg'"
               :alt="publication.title"
               @error="handleImageError"
             />
@@ -202,6 +202,8 @@
 <script>
 import { usePublicationsStore } from '../stores/publicationsStore';
 import { useFavoritesStore } from '../stores/favorites';
+import { useUsersStore } from '../stores/users';
+import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -211,12 +213,14 @@ export default {
     const router = useRouter();
     const publicationsStore = usePublicationsStore();
     const favoritesStore = useFavoritesStore();
+    const usersStore = useUsersStore();
+    const booksStore = useBooksStore();
     const loading = ref(true);
     const showUploadModal = ref(false);
 
     const stats = computed(() => ({
       totalPublications: publicationsStore.totalItems || 0,
-      totalUsers: Math.floor(publicationsStore.totalItems * 0.3) || 0,
+      totalUsers: usersStore.totalUsers || 0,
       totalFavorites: Object.values(favoritesStore.favoritesCount).reduce((a, b) => a + b, 0) || 0,
       totalCategories: publicationsStore.categories?.length || 0
     }));
@@ -227,7 +231,7 @@ export default {
         .map(pub => ({
           ...pub,
           favoritesCount: favoritesStore.getFavoriteCountByPublication(pub.id),
-          coverImage: pub.books?.[0]?.coverImg || '/programming-book-cover.png'
+          coverImage: pub.books?.[0]?.coverImg || '/programming-book-cover.jpg'
         }));
     });
 
@@ -288,15 +292,24 @@ export default {
     };
 
     const handleImageError = (event) => {
-      event.target.src = '/programming-book-cover.png';
+      event.target.src = '/programming-book-cover.jpg';
     };
 
     onMounted(async () => {
       loading.value = true;
-      await publicationsStore.fetchCategories();
-      await publicationsStore.fetchPublications();
-      await favoritesStore.fetchFavorites();
+
+      // Cargar datos en paralelo
+      await Promise.all([
+        publicationsStore.fetchCategories(),
+        publicationsStore.fetchPublications(),
+        favoritesStore.fetchFavorites(),
+        usersStore.fetchUsers(),
+        usersStore.fetchUserProfiles(),
+        booksStore.fetchBooks()
+      ]);
+
       await publicationsStore.fetchCurrentPublicationsFavorites();
+
       loading.value = false;
     });
 

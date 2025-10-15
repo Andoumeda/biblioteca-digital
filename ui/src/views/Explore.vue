@@ -106,7 +106,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              <span>0</span>
+              <span>{{ publication.totalRatings || 0 }}</span>
             </div>
           </div>
 
@@ -162,6 +162,7 @@
 <script>
 import { usePublicationsStore } from '../stores/publicationsStore';
 import { useFavoritesStore } from '../stores/favorites';
+import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref, watch } from 'vue';
 
 export default {
@@ -169,6 +170,7 @@ export default {
   setup() {
     const store = usePublicationsStore();
     const favoritesStore = useFavoritesStore();
+    const booksStore = useBooksStore();
     const searchTerm = ref('');
     const sortBy = ref('trending');
     const currentFilter = ref('all');
@@ -183,12 +185,26 @@ export default {
         return matchesSearch;
       });
 
-      // Add favorites count
-      return pubs.map(pub => ({
-        ...pub,
-        favoritesCount: favoritesStore.getFavoriteCountByPublication(pub.id),
-        coverImage: pub.books?.[0]?.coverImg || '/programming-book-cover.png'
-      }));
+      // Add favorites count and book ratings
+      return pubs.map(pub => {
+        const books = pub.books || [];
+        const totalBooksRating = books.reduce((sum, book) => {
+          const rating = booksStore.getBookRating(book.id);
+          return sum + (rating.average || 0);
+        }, 0);
+        const averageRating = books.length > 0 ? totalBooksRating / books.length : 0;
+
+        return {
+          ...pub,
+          favoritesCount: favoritesStore.getFavoriteCountByPublication(pub.id),
+          coverImage: books[0]?.coverImg || '/programming-book-cover.jpg',
+          averageRating: parseFloat(averageRating.toFixed(1)),
+          totalRatings: books.reduce((sum, book) => {
+            const rating = booksStore.getBookRating(book.id);
+            return sum + (rating.count || 0);
+          }, 0)
+        };
+      });
     });
 
     const sortedPublications = computed(() => {
@@ -198,7 +214,7 @@ export default {
         case 'recent':
           return pubs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         case 'rating':
-          return pubs.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          return pubs.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
         case 'popular':
           return pubs.sort((a, b) => (b.favoritesCount || 0) - (a.favoritesCount || 0));
         case 'trending':
@@ -233,13 +249,26 @@ export default {
     };
 
     const handleImageError = (event) => {
-      event.target.src = '/programming-book-cover.png';
+      event.target.src = '/programming-book-cover.jpg';
     };
 
     const handleFilterChange = async (filter) => {
       currentFilter.value = filter;
       await store.setFilter(filter);
       await store.fetchCurrentPublicationsFavorites();
+      await loadBooksRatings();
+    };
+
+    const loadBooksRatings = async () => {
+      // Obtener todos los IDs de libros de las publicaciones actuales
+      const bookIds = store.publications.flatMap(pub =>
+        (pub.books || []).map(book => book.id)
+      );
+
+      // Cargar ratings de todos los libros
+      if (bookIds.length > 0) {
+        await booksStore.fetchMultipleBookRatings(bookIds);
+      }
     };
 
     // Watch for search changes with debounce
@@ -253,6 +282,7 @@ export default {
           await store.fetchPublications();
         }
         await store.fetchCurrentPublicationsFavorites();
+        await loadBooksRatings();
       }, 500);
     });
 
@@ -260,6 +290,7 @@ export default {
       await store.fetchPublications();
       await favoritesStore.fetchFavorites();
       await store.fetchCurrentPublicationsFavorites();
+      await loadBooksRatings();
     });
 
     return {
