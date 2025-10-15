@@ -1,19 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router';
-//import Home from '../views/Home.vue';
-//import Explore from '../views/Explore.vue';
+import Home from '../src/views/Home.vue';
+import NotFound from '../src/views/NotFound.vue';
 
 const routes = [
   {
     path: '/',
-    props: { msg : 'Welcome to DigiBooks Source' },
     name: 'Home',
     component: Home
   },
   {
-    path: '/explore',
-    props: { msg : 'Explore the Library' },
-    name: 'Explore',
-    component: Explore
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound
   }
 ];
 
