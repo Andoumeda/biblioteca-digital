@@ -38,9 +38,9 @@ export const publicationsAPI = {
 };
 
 export const categoriesAPI = {
-  // Obtener todas las categorías
-  getAll() {
-    return apiClient.get('/categories');
+  // Obtener categorías paginadas
+  getAll(page = 0, size = 20) {
+    return apiClient.get(`/categories/page/${page}/size/${size}`);
   },
 
   // Obtener categoría por ID
@@ -49,8 +49,8 @@ export const categoriesAPI = {
   },
 
   // Buscar por nombre
-  searchByName(name) {
-    return apiClient.get(`/categories/name/${name}`);
+  searchByName(name, page = 0, size = 20) {
+    return apiClient.get(`/categories/name/${name}/page/${page}/size/${size}`);
   },
 
   // Crear categoría

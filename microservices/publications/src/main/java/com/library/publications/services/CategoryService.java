@@ -2,23 +2,26 @@ package com.library.publications.services;
 
 import com.library.dtos.CategoryRequestDTO;
 import com.library.dtos.CategoryResponseDTO;
+import com.library.dtos.PaginatedResponseDTO;
 
 import com.library.entities.Category;
 
 import com.library.publications.repositories.CategoryRepository;
 
-import com.library.publications.exceptions.DuplicateResourceException;
-import com.library.publications.exceptions.ResourceNotFoundException;
+import com.library.publications.utils.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +36,9 @@ public class CategoryService {
             // Validar que no exista una categoría con el mismo nombre
             if (!categoryRepository.findByNameNotDeleted(dto.getName()).isEmpty()) {
                 logger.error("Una categoría ya existe con el nombre " + dto.getName());
-                throw new DuplicateResourceException("Categoría", "nombre", dto.getName());
+                throw new IllegalArgumentException(
+                    String.format("Categoría ya existe con nombre: %s", dto.getName())
+                );
             }
 
             Category category = new Category();
@@ -48,19 +53,31 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryResponseDTO> getAll() {
-        return categoryRepository.findAllNotDeleted()
-                .stream()
-                .map(cat -> modelMapper.map(cat, CategoryResponseDTO.class))
-                .toList();
+    public PaginatedResponseDTO getPaginated(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Category> categoriesPage = categoryRepository.findAllNotDeleted(pageable);
+
+        if (categoriesPage.isEmpty()) {
+            logger.warn("No se encontraron categorías");
+            throw new IllegalArgumentException("No se encontraron categorías");
+        } else
+            logger.info("Se encontraron " + categoriesPage.getTotalElements() + " categorías");
+
+        return PaginationUtil.buildPaginatedResponse(categoriesPage, CategoryResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryResponseDTO> getByName(String name) {
-        return categoryRepository.findByNameNotDeleted(name)
-                .stream()
-                .map(cat -> modelMapper.map(cat, CategoryResponseDTO.class))
-                .toList();
+    public PaginatedResponseDTO getPaginatedByName(String name, Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Category> categoriesPage = categoryRepository.findByNameNotDeleted(name, pageable);
+
+        if (categoriesPage.isEmpty()) {
+            logger.warn("No se encontraron categorías con el nombre " + name);
+            throw new IllegalArgumentException("No se encontraron categorías con el nombre " + name);
+        } else
+            logger.info("Se encontraron " + categoriesPage.getTotalElements() + " categorías con el nombre " + name);
+
+        return PaginationUtil.buildPaginatedResponse(categoriesPage, CategoryResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -68,7 +85,9 @@ public class CategoryService {
         Category category = categoryRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la categoría con ID " + id);
-                    return new ResourceNotFoundException("Categoría", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Categoría no encontrada con ID: %s", id)
+                    );
                 });
 
         return modelMapper.map(category, CategoryResponseDTO.class);
@@ -79,13 +98,17 @@ public class CategoryService {
         Category category = categoryRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la categoría con ID " + id);
-                    return new ResourceNotFoundException("Categoría", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Categoría no encontrada con ID: %s", id)
+                    );
                 });
 
         // Cambiar sólo si no es nombre duplicado
         if (dto.getName() == null || dto.getName().equals(category.getName()) || !categoryRepository.findByNameNotDeleted(dto.getName()).isEmpty()) {
             logger.error("Una categoría ya existe con el nombre " + dto.getName());
-            throw new DuplicateResourceException("Categoría", "nombre", dto.getName());
+            throw new IllegalArgumentException(
+                String.format("Categoría ya existe con nombre: %s", dto.getName())
+            );
         }
 
         category.setName(dto.getName());
@@ -100,7 +123,9 @@ public class CategoryService {
         Category category = categoryRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró la categoría con ID " + id);
-                    return new ResourceNotFoundException("Categoría", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Categoría no encontrada con ID: %s", id)
+                    );
                 });
 
         // Soft delete (borrado lógico)

@@ -153,7 +153,11 @@ export const usePublicationsStore = defineStore('publications', {
     async fetchCategories() {
       try {
         const response = await categoriesAPI.getAll();
-        this.categories = response.data || [];
+        this.categories = response.data.data || [];
+        this.currentPage = response.data.currentPage || 0;
+        this.pageSize = response.data.pageSize || size;
+        this.totalPages = response.data.totalPages || 0;
+        this.totalItems = response.data.totalItems || 0;
       } catch (error) {
         console.error('Error fetching categories:', error);
       }

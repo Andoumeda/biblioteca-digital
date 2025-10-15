@@ -1,5 +1,7 @@
 package com.library.publications.controllers;
 
+import com.library.publications.api.FavoritesApi;
+
 import com.library.dtos.FavoriteRequestDTO;
 import com.library.dtos.FavoriteResponseDTO;
 import com.library.dtos.PaginatedResponseDTO;
@@ -12,63 +14,42 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/favorites")
-public class FavoriteController {
+public class FavoriteController implements FavoritesApi {
     @Autowired
     private FavoriteService favoriteService;
 
-    @PostMapping
-    public ResponseEntity<FavoriteResponseDTO> add(@RequestBody FavoriteRequestDTO dto) {
+    @Override
+    public ResponseEntity<FavoriteResponseDTO> addFavorite(FavoriteRequestDTO dto) {
         FavoriteResponseDTO created = favoriteService.add(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping({"/page/{page}/size/{size}", "/page/{page}", "/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginated(
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO favorites = favoriteService.getPaginated(pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getAllFavorites(Integer page, Integer size) {
+        PaginatedResponseDTO favorites = favoriteService.getPaginated(page, size);
         return ResponseEntity.ok(favorites);
     }
 
-    @GetMapping({"/user/{user}/page/{page}/size/{size}", "/user/{user}/page/{page}", "/user/{user}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByUser(
-            @PathVariable Integer user,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO favorites = favoriteService.getPaginatedByUser(user, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getFavoritesByUser(Integer user, Integer page, Integer size) {
+        PaginatedResponseDTO favorites = favoriteService.getPaginatedByUser(user, page, size);
         return ResponseEntity.ok(favorites);
     }
 
-    @GetMapping({"/publication/{pub}/page/{page}/size/{size}", "/publication/{pub}/page/{page}", "/publication/{pub}/size/{size}"})
-    public ResponseEntity<PaginatedResponseDTO> getPaginatedByPublication(
-            @PathVariable Integer pub,
-            @PathVariable(required = false) Integer page,
-            @PathVariable(required = false) Integer size) {
-
-        int pageNum = page != null ? page : 0;
-        int sizeNum = size != null ? size : 20;
-
-        PaginatedResponseDTO favorites = favoriteService.getPaginatedByPublication(pub, pageNum, sizeNum);
+    @Override
+    public ResponseEntity<PaginatedResponseDTO> getFavoritesByPublication(Integer pub, Integer page, Integer size) {
+        PaginatedResponseDTO favorites = favoriteService.getPaginatedByPublication(pub, page, size);
         return ResponseEntity.ok(favorites);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<FavoriteResponseDTO> getById(@PathVariable Integer id) {
+    @Override
+    public ResponseEntity<FavoriteResponseDTO> getFavoriteById(Integer id) {
         FavoriteResponseDTO favorite = favoriteService.getById(id);
         return ResponseEntity.ok(favorite);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remove(@PathVariable Integer id) {
+    @Override
+    public ResponseEntity<Void> removeFavorite(Integer id) {
         favoriteService.remove(id);
         return ResponseEntity.noContent().build();
     }

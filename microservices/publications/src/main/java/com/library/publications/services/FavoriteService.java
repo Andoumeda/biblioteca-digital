@@ -11,8 +11,7 @@ import com.library.entities.UserProfile;
 import com.library.publications.repositories.FavoriteRepository;
 import com.library.publications.repositories.PublicationRepository;
 
-import com.library.publications.exceptions.DuplicateResourceException;
-import com.library.publications.exceptions.ResourceNotFoundException;
+import com.library.publications.utils.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -26,8 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,21 +40,25 @@ public class FavoriteService {
             // Verificar que no existe ya el favorito
             if (favoriteRepository.findByUserAndPublicationNotDeleted(dto.getUserProfileId(), dto.getPublicationId()).isPresent()) {
                 logger.error("Esta publicación ya está en favoritos");
-                throw new DuplicateResourceException("Esta publicación ya está en favoritos");
+                throw new IllegalArgumentException("Esta publicación ya está en favoritos");
             }
 
             // Verificar si existe el perfil de usuario
             UserProfile userProfile = favoriteRepository.findUserByIdNotDeleted(dto.getUserProfileId())
                     .orElseThrow(() -> {
-                        logger.error("No se encontró el User Profile con ID " + dto.getUserProfileId());
-                        return new ResourceNotFoundException("User Profile", "ID", dto.getUserProfileId());
+                        logger.error("No se encontró el perfil de usuario con ID " + dto.getUserProfileId());
+                        return new IllegalArgumentException(
+                            String.format("Perfil de usuario no encontrado con ID: %s", dto.getUserProfileId())
+                        );
                     });
 
             // Verificar si existe la publicación
             Publication publication = publicationRepository.findByIdNotDeleted(dto.getPublicationId())
                     .orElseThrow(() -> {
-                        logger.error("No se encontró la Publicación con ID " + dto.getPublicationId());
-                        return new ResourceNotFoundException("Publicación", "ID", dto.getPublicationId());
+                        logger.error("No se encontró la publicación con ID " + dto.getPublicationId());
+                        return new IllegalArgumentException(
+                            String.format("Publicación no encontrada con ID: %s", dto.getPublicationId())
+                        );
                     });
 
             Favorite favorite = new Favorite();
@@ -76,17 +77,29 @@ public class FavoriteService {
     @Transactional(readOnly = true)
     public PaginatedResponseDTO getPaginated(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Favorite> favoritePage = favoriteRepository.findAllNotDeleted(pageable);
+        Page<Favorite> favoritesPage = favoriteRepository.findAllNotDeleted(pageable);
 
-        return buildPaginatedResponse(favoritePage);
+        if (favoritesPage.isEmpty()) {
+            logger.warn("No se encontraron favoritos");
+            throw new IllegalArgumentException("No se encontraron favoritos");
+        } else
+            logger.info("Se encontraron " + favoritesPage.getTotalElements() + " favoritos");
+
+        return PaginationUtil.buildPaginatedResponse(favoritesPage, FavoriteResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
     public PaginatedResponseDTO getPaginatedByUser(Integer user, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Favorite> favoritePage = favoriteRepository.findByUserNotDeleted(user, pageable);
+        Page<Favorite> favoritesPage = favoriteRepository.findByUserNotDeleted(user, pageable);
 
-        return buildPaginatedResponse(favoritePage);
+        if (favoritesPage.isEmpty()) {
+            logger.warn("No se encontraron favoritos con el ID de usuario " + user);
+            throw new IllegalArgumentException("No se encontraron favoritos con el ID de usuario " + user);
+        } else
+            logger.info("Se encontraron " + favoritesPage.getTotalElements() + " favoritos con el ID de usuario " + user);
+
+        return PaginationUtil.buildPaginatedResponse(favoritesPage, FavoriteResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -94,7 +107,13 @@ public class FavoriteService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Favorite> favoritePage = favoriteRepository.findByPublicationNotDeleted(pub, pageable);
 
-        return buildPaginatedResponse(favoritePage);
+        if (favoritePage.isEmpty()) {
+            logger.warn("No se encontraron favoritos con el ID de publicación " + pub);
+            throw new IllegalArgumentException("No se encontraron favoritos con el ID de publicación " + pub);
+        } else
+            logger.info("Se encontraron " + favoritePage.getTotalElements() + " favoritos con el ID de publicación " + pub);
+
+        return PaginationUtil.buildPaginatedResponse(favoritePage, FavoriteResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -102,7 +121,9 @@ public class FavoriteService {
         Favorite favorite = favoriteRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró el favorito con ID " + id);
-                    return new ResourceNotFoundException("Favorito", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Favorito no encontrado con ID: %s", id)
+                    );
                 });
 
         return modelMapper.map(favorite, FavoriteResponseDTO.class);
@@ -113,31 +134,14 @@ public class FavoriteService {
         Favorite favorite = favoriteRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró el favorito con ID " + id);
-                    return new ResourceNotFoundException("Favorito", "ID", id);
+                    return new IllegalArgumentException(
+                        String.format("Favorito no encontrado con ID: %s", id)
+                    );
                 });
 
         // Soft delete (borrado lógico)
         favorite.setIsDeleted(true);
         favorite.setUpdatedAt(LocalDateTime.now());
         favoriteRepository.save(favorite);
-    }
-
-    // Método auxiliar para construir respuesta paginada
-    private PaginatedResponseDTO buildPaginatedResponse(Page<Favorite> page) {
-        PaginatedResponseDTO response = new PaginatedResponseDTO();
-
-        List<FavoriteResponseDTO> data = page.getContent().stream()
-                .map(fav -> modelMapper.map(fav, FavoriteResponseDTO.class))
-                .toList();
-
-        response.setData(new ArrayList<>(data));
-        response.setPageSize(page.getSize());
-        response.setTotalItems((int) page.getTotalElements());
-        response.setCurrentPage(page.getNumber());
-        response.setTotalPages(page.getTotalPages());
-        response.setPrev(page.hasPrevious());
-        response.setNext(page.hasNext());
-
-        return response;
     }
 }
