@@ -106,7 +106,7 @@ public class RatingService {
             throw new BadRequestException("El número de página debe ser mayor o igual a 0");
         }
 
-        // Normalizar valores especiales (0 = null para filtros opcionales)
+        // Normalizar valores especiales
         Integer normalizedBookId = NormalizeParameter.normalizeInteger(bookId);
         Integer normalizedUserProfileId = NormalizeParameter.normalizeInteger(userProfileId);
         Integer normalizedMinValoration = NormalizeParameter.normalizeInteger(minValoration);
@@ -127,12 +127,14 @@ public class RatingService {
             throw new BadRequestException("La valoración máxima debe estar entre 1 y 5");
         }
 
-        // Verificar que el libro exista en la DB
-        if (normalizedBookId != null && !bookRepository.existsById(normalizedBookId)) {
+        // Verificar si la id del libro es positivo y si existe en la DB
+        if (normalizedBookId != null && normalizedBookId < 0) {
+            throw new BadRequestException("El ID del libro debe ser un número positivo");
+        } else if (normalizedBookId != null && !bookRepository.existsById(normalizedBookId)) {
             throw new ResourceNotFoundException("Libro", "id", normalizedBookId);
         }
 
-        // Verificar que el perfil de usuario exista en la DB
+        // Verificar si la id del perfil es positivo y si existe en la DB
         if (normalizedUserProfileId != null && normalizedUserProfileId < 0) {
             throw new BadRequestException("El ID del perfil de usuario debe ser un número positivo");
         } else if (normalizedUserProfileId != null && !ratingRepository.existsUserProfileByIdAndIsDeletedFalse(normalizedUserProfileId)) {

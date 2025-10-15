@@ -24,30 +24,10 @@ public class BooksController implements BooksApi {
     }
 
     @Override
-    public ResponseEntity<PaginatedBookResponseDTO> getAllBooks(Integer page) {
-        log.info("REST request to get all Books - page: {}", page);
-        PaginatedBookResponseDTO response = bookService.getAllBooks(page);
-        return ResponseEntity.ok(response);
-    }
-
-    @Override
-    public ResponseEntity<PaginatedBookResponseDTO> getBooksByTitle(String title, Integer page) {
-        log.info("REST request to get Books by title: {} - page: {}", title, page);
-        PaginatedBookResponseDTO response = bookService.getBooksByTitle(title, page);
-        return ResponseEntity.ok(response);
-    }
-
-    @Override
-    public ResponseEntity<PaginatedBookResponseDTO> getBooksByPublicationId(Integer publicationId, Integer page) {
-        log.info("REST request to get Books by Publication ID: {} - page: {}", publicationId, page);
-        PaginatedBookResponseDTO response = bookService.getBooksByPublicationId(publicationId, page);
-        return ResponseEntity.ok(response);
-    }
-
-    @Override
-    public ResponseEntity<PaginatedBookResponseDTO> getBooksByAuthorId(Integer id, Integer page) {
-        log.info("REST request to get Books by Author ID: {} - page: {}", id, page);
-        PaginatedBookResponseDTO response = bookService.getBooksByAuthorId(id, page);
+    public ResponseEntity<PaginatedBookResponseDTO> getBooksByFilters(String title, Integer publicationId, Integer authorId, Integer page) {
+        log.info("REST request to get books by filters - title: {}, publicationId: {}, authorId: {}, page: {}",
+                title, publicationId, authorId, page);
+        PaginatedBookResponseDTO response = bookService.getBooksByFilters(title, publicationId, authorId, page);
         return ResponseEntity.ok(response);
     }
 

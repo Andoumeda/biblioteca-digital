@@ -49,99 +49,47 @@ paths:
               schema:
                 $ref: './models/openapi.yaml#/components/schemas/BookResponseDTO'
 
-  /books/page/{page}:
+  /books/publication/{publicationId}/author/{authorId}/title/{title}/page/{page}:
     get:
       tags: [Books]
-      summary: Obtener todos los libros
-      operationId: getAllBooks
-      parameters:
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de libros
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
-
-  /books/title/{title}/page/{page}:
-    get:
-      tags: [Books]
-      summary: Obtener libros por título
-      operationId: getBooksByTitle
+      summary: Obtener libros con manejo de filtros opcionales
+      description: Busca libros aplicando filtros opcionales
+      operationId: getBooksByFilters
       parameters:
         - name: title
           in: path
           required: true
+          description: Título del libro. Use "-" para omitir este filtro
           schema:
             type: string
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de libros filtrados por título
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
-
-  /books/publication/{publicationId}/page/{page}:
-    get:
-      tags: [Books]
-      summary: Obtener libros de una publicación
-      operationId: getBooksByPublicationId
-      parameters:
+          example: '-'
         - name: publicationId
           in: path
           required: true
+          description: ID de la publicación. Use 0 para omitir este filtro
           schema:
             type: integer
             format: int32
-          description: ID de la publicación
+          example: 0
+        - name: authorId
+          in: path
+          required: true
+          description: ID del autor. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
         - name: page
           in: path
           required: true
+          description: Número de página (comienza en 0)
           schema:
             type: integer
             format: int32
+          example: 0
       responses:
         '200':
-          description: Lista de libros de una publicación
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookResponseDTO'
-
-  /books/author/{id}/page/{page}:
-    get:
-      tags: [Books]
-      summary: Obtener los libros de un autor
-      operationId: getBooksByAuthorId
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: page
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Lista de libros de un autor
+          description: Lista paginada de libros que cumplen los filtros
           content:
             application/json:
               schema:

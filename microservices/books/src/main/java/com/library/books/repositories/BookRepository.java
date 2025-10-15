@@ -16,34 +16,31 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
 
     /**
      * Buscar publication por ID que no esté eliminado
-      */
+     */
     @Query("SELECT p FROM Publication p WHERE p.id = :publicationId AND p.isDeleted = false")
     Optional<Publication> findPublicationByIdAndIsDeletedFalse(@Param("publicationId") Integer publicationId);
 
     /**
-     * Buscar todos los libros que no estén eliminados
+     * Verificar si existe un UserProfile por su ID y no está eliminado
      */
-    Page<Book> findByIsDeletedFalse(Pageable pageable);
-
-    /**
-     * Buscar libros por título (búsqueda parcial, case insensitive)
-     */
-    @Query("SELECT b FROM Book b WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%')) AND b.isDeleted = false")
-    Page<Book> findByTitleContainingIgnoreCaseAndIsDeletedFalse(@Param("title") String title, Pageable pageable);
-
-    /**
-     * Buscar libros por publicación
-     */
-    Page<Book> findByPublicationIdAndIsDeletedFalse(Integer publicationId, Pageable pageable);
-
-    /**
-     * Buscar libros por autor
-     */
-    @Query("SELECT b FROM Book b JOIN b.authors a WHERE a.id = :authorId AND b.isDeleted = false")
-    Page<Book> findByAuthorIdAndIsDeletedFalse(@Param("authorId") Integer authorId, Pageable pageable);
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Publication p WHERE p.id = :publicationId AND p.isDeleted = false")
+    boolean existsPublicationByIdAndIsDeletedFalse(@Param("publicationId") Integer publicationId);
 
     /**
      * Buscar libro por ID que no esté eliminado
      */
     Optional<Book> findByIdAndIsDeletedFalse(Integer id);
+
+    /**
+     * Buscar libros por múltiples filtros (título, publicación, autor)
+     */
+    @Query("SELECT DISTINCT b FROM Book b LEFT JOIN b.authors a WHERE " +
+            "(:title IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))) AND " +
+            "(:publicationId IS NULL OR b.publication.id = :publicationId) AND " +
+            "(:authorId IS NULL OR a.id = :authorId) AND " +
+            "b.isDeleted = false")
+    Page<Book> findByFilters(@Param("title") String title,
+                              @Param("publicationId") Integer publicationId,
+                              @Param("authorId") Integer authorId,
+                              Pageable pageable);
 }

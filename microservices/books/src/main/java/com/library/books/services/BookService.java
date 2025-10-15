@@ -1,5 +1,6 @@
 package com.library.books.services;
 
+import com.library.books.utils.NormalizeParameter;
 import com.library.dtos.*;
 import com.library.entities.Author;
 import com.library.entities.Book;
@@ -48,6 +49,16 @@ public class BookService {
             throw new BadRequestException("El título del libro es obligatorio");
         }
 
+        // La URL del libro es obligatoria
+        if (requestDTO.getBookUrl() == null || requestDTO.getBookUrl().trim().isEmpty()) {
+            throw new BadRequestException("La url del libro es obligatoria");
+        }
+
+        // La URL de la portada es obligatoria
+        if (requestDTO.getCoverImg() == null || requestDTO.getCoverImg().trim().isEmpty()) {
+            throw new BadRequestException("La url de portada del libro es obligatoria");
+        }
+
         // La id de publicacion es obligatoria y debe existir en la DB
         if (requestDTO.getPublicationId() == null || requestDTO.getPublicationId() <= 0) {
             throw new BadRequestException("El ID de publicación es obligatorio y debe ser un número positivo");
@@ -55,7 +66,7 @@ public class BookService {
 
         // Verificar que la publicación exista usando consulta personalizada
         publication = bookRepository.findPublicationByIdAndIsDeletedFalse(requestDTO.getPublicationId())
-            .orElseThrow(() -> new BadRequestException("La publicación con ID " + requestDTO.getPublicationId() + " no existe"));
+            .orElseThrow(() -> new ResourceNotFoundException("Publicación", "id", requestDTO.getPublicationId()));
 
         // Las ids de autores son obligatorias y deben existir en la DB
         if (requestDTO.getAuthorIds() == null || requestDTO.getAuthorIds().isEmpty()) {
@@ -68,9 +79,18 @@ public class BookService {
 
             // Usar AuthorRepository para obtener el autor
             Author author = authorRepository.findByIdAndIsDeletedFalse(authorId)
-                    .orElseThrow(() -> new BadRequestException("El autor con ID " + authorId + " no existe"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Autor", "id", authorId));
 
             authors.add(author);
+        }
+
+        // Verificar que los autores no estén repetidos
+        List<Integer> distinctAuthorIds = authors.stream()
+                .map(Author::getId)
+                .distinct()
+                .toList();
+        if (distinctAuthorIds.size() < authors.size()) {
+            throw new BadRequestException("No se pueden asociar autores repetidos al libro");
         }
 
         Book book = new Book();
@@ -92,93 +112,46 @@ public class BookService {
     }
 
     /**
-     * Obtener todos los libros con paginación
+     * Obtener libros con paginación mediante múltiples filtros
      */
     @Transactional(readOnly = true)
-    public PaginatedBookResponseDTO getAllBooks(Integer page) {
-        log.info("Obteniendo todos los libros - página: {}, tamaño: {}", page, paginationConfig.getPageSize());
+    public PaginatedBookResponseDTO getBooksByFilters(String title, Integer publicationId, Integer authorId, Integer page) {
+        log.info("Buscando libros por filtros - título: {}, publicaciónId: {}, autorId: {}, página: {}, tamaño: {}",
+                title, publicationId, authorId, page, paginationConfig.getPageSize());
 
         // Validar parámetro page
         if (page == null || page < 0) {
             throw new BadRequestException("El número de página debe ser mayor o igual a 0");
         }
 
-        Pageable pageable = PageRequest.of(page, paginationConfig.getPageSize());
-        Page<Book> paginatedBook = bookRepository.findByIsDeletedFalse(pageable);
-        
-        return buildPaginatedResponse(paginatedBook);
-    }
+        // Convertir valores especiales a null
+        String normalizedTitle = NormalizeParameter.normalizeString(title);
+        Integer normalizedPublicationId = NormalizeParameter.normalizeInteger(publicationId);
+        Integer normalizedAuthorId = NormalizeParameter.normalizeInteger(authorId);
 
-    /**
-     * Buscar libros por título
-     */
-    @Transactional(readOnly = true)
-    public PaginatedBookResponseDTO getBooksByTitle(String title, Integer page) {
-        log.info("Buscando libros por título: {} - página: {}, tamaño: {}", title, page, paginationConfig.getPageSize());
-
-        // Validar parámetro page
-        if (page == null || page < 0) {
-            throw new BadRequestException("El número de página debe ser mayor o igual a 0");
-        }
-
-        // Título obligatorio
-        if (title == null || title.trim().isEmpty()) {
-            throw new BadRequestException("El título de búsqueda no puede estar vacío");
-        }
-
-        Pageable pageable = PageRequest.of(page, paginationConfig.getPageSize());
-        Page<Book> bookPage = bookRepository.findByTitleContainingIgnoreCaseAndIsDeletedFalse(title, pageable);
-
-        return buildPaginatedResponse(bookPage);
-    }
-
-    /**
-     * Buscar libros por publicación
-     */
-    @Transactional(readOnly = true)
-    public PaginatedBookResponseDTO getBooksByPublicationId(Integer publicationId, Integer page) {
-        log.info("Buscando libros por publicación ID: {} - página: {}, tamaño: {}", publicationId, page, paginationConfig.getPageSize());
-
-        // Validar parámetro page
-        if (page == null || page < 0) {
-            throw new BadRequestException("El número de página debe ser mayor o igual a 0");
-        }
-
-        // Id de publicacion obligatoria y debe ser mayor a cero
-        if (publicationId == null || publicationId <= 0) {
+        // Validar si el ID de publicación es válido y si existe en la DB
+        if (normalizedPublicationId != null && normalizedPublicationId < 0) {
             throw new BadRequestException("El ID de publicación debe ser un número positivo");
+        } else if (normalizedPublicationId != null && !bookRepository.existsPublicationByIdAndIsDeletedFalse(normalizedPublicationId)) {
+            throw new ResourceNotFoundException("Publicación", "id", normalizedPublicationId);
         }
 
-        Pageable pageable = PageRequest.of(page, paginationConfig.getPageSize());
-        Page<Book> bookPage = bookRepository.findByPublicationIdAndIsDeletedFalse(publicationId, pageable);
-
-        return buildPaginatedResponse(bookPage);
-    }
-
-    /**
-     * Buscar libros por autor
-     */
-    @Transactional(readOnly = true)
-    public PaginatedBookResponseDTO getBooksByAuthorId(Integer authorId, Integer page) {
-        log.info("Buscando libros por autor ID: {} - página: {}, tamaño: {}", authorId, page, paginationConfig.getPageSize());
-
-        // Validar parámetro page
-        if (page == null || page < 0) {
-            throw new BadRequestException("El número de página debe ser mayor o igual a 0");
-        }
-
-        // Id de autor obligatoria y debe existir en la DB
-        if (authorId == null || authorId <= 0) {
+        // Validar si el ID de autor es válido y si existe en la DB
+        if (normalizedAuthorId != null && normalizedAuthorId < 0) {
             throw new BadRequestException("El ID de autor debe ser un número positivo");
-        }
-
-        // Verificar que el autor exista
-        if (!authorRepository.existsById(authorId)) {
-            throw new ResourceNotFoundException("Autor", "id", authorId);
+        } else if (normalizedAuthorId != null && !authorRepository.existsById(normalizedAuthorId)) {
+            throw new ResourceNotFoundException("Autor", "id", normalizedAuthorId);
         }
 
         Pageable pageable = PageRequest.of(page, paginationConfig.getPageSize());
-        Page<Book> bookPage = bookRepository.findByAuthorIdAndIsDeletedFalse(authorId, pageable);
+        Page<Book> bookPage = bookRepository.findByFilters(
+                normalizedTitle,
+                normalizedPublicationId,
+                normalizedAuthorId,
+                pageable
+        );
+
+        log.info("Búsqueda por filtros completada. Total de libros encontrados: {}", bookPage.getTotalElements());
 
         return buildPaginatedResponse(bookPage);
     }
@@ -261,6 +234,15 @@ public class BookService {
             authors.add(author);
         }
 
+        // Verificar que los autores no estén repetidos
+        List<Integer> distinctAuthorIds = authors.stream()
+                .map(Author::getId)
+                .distinct()
+                .toList();
+        if (distinctAuthorIds.size() < authors.size()) {
+            throw new BadRequestException("No se pueden asociar autores repetidos al libro");
+        }
+
         book.setPublication(publication);
         book.setTitle(requestDTO.getTitle());
         book.setDescription(requestDTO.getDescription());
@@ -281,10 +263,12 @@ public class BookService {
     public void deleteBook(Integer id) {
         log.info("Eliminando libro con ID: {}", id);
 
+        // Id de libro obligatorio y debe ser positivo
         if (id == null || id <= 0) {
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         }
 
+        // Buscar libro en la DB
         Book book = bookRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", id));
 
@@ -308,12 +292,10 @@ public class BookService {
         dto.setPublicationId(book.getPublication().getId());
 
         // Añadir las ids a la lista "authorsIds" del dto
-        if (!authors.isEmpty()){
+        if (authors != null && !authors.isEmpty()){
             for (Author author : authors){
                 dto.getAuthorIds().add(author.getId());
             }
-        } else {
-            dto.setAuthorIds(null);
         }
 
         if (ratings != null && !ratings.isEmpty()) {
@@ -332,8 +314,8 @@ public class BookService {
                     .count());
             dto.setRatingsCount(ratingsCount);
         } else {
-            dto.setRatingAverage(null);
-            dto.setRatingsCount(null);
+            dto.setRatingAverage(0f);
+            dto.setRatingsCount(0);
         }
 
         return dto;
