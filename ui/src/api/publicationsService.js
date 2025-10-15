@@ -35,6 +35,26 @@ export const publicationsAPI = {
   createPublication(publicationData) {
     return apiClient.post('/publications', publicationData);
   },
+
+  // Actualizar estado de publicación
+  updateState(publicationId, newState) {
+    return apiClient.put(`/publications/${publicationId}/state/${newState}`);
+  },
+
+  // Obtener publicación por ID
+  getById(publicationId) {
+    return apiClient.get(`/publications/${publicationId}`);
+  },
+
+  // Actualizar publicación
+  update(publicationId, publicationData) {
+    return apiClient.put(`/publications/${publicationId}`, publicationData);
+  },
+
+  // Eliminar publicación
+  delete(publicationId) {
+    return apiClient.delete(`/publications/${publicationId}`);
+  },
 };
 
 export const categoriesAPI = {
@@ -70,6 +90,11 @@ export const categoriesAPI = {
 };
 
 export const favoritesAPI = {
+  // Obtener todos los favoritos (para contar)
+  getAllFavorites(page = 0, size = 1000) {
+    return apiClient.get(`/favorites/page/${page}/size/${size}`);
+  },
+
   // Obtener favoritos de un usuario
   getByUser(userId, page = 0, size = 20) {
     return apiClient.get(`/favorites/user/${userId}/page/${page}/size/${size}`);
@@ -92,12 +117,12 @@ export const favoritesAPI = {
   },
 
   // Agregar a favoritos
-  addFavorite(favoriteData) {
+  createFavorite(favoriteData) {
     return apiClient.post('/favorites', favoriteData);
   },
 
   // Eliminar de favoritos
-  removeFavorite(id) {
+  deleteFavorite(id) {
     return apiClient.delete(`/favorites/${id}`);
   },
 };

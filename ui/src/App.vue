@@ -1,22 +1,42 @@
 <template>
-  <Topbar />
+  <div v-if="showLayout">
+    <Topbar />
 
-  <div class="layout">
-    <Sidebar />
+    <div class="layout">
+      <Sidebar />
 
-    <div class="main">
-      <router-view />
+      <div class="main">
+        <router-view />
+      </div>
     </div>
+  </div>
+
+  <div v-else>
+    <router-view />
   </div>
 </template>
 
 <script>
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 
 export default {
   name: "App",
   components: { Sidebar, Topbar },
+  setup() {
+    const route = useRoute();
+
+    // Ocultar layout en páginas de autenticación
+    const showLayout = computed(() => {
+      return route.name !== 'Login' && route.name !== 'NotFound';
+    });
+
+    return {
+      showLayout
+    };
+  }
 };
 </script>
 

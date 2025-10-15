@@ -223,5 +223,23 @@ export const usePublicationsStore = defineStore('publications', {
         this.fetchPublications(this.currentPage - 1, this.pageSize);
       }
     },
+
+    async updatePublicationState(publicationId, newState) {
+      try {
+        const response = await publicationsAPI.updateState(publicationId, newState.toUpperCase());
+
+        // Actualizar la publicación en el estado local
+        const index = this.publications.findIndex(pub => pub.id === publicationId);
+        if (index !== -1) {
+          this.publications[index].state = newState.toUpperCase();
+        }
+
+        return response.data;
+      } catch (error) {
+        this.error = error.message || 'Error al actualizar el estado de la publicación';
+        console.error('Error updating publication state:', error);
+        throw error;
+      }
+    },
   },
 });
