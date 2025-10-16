@@ -6,19 +6,6 @@
     </div>
 
     <div class="filters-section">
-      <div class="search-box">
-        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input
-          v-model="searchTerm"
-          type="text"
-          placeholder="Buscar por título, autor o usuario..."
-          class="search-input"
-        />
-      </div>
-
       <select v-model="sortBy" class="select-input">
         <option value="trending">Más populares</option>
         <option value="recent">Más recientes</option>
@@ -342,35 +329,6 @@ export default {
   align-items: center;
 }
 
-.search-box {
-  flex: 1;
-  min-width: 300px;
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #a0aec0;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px 12px 10px 40px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
 
 .select-input {
   padding: 10px 16px;

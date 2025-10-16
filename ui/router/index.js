@@ -4,6 +4,8 @@ import NotFound from '../src/views/NotFound.vue';
 import Login from '../src/views/Login.vue';
 import Explore from '../src/views/Explore.vue';
 import Moderation from '../src/views/Moderation.vue';
+import MyLibrary from '../src/views/MyLibrary.vue';
+import Settings from '../src/views/Settings.vue';
 
 const routes = [
   {
@@ -25,6 +27,16 @@ const routes = [
     path: '/moderation',
     name: 'Moderation',
     component: Moderation
+  },
+  {
+    path: '/my-library',
+    name: 'MyLibrary',
+    component: MyLibrary
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: Settings
   },
   {
     path: '/:pathMatch(.*)*',

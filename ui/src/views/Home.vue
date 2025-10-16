@@ -206,6 +206,8 @@ import { useUsersStore } from '../stores/users';
 import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { usersAPI } from '../api/usersService';
+import { publicationsAPI } from '../api/publicationsService';
 
 export default {
   name: 'Home',
