@@ -223,7 +223,7 @@ export default {
     const stats = computed(() => ({
       totalPublications: publicationsStore.totalItems || 0,
       totalUsers: usersStore.totalUsers || 0,
-      totalFavorites: Object.values(favoritesStore.favoritesCount).reduce((a, b) => a + b, 0) || 0,
+      totalFavorites: favoritesStore.totalFavorites || 0,
       totalCategories: publicationsStore.categories?.length || 0
     }));
 

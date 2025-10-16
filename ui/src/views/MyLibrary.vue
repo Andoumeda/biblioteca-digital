@@ -401,6 +401,8 @@ export default {
   background: white;
   border-radius: 12px;
   overflow: hidden;
+  min-width: 800px;
+  max-width: 100%;
 }
 
 .tabs-list {
@@ -439,12 +441,15 @@ export default {
 
 .tab-content {
   padding: 24px;
+  min-height: 400px;
+  width: 100%;
 }
 
 .collections-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 94%;
 }
 
 .collection-card {
@@ -572,6 +577,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
+  width: 94%;
 }
 
 .bookmark-card {
@@ -658,6 +664,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 94%;
 }
 
 .comment-card {
@@ -769,5 +776,83 @@ export default {
 .empty-state p {
   font-size: 14px;
   margin: 0 0 20px 0;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .tabs-container {
+    min-width: 600px;
+  }
+
+  .bookmarks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs-container {
+    min-width: 100%;
+  }
+
+  .tab-content {
+    padding: 16px;
+    min-height: 300px;
+  }
+
+  .tabs-list {
+    flex-direction: column;
+  }
+
+  .tab {
+    border-bottom: 1px solid #e2e8f0;
+    justify-content: flex-start;
+  }
+
+  .tab.active {
+    border-bottom-color: #667eea;
+    border-left: 3px solid #667eea;
+  }
+
+  .collection-content {
+    flex-direction: column;
+  }
+
+  .collection-cover {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3/4;
+  }
+
+  .bookmarks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1920px) {
+  .my-library-container {
+    max-width: 1600px;
+  }
+
+  .tabs-container {
+    min-width: 1000px;
+  }
+
+  .bookmarks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 2560px) {
+  .my-library-container {
+    max-width: 2000px;
+  }
+
+  .tabs-container {
+    min-width: 1200px;
+  }
+
+  .bookmarks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
 }
 </style>
