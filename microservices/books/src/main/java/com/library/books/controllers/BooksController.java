@@ -18,14 +18,14 @@ public class BooksController implements BooksApi {
 
     @Override
     public ResponseEntity<BookResponseDTO> createBook(BookRequestDTO bookRequestDTO) {
-        log.info("REST request to create Book: {}", bookRequestDTO.getTitle());
+        log.info("Petición REST para crear libro: {}", bookRequestDTO.getTitle());
         BookResponseDTO response = bookService.createBook(bookRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Override
     public ResponseEntity<PaginatedBookResponseDTO> getBooksByFilters(String title, Integer publicationId, Integer authorId, Integer page) {
-        log.info("REST request to get books by filters - title: {}, publicationId: {}, authorId: {}, page: {}",
+        log.info("Petición REST para obtener libros por filtros - título: {}, publicaciónId: {}, autorId: {}, página: {}",
                 title, publicationId, authorId, page);
         PaginatedBookResponseDTO response = bookService.getBooksByFilters(title, publicationId, authorId, page);
         return ResponseEntity.ok(response);
@@ -33,21 +33,21 @@ public class BooksController implements BooksApi {
 
     @Override
     public ResponseEntity<BookResponseDTO> getBookById(Integer id) {
-        log.info("REST request to get Book by ID: {}", id);
+        log.info("Petición REST para obtener libro por ID: {}", id);
         BookResponseDTO response = bookService.getBookById(id);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<BookResponseDTO> updateBook(Integer id, BookRequestDTO bookRequestDTO) {
-        log.info("REST request to update Book: {}", id);
+        log.info("Petición REST para actualizar libro: {}", id);
         BookResponseDTO response = bookService.updateBook(id, bookRequestDTO);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<Void> deleteBook(Integer id) {
-        log.info("REST request to delete Book: {}", id);
+        log.info("Petición REST para eliminar libro: {}", id);
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }

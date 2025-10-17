@@ -18,7 +18,7 @@ public class RatingsController implements RatingsApi {
 
     @Override
     public ResponseEntity<PaginatedRatingResponseDTO> getRatingsByFilters(Integer bookId, Integer userProfileId, Integer min, Integer max, Integer page) {
-        log.info("REST request to get ratings by filters - bookId: {}, userProfileId: {}, min: {}, max: {}, page: {}",
+        log.info("Petición REST para obtener valoraciones por filtros - libroId: {}, usuarioId: {}, min: {}, max: {}, página: {}",
                  bookId, userProfileId, min, max, page);
         PaginatedRatingResponseDTO response = ratingService.getRatingsByFilters(bookId, userProfileId, min, max, page);
         return ResponseEntity.ok(response);
@@ -26,28 +26,28 @@ public class RatingsController implements RatingsApi {
 
     @Override
     public ResponseEntity<RatingResponseDTO> createRating(RatingRequestDTO ratingRequestDTO) {
-        log.info("REST request to create Rating for book: {}", ratingRequestDTO.getBookId());
+        log.info("Petición REST para crear valoración para libro: {}", ratingRequestDTO.getBookId());
         RatingResponseDTO response = ratingService.createRating(ratingRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Override
     public ResponseEntity<RatingResponseDTO> getRatingById(Integer id) {
-        log.info("REST request to get Rating by ID: {}", id);
+        log.info("Petición REST para obtener valoración por ID: {}", id);
         RatingResponseDTO response = ratingService.getRatingById(id);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<RatingResponseDTO> updateRating(Integer id, RatingRequestDTO ratingRequestDTO) {
-        log.info("REST request to update Rating: {}", id);
+        log.info("Petición REST para actualizar valoración: {}", id);
         RatingResponseDTO response = ratingService.updateRating(id, ratingRequestDTO);
         return ResponseEntity.ok(response);
     }
 
     @Override
     public ResponseEntity<Void> deleteRating(Integer id) {
-        log.info("REST request to delete Rating: {}", id);
+        log.info("Petición REST para eliminar valoración: {}", id);
         ratingService.deleteRating(id);
         return ResponseEntity.noContent().build();
     }

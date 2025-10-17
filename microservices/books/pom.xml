@@ -215,7 +215,7 @@
                 <executions>
                     <execution>
                         <id>delete-models-directory</id>
-                        <phase>verify</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>

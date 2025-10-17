@@ -47,25 +47,35 @@ public class RatingService {
         
         // Id de libro obligatorio y debe existir en la DB
         if (requestDTO.getBookId() == null || requestDTO.getBookId() <= 0) {
+            log.error("Error al crear valoración: ID de libro inválido: {}", requestDTO.getBookId());
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         }
         book = bookRepository.findByIdAndIsDeletedFalse(requestDTO.getBookId())
-                .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", requestDTO.getBookId()));
+                .orElseThrow(() -> {
+                    log.error("Error al crear valoración: Libro no encontrado con ID: {}", requestDTO.getBookId());
+                    return new ResourceNotFoundException("Libro", "id", requestDTO.getBookId());
+                });
 
         // Id de usuario obligatorio y debe existir en la DB
         if (requestDTO.getUserProfileId() == null || requestDTO.getUserProfileId() <= 0) {
+            log.error("Error al crear valoración: ID de usuario inválido: {}", requestDTO.getUserProfileId());
             throw new BadRequestException("El ID del usuario debe ser un número positivo");
         }
         userProfile = ratingRepository.findUserProfileByIdAndIsDeletedFalse(requestDTO.getUserProfileId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", requestDTO.getUserProfileId()));
+                .orElseThrow(() -> {
+                    log.error("Error al crear valoración: Usuario no encontrado con ID: {}", requestDTO.getUserProfileId());
+                    return new ResourceNotFoundException("Usuario", "id", requestDTO.getUserProfileId());
+                });
 
         // Valoración obligatoria y debe estar entre 1 y 5
         if (requestDTO.getValoration() == null || requestDTO.getValoration() < 1 || requestDTO.getValoration() > 5) {
+            log.error("Error al crear valoración: Valoración inválida: {}", requestDTO.getValoration());
             throw new BadRequestException("La valoración debe estar entre 1 y 5");
         }
 
         // Verificar si el usuario ya calificó este libro
         if (ratingRepository.existsByUserProfileIdAndBookIdAndIsDeletedFalse( requestDTO.getUserProfileId(), requestDTO.getBookId())) {
+            log.error("Error al crear valoración: El usuario {} ya ha calificado el libro {}", requestDTO.getUserProfileId(), requestDTO.getBookId());
             throw new ConflictException("El usuario ya ha calificado este libro");
         }
 
@@ -103,6 +113,7 @@ public class RatingService {
 
         // Validar parámetro page
         if (page == null || page < 0) {
+            log.error("Error al buscar valoraciones: Número de página inválido: {}", page);
             throw new BadRequestException("El número de página debe ser mayor o igual a 0");
         }
 
@@ -115,29 +126,36 @@ public class RatingService {
         // Validar rango de valoraciones solo si ambas están presentes
         if (normalizedMinValoration != null && normalizedMaxValoration != null) {
             if (normalizedMinValoration > normalizedMaxValoration) {
+                log.error("Error al buscar valoraciones: Rango inválido - min: {}, max: {}", normalizedMinValoration, normalizedMaxValoration);
                 throw new BadRequestException("La valoración mínima no puede ser mayor que la valoración máxima");
             }
         }
 
         // Validar que las valoraciones estén en el rango válido (1-5)
         if (normalizedMinValoration != null && (normalizedMinValoration < 1 || normalizedMinValoration > 5)) {
+            log.error("Error al buscar valoraciones: Valoración mínima inválida: {}", normalizedMinValoration);
             throw new BadRequestException("La valoración mínima debe estar entre 1 y 5");
         }
         if (normalizedMaxValoration != null && (normalizedMaxValoration < 1 || normalizedMaxValoration > 5)) {
+            log.error("Error al buscar valoraciones: Valoración máxima inválida: {}", normalizedMaxValoration);
             throw new BadRequestException("La valoración máxima debe estar entre 1 y 5");
         }
 
         // Verificar si la id del libro es positivo y si existe en la DB
         if (normalizedBookId != null && normalizedBookId < 0) {
+            log.error("Error al buscar valoraciones: ID de libro inválido: {}", normalizedBookId);
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         } else if (normalizedBookId != null && !bookRepository.existsById(normalizedBookId)) {
+            log.error("Error al buscar valoraciones: Libro no encontrado con ID: {}", normalizedBookId);
             throw new ResourceNotFoundException("Libro", "id", normalizedBookId);
         }
 
         // Verificar si la id del perfil es positivo y si existe en la DB
         if (normalizedUserProfileId != null && normalizedUserProfileId < 0) {
+            log.error("Error al buscar valoraciones: ID de perfil de usuario inválido: {}", normalizedUserProfileId);
             throw new BadRequestException("El ID del perfil de usuario debe ser un número positivo");
         } else if (normalizedUserProfileId != null && !ratingRepository.existsUserProfileByIdAndIsDeletedFalse(normalizedUserProfileId)) {
+            log.error("Error al buscar valoraciones: Usuario no encontrado con ID: {}", normalizedUserProfileId);
             throw new ResourceNotFoundException("Usuario", "id", normalizedUserProfileId);
         }
 
@@ -164,12 +182,16 @@ public class RatingService {
         
         // Id de valoración obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al obtener valoración: ID inválido: {}", id);
             throw new BadRequestException("El ID de la valoración debe ser un número positivo");
         }
 
         // Buscar valoración en la DB
         Rating rating = ratingRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Valoración", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al obtener valoración: Valoración no encontrada con ID: {}", id);
+                    return new ResourceNotFoundException("Valoración", "id", id);
+                });
 
         return convertToResponseDTO(rating);
     }
@@ -185,35 +207,50 @@ public class RatingService {
         
         // Id de valoración obligatorio y debe existir en la DB
         if (id == null || id <= 0) {
+            log.error("Error al actualizar valoración: ID inválido: {}", id);
             throw new BadRequestException("El ID de la valoración debe ser un número positivo");
         }
         Rating rating = ratingRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Valoración", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al actualizar valoración: Valoración no encontrada con ID: {}", id);
+                    return new ResourceNotFoundException("Valoración", "id", id);
+                });
 
         // Id de libro obligatorio y debe existir en la DB
         if (requestDTO.getBookId() == null || requestDTO.getBookId() <= 0) {
+            log.error("Error al actualizar valoración: ID de libro inválido: {}", requestDTO.getBookId());
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         }
         book = bookRepository.findByIdAndIsDeletedFalse(requestDTO.getBookId())
-                .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", requestDTO.getBookId()));
+                .orElseThrow(() -> {
+                    log.error("Error al actualizar valoración: Libro no encontrado con ID: {}", requestDTO.getBookId());
+                    return new ResourceNotFoundException("Libro", "id", requestDTO.getBookId());
+                });
 
         // Id de usuario obligatorio y debe existir en la DB
         if (requestDTO.getUserProfileId() == null || requestDTO.getUserProfileId() <= 0) {
+            log.error("Error al actualizar valoración: ID de usuario inválido: {}", requestDTO.getUserProfileId());
             throw new BadRequestException("El ID del usuario debe ser un número positivo");
         }
         userProfile = ratingRepository.findUserProfileByIdAndIsDeletedFalse(requestDTO.getUserProfileId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", requestDTO.getUserProfileId()));
+                .orElseThrow(() -> {
+                    log.error("Error al actualizar valoración: Usuario no encontrado con ID: {}", requestDTO.getUserProfileId());
+                    return new ResourceNotFoundException("Usuario", "id", requestDTO.getUserProfileId());
+                });
 
         // Valoración obligatoria y debe estar entre 1 y 5
         if (requestDTO.getValoration() == null || requestDTO.getValoration() < 1 || requestDTO.getValoration() > 5) {
+            log.error("Error al actualizar valoración: Valoración inválida: {}", requestDTO.getValoration());
             throw new BadRequestException("La valoración debe estar entre 1 y 5");
         }
 
         // Verificar que el usuario no actualice otra calificación existente
         if (ratingRepository.existsByUserProfileIdAndBookIdAndIsDeletedFalse(requestDTO.getUserProfileId(), requestDTO.getBookId())) {
             if (!rating.getUserProfile().getId().equals(requestDTO.getUserProfileId())){
+                log.error("Error al actualizar valoración: El usuario {} ya ha calificado el libro {}", requestDTO.getUserProfileId(), requestDTO.getBookId());
                 throw new ConflictException("El usuario ya ha calificado este libro");
             } else if (!rating.getBook().getId().equals(requestDTO.getBookId())){
+                log.error("Error al actualizar valoración: Conflicto al cambiar libro - usuario {} ya calificó libro {}", requestDTO.getUserProfileId(), requestDTO.getBookId());
                 throw new ConflictException("El usuario ya ha calificado este libro");
             }
         }
@@ -233,7 +270,7 @@ public class RatingService {
         log.info("Valoración actualizada exitosamente: {}", updatedRating.getId());
 
         bookRepository.save(book);
-        log.info("Actualizado con éxito el libro con ID: {}", book.getId());
+        log.info("Libro actualizado exitosamente con ID: {}", book.getId());
 
         return convertToResponseDTO(updatedRating);
     }
@@ -246,12 +283,16 @@ public class RatingService {
         
         // Id de valoración obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al eliminar valoración: ID inválido: {}", id);
             throw new BadRequestException("El ID de la valoración debe ser un número positivo");
         }
 
         // Buscar valoración en la DB
         Rating rating = ratingRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Valoración", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al eliminar valoración: Valoración no encontrada con ID: {}", id);
+                    return new ResourceNotFoundException("Valoración", "id", id);
+                });
 
         rating.setIsDeleted(true);
         rating.setUpdatedAt(LocalDateTime.now());
@@ -265,7 +306,7 @@ public class RatingService {
      */
     private RatingResponseDTO convertToResponseDTO(Rating rating) {
         RatingResponseDTO dto = modelMapper.map(rating, RatingResponseDTO.class);
-        log.debug("Conversión Rating de entidad a ResponseDTO con ModelMapper: {}", dto);
+        log.debug("Conversión de Rating de entidad a ResponseDTO con ModelMapper: {}", dto);
 
         dto.setUserProfileId(rating.getUserProfile().getId());
         dto.setBookId(rating.getBook().getId());

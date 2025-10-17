@@ -41,16 +41,19 @@ public class AuthorService {
         
         // El nombre completo es obligatorio
         if (requestDTO.getFullName() == null || requestDTO.getFullName().trim().isEmpty()) {
+            log.error("Error al crear autor: El nombre completo es obligatorio");
             throw new BadRequestException("El nombre completo del autor es obligatorio");
         }
 
         // La fecha de nacimiento es obligatoria y no puede ser futura
         if (requestDTO.getBirthDate() == null || requestDTO.getBirthDate().isAfter(LocalDate.now())) {
+            log.error("Error al crear autor: La fecha de nacimiento es inválida o futura: {}", requestDTO.getBirthDate());
             throw new BadRequestException("La fecha de nacimiento del autor es obligatoria y no puede ser futura");
         }
 
         // La nacionalidad es obligatoria
         if (requestDTO.getNationality() == null || requestDTO.getNationality().trim().isEmpty()) {
+            log.error("Error al crear autor: La nacionalidad es obligatoria");
             throw new BadRequestException("La nacionalidad del autor es obligatoria");
         }
 
@@ -79,6 +82,7 @@ public class AuthorService {
 
         // Validar parámetro page
         if (page == null || page < 0) {
+            log.error("Error al buscar autores: Número de página inválido: {}", page);
             throw new BadRequestException("El número de página debe ser mayor o igual a 0");
         }
 
@@ -91,32 +95,39 @@ public class AuthorService {
 
         // Validar si el libro existe
         if (normalizedBookId != null && normalizedBookId < 0) {
+            log.error("Error al buscar autores: ID de libro inválido: {}", normalizedBookId);
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         } else if (normalizedBookId != null && !bookRepository.existsById(normalizedBookId)) {
+            log.error("Error al buscar autores: Libro no encontrado con ID: {}", normalizedBookId);
             throw new ResourceNotFoundException("Libro", "id", normalizedBookId);
         }
 
         // Validar rango de fechas solo si ambas están presentes
         if (normalizedMinDate != null && normalizedMaxDate != null && normalizedMinDate.isAfter(normalizedMaxDate)) {
+            log.error("Error al buscar autores: Rango de fechas inválido - minDate: {}, maxDate: {}", normalizedMinDate, normalizedMaxDate);
             throw new BadRequestException("La fecha mínima no puede ser posterior a la fecha máxima");
         }
 
         // Validar que las fechas no sean futuras
         if (normalizedMinDate != null && normalizedMinDate.isAfter(LocalDate.now())) {
+            log.error("Error al buscar autores: La fecha mínima es futura: {}", normalizedMinDate);
             throw new BadRequestException("La fecha mínima no puede ser futura");
         }
 
         if (normalizedMaxDate != null && normalizedMaxDate.isAfter(LocalDate.now())) {
+            log.error("Error al buscar autores: La fecha máxima es futura: {}", normalizedMaxDate);
             throw new BadRequestException("La fecha máxima no puede ser futura");
         }
 
         // Nombre completo obligatorio
         if (fullName == null || fullName.trim().isEmpty()) {
+            log.error("Error al buscar autores: El nombre de búsqueda está vacío");
             throw new BadRequestException("El nombre de búsqueda no puede estar vacío");
         }
 
         // Nacionalidad obligatoria
         if (nationality == null || nationality.trim().isEmpty()) {
+            log.error("Error al buscar autores: La nacionalidad de búsqueda está vacía");
             throw new BadRequestException("La nacionalidad de búsqueda no puede estar vacía");
         }
 
@@ -144,12 +155,16 @@ public class AuthorService {
 
         // Id de autor obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al obtener autor: ID inválido: {}", id);
             throw new BadRequestException("El ID del autor debe ser un número mayor a 0");
         }
 
         // Buscar autor en la DB
         Author author = authorRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Autor", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al obtener autor: Autor no encontrado con ID: {}", id);
+                    return new ResourceNotFoundException("Autor", "id", id);
+                });
 
         return convertToResponseDTO(author);
     }
@@ -162,25 +177,32 @@ public class AuthorService {
         
         // Id de autor obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al actualizar autor: ID inválido: {}", id);
             throw new BadRequestException("El ID del autor debe ser un número positivo");
         }
 
         // Buscar autor en la DB
         Author author = authorRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Autor", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al actualizar autor: Autor no encontrado con ID: {}", id);
+                    return new ResourceNotFoundException("Autor", "id", id);
+                });
 
         // Nombre completo obligatorio
         if (requestDTO.getFullName() == null || requestDTO.getFullName().trim().isEmpty()) {
+            log.error("Error al actualizar autor: El nombre completo es obligatorio");
             throw new BadRequestException("El nombre completo del autor es obligatorio");
         }
 
         // La fecha de nacimiento es obligatoria y no puede ser futura
         if (requestDTO.getBirthDate() == null || requestDTO.getBirthDate().isAfter(LocalDate.now())) {
+            log.error("Error al actualizar autor: La fecha de nacimiento es inválida o futura: {}", requestDTO.getBirthDate());
             throw new BadRequestException("La fecha de nacimiento del autor debe ser obligatoria y no puede ser futura");
         }
 
         // La nacionalidad es obligatoria
         if (requestDTO.getNationality() == null || requestDTO.getNationality().trim().isEmpty()) {
+            log.error("Error al actualizar autor: La nacionalidad es obligatoria");
             throw new BadRequestException("La nacionalidad del autor es obligatoria");
         }
 
@@ -204,12 +226,16 @@ public class AuthorService {
         
         // Id de autor obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al eliminar autor: ID inválido: {}", id);
             throw new BadRequestException("El ID del autor debe ser un número positivo");
         }
 
         // Buscar autor en la DB
         Author author = authorRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Autor", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al eliminar autor: Autor no encontrado con ID: {}", id);
+                    return new ResourceNotFoundException("Autor", "id", id);
+                });
 
         author.setIsDeleted(true);
         author.setUpdatedAt(LocalDateTime.now());
@@ -223,7 +249,7 @@ public class AuthorService {
      */
     private AuthorResponseDTO convertToResponseDTO(Author author) {
         AuthorResponseDTO dto = modelMapper.map(author, AuthorResponseDTO.class);
-        log.debug("Conversión Author de entidad a ResponseDTO con ModelMapper: {}", dto);
+        log.debug("Conversión de Author de entidad a ResponseDTO con ModelMapper: {}", dto);
 
         return dto;
     }

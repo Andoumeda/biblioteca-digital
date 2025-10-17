@@ -46,40 +46,52 @@ public class BookService {
 
         // El título es obligatorio
         if (requestDTO.getTitle() == null || requestDTO.getTitle().trim().isEmpty()) {
+            log.error("Error al crear libro: El título es obligatorio");
             throw new BadRequestException("El título del libro es obligatorio");
         }
 
         // La URL del libro es obligatoria
         if (requestDTO.getBookUrl() == null || requestDTO.getBookUrl().trim().isEmpty()) {
+            log.error("Error al crear libro: La URL del libro es obligatoria");
             throw new BadRequestException("La url del libro es obligatoria");
         }
 
         // La URL de la portada es obligatoria
         if (requestDTO.getCoverImg() == null || requestDTO.getCoverImg().trim().isEmpty()) {
+            log.error("Error al crear libro: La URL de la portada es obligatoria");
             throw new BadRequestException("La url de portada del libro es obligatoria");
         }
 
         // La id de publicacion es obligatoria y debe existir en la DB
         if (requestDTO.getPublicationId() == null || requestDTO.getPublicationId() <= 0) {
+            log.error("Error al crear libro: El ID de publicación es inválido: {}", requestDTO.getPublicationId());
             throw new BadRequestException("El ID de publicación es obligatorio y debe ser un número positivo");
         }
 
         // Verificar que la publicación exista usando consulta personalizada
         publication = bookRepository.findPublicationByIdAndIsDeletedFalse(requestDTO.getPublicationId())
-            .orElseThrow(() -> new ResourceNotFoundException("Publicación", "id", requestDTO.getPublicationId()));
+            .orElseThrow(() -> {
+                log.error("Error al crear libro: Publicación no encontrada con ID: {}", requestDTO.getPublicationId());
+                return new ResourceNotFoundException("Publicación", "id", requestDTO.getPublicationId());
+            });
 
         // Las ids de autores son obligatorias y deben existir en la DB
         if (requestDTO.getAuthorIds() == null || requestDTO.getAuthorIds().isEmpty()) {
+            log.error("Error al crear libro: No se asoció ningún autor");
             throw new BadRequestException("Debe asociar al menos un autor al libro");
         }
         for (Integer authorId : requestDTO.getAuthorIds()) {
             if (authorId == null || authorId <= 0) {
+                log.error("Error al crear libro: ID de autor inválido: {}", authorId);
                 throw new BadRequestException("El ID de autor debe ser un número positivo");
             }
 
             // Usar AuthorRepository para obtener el autor
             Author author = authorRepository.findByIdAndIsDeletedFalse(authorId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Autor", "id", authorId));
+                    .orElseThrow(() -> {
+                        log.error("Error al crear libro: Autor no encontrado con ID: {}", authorId);
+                        return new ResourceNotFoundException("Autor", "id", authorId);
+                    });
 
             authors.add(author);
         }
@@ -90,6 +102,7 @@ public class BookService {
                 .distinct()
                 .toList();
         if (distinctAuthorIds.size() < authors.size()) {
+            log.error("Error al crear libro: Se intentaron asociar autores repetidos");
             throw new BadRequestException("No se pueden asociar autores repetidos al libro");
         }
 
@@ -121,6 +134,7 @@ public class BookService {
 
         // Validar parámetro page
         if (page == null || page < 0) {
+            log.error("Error al buscar libros: Número de página inválido: {}", page);
             throw new BadRequestException("El número de página debe ser mayor o igual a 0");
         }
 
@@ -131,15 +145,19 @@ public class BookService {
 
         // Validar si el ID de publicación es válido y si existe en la DB
         if (normalizedPublicationId != null && normalizedPublicationId < 0) {
+            log.error("Error al buscar libros: ID de publicación inválido: {}", normalizedPublicationId);
             throw new BadRequestException("El ID de publicación debe ser un número positivo");
         } else if (normalizedPublicationId != null && !bookRepository.existsPublicationByIdAndIsDeletedFalse(normalizedPublicationId)) {
+            log.error("Error al buscar libros: Publicación no encontrada con ID: {}", normalizedPublicationId);
             throw new ResourceNotFoundException("Publicación", "id", normalizedPublicationId);
         }
 
         // Validar si el ID de autor es válido y si existe en la DB
         if (normalizedAuthorId != null && normalizedAuthorId < 0) {
+            log.error("Error al buscar libros: ID de autor inválido: {}", normalizedAuthorId);
             throw new BadRequestException("El ID de autor debe ser un número positivo");
         } else if (normalizedAuthorId != null && !authorRepository.existsById(normalizedAuthorId)) {
+            log.error("Error al buscar libros: Autor no encontrado con ID: {}", normalizedAuthorId);
             throw new ResourceNotFoundException("Autor", "id", normalizedAuthorId);
         }
 
@@ -165,12 +183,16 @@ public class BookService {
 
         // Id de libro obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al obtener libro: ID inválido: {}", id);
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         }
 
         // Buscar libro en la DB
         Book book = bookRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al obtener libro: Libro no encontrado con ID: {}", id);
+                    return new ResourceNotFoundException("Libro", "id", id);
+                });
 
         return convertToResponseDTO(book);
     }
@@ -186,50 +208,66 @@ public class BookService {
 
         // Id de libro obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al actualizar libro: ID inválido: {}", id);
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         }
 
         // Buscar libro en la DB
         Book book = bookRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al actualizar libro: Libro no encontrado con ID: {}", id);
+                    return new ResourceNotFoundException("Libro", "id", id);
+                });
 
         // Id de publicación obligatorio y validar si existe la publicación en la DB
         if (requestDTO.getPublicationId() == null || requestDTO.getPublicationId() <= 0) {
+            log.error("Error al actualizar libro: ID de publicación inválido: {}", requestDTO.getPublicationId());
             throw new BadRequestException("El ID de publicación debe ser un número positivo");
         }
 
         // Verificar que la publicación exista
         publication = bookRepository.findPublicationByIdAndIsDeletedFalse(requestDTO.getPublicationId())
-            .orElseThrow(() -> new BadRequestException("La publicación con ID " + requestDTO.getPublicationId() + " no existe"));
+            .orElseThrow(() -> {
+                log.error("Error al actualizar libro: Publicación no encontrada con ID: {}", requestDTO.getPublicationId());
+                return new BadRequestException("La publicación con ID " + requestDTO.getPublicationId() + " no existe");
+            });
 
         // Título obligatorio
         if (requestDTO.getTitle() == null || requestDTO.getTitle().trim().isEmpty()) {
+            log.error("Error al actualizar libro: El título es obligatorio");
             throw new BadRequestException("El título del libro es obligatorio");
         }
 
         // URL del libro obligatorio
         if (requestDTO.getBookUrl() == null || requestDTO.getBookUrl().trim().isEmpty()) {
+            log.error("Error al actualizar libro: La URL del libro es obligatoria");
             throw new BadRequestException("La url del libro es obligatorio");
         }
 
         // URL de la portada obligatorio
         if (requestDTO.getCoverImg() == null || requestDTO.getCoverImg().trim().isEmpty()) {
+            log.error("Error al actualizar libro: La URL de la portada es obligatoria");
             throw new BadRequestException("La url de portada del libro es obligatorio");
         }
 
         // Id de autores obligatorios
         if (requestDTO.getAuthorIds() == null || requestDTO.getAuthorIds().isEmpty()) {
+            log.error("Error al actualizar libro: No se asoció ningún autor");
             throw new BadRequestException("Debe asociar al menos un autor al libro");
         }
         for (Integer authorId : requestDTO.getAuthorIds()) {
             // Validar que la id sea positiva
             if (authorId == null || authorId <= 0) {
+                log.error("Error al actualizar libro: ID de autor inválido: {}", authorId);
                 throw new BadRequestException("El ID de autor debe ser un número positivo");
             }
 
             // Usar AuthorRepository para obtener el autor
             Author author = authorRepository.findByIdAndIsDeletedFalse(authorId)
-                    .orElseThrow(() -> new BadRequestException("El autor con ID " + authorId + " no existe"));
+                    .orElseThrow(() -> {
+                        log.error("Error al actualizar libro: Autor no encontrado con ID: {}", authorId);
+                        return new BadRequestException("El autor con ID " + authorId + " no existe");
+                    });
 
             authors.add(author);
         }
@@ -240,6 +278,7 @@ public class BookService {
                 .distinct()
                 .toList();
         if (distinctAuthorIds.size() < authors.size()) {
+            log.error("Error al actualizar libro: Se intentaron asociar autores repetidos");
             throw new BadRequestException("No se pueden asociar autores repetidos al libro");
         }
 
@@ -265,12 +304,16 @@ public class BookService {
 
         // Id de libro obligatorio y debe ser positivo
         if (id == null || id <= 0) {
+            log.error("Error al eliminar libro: ID inválido: {}", id);
             throw new BadRequestException("El ID del libro debe ser un número positivo");
         }
 
         // Buscar libro en la DB
         Book book = bookRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", id));
+                .orElseThrow(() -> {
+                    log.error("Error al eliminar libro: Libro no encontrado con ID: {}", id);
+                    return new ResourceNotFoundException("Libro", "id", id);
+                });
 
         book.setIsDeleted(true);
         book.setUpdatedAt(LocalDateTime.now());
@@ -287,7 +330,7 @@ public class BookService {
         List<Author> authors = book.getAuthors();
 
         BookResponseDTO dto = modelMapper.map(book, BookResponseDTO.class);
-        log.debug("Conversión Book de entidad a ResponseDTO con ModelMapper: {}", dto);
+        log.debug("Conversión de Book de entidad a ResponseDTO con ModelMapper: {}", dto);
 
         dto.setPublicationId(book.getPublication().getId());
 
