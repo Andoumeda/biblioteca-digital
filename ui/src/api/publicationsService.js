@@ -91,7 +91,7 @@ export const categoriesAPI = {
 
 export const favoritesAPI = {
   // Obtener todos los favoritos (para contar)
-  getAllFavorites(page = 0, size = 1000) {
+  getAllFavorites(page = 0, size = 90) {
     return apiClient.get(`/favorites/page/${page}/size/${size}`);
   },
 

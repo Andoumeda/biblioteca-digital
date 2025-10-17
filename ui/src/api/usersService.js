@@ -42,34 +42,34 @@ export const userProfilesAPI = {
 export const usersAPI = {
   // Obtener todos los usuarios
   getAll() {
-    return usersApiClient.get('/api/users');
+    return usersApiClient.get('/api/user-profiles');
   },
 
   // Obtener usuario por ID
   getById(id) {
-    return usersApiClient.get(`/api/users/${id}`);
+    return usersApiClient.get(`/api/user-profiles/${id}`);
   },
 
   // Crear usuario
   create(userData) {
-    return usersApiClient.post('/api/users', userData);
+    return usersApiClient.post('/api/user-profiles', userData);
   },
 
   // Actualizar usuario
   update(id, userData) {
-    return usersApiClient.put(`/api/users/${id}`, userData);
+    return usersApiClient.put(`/api/user-profiles/${id}`, userData);
   },
 
   // Eliminar usuario
   delete(id) {
-    return usersApiClient.delete(`/api/users/${id}`);
+    return usersApiClient.delete(`/api/user-profiles/${id}`);
   }
 };
 
 export const announcementsAPI = {
   // Obtener todos los anuncios
-  getAll() {
-    return usersApiClient.get('/api/announcements');
+  getAll(page = 0, size = 20) {
+    return usersApiClient.get(`/api/announcements/page/${page}/size/${size}`);
   },
 
   // Obtener anuncio por ID

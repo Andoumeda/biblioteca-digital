@@ -120,7 +120,7 @@
                 </div>
                 <div class="notification-content">
                   <h4>{{ announcement.title }}</h4>
-                  <p>{{ announcement.content }}</p>
+                  <p>{{ announcement.message }}</p>
                   <span class="notification-time">{{ formatDate(announcement.createdAt) }}</span>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export default {
     const loadAnnouncements = async () => {
       try {
         const response = await announcementsAPI.getAll();
-        announcements.value = response.data || [];
+        announcements.value = response.data?.content || [];
       } catch (error) {
         console.error('Error loading announcements:', error);
         announcements.value = [];
@@ -236,8 +236,8 @@ export default {
         // Buscar por título
         try {
           const titleResponse = await publicationsAPI.searchByTitle(query, 0, 5);
-          if (titleResponse.data?.content) {
-            results.push(...titleResponse.data.content);
+          if (titleResponse.data?.data) {
+            results.push(...titleResponse.data.data);
           }
         } catch (error) {
           console.log('No results by title');
@@ -246,8 +246,8 @@ export default {
         // Buscar por descripción
         try {
           const descResponse = await publicationsAPI.searchByDescription(query, 0, 5);
-          if (descResponse.data?.content) {
-            results.push(...descResponse.data.content);
+          if (descResponse.data?.data) {
+            results.push(...descResponse.data.data);
           }
         } catch (error) {
           console.log('No results by description');
@@ -272,8 +272,7 @@ export default {
         await performSearch();
         // Navegar a explorar con el término de búsqueda
         router.push({
-          path: '/explore',
-          query: { search: searchQuery.value }
+          path: '/explore'
         });
         closeSearchResults();
       }
@@ -287,8 +286,7 @@ export default {
 
     const viewAllResults = () => {
       router.push({
-        path: '/explore',
-        query: { search: searchQuery.value }
+        path: '/explore'
       });
       closeSearchResults();
     };

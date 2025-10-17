@@ -5,6 +5,7 @@ export const useFavoritesStore = defineStore('favorites', {
   state: () => ({
     favorites: [],
     favoritesCount: {},
+    totalFavorites: 0,
     loading: false,
     error: null,
   }),
@@ -16,7 +17,7 @@ export const useFavoritesStore = defineStore('favorites', {
 
     isPublicationFavorited: (state) => (publicationId, userId) => {
       return state.favorites.some(
-        fav => fav.publicationId === publicationId && fav.userProfileId === userId
+        fav => fav.publication?.id === publicationId && fav.userProfile?.userId === userId
       );
     }
   },
@@ -27,15 +28,18 @@ export const useFavoritesStore = defineStore('favorites', {
       this.error = null;
 
       try {
-        const response = await favoritesAPI.getAllFavorites();
-        this.favorites = response.data || [];
+        const response = await favoritesAPI.getAllFavorites(0, 90);
+
+        // La API devuelve una estructura paginada: { data: [], totalItems: X }
+        this.favorites = response.data?.data || [];
+        this.totalFavorites = response.data?.totalItems || 0;
 
         // Calcular el conteo de favoritos por publicación
         this.favoritesCount = {};
         this.favorites.forEach(fav => {
-          if (fav.publicationId) {
-            this.favoritesCount[fav.publicationId] =
-              (this.favoritesCount[fav.publicationId] || 0) + 1;
+          const pubId = fav.publication?.id;
+          if (pubId) {
+            this.favoritesCount[pubId] = (this.favoritesCount[pubId] || 0) + 1;
           }
         });
       } catch (error) {
@@ -55,6 +59,7 @@ export const useFavoritesStore = defineStore('favorites', {
 
         // Actualizar el estado local
         this.favorites.push(response.data);
+        this.totalFavorites++;
         this.favoritesCount[publicationId] =
           (this.favoritesCount[publicationId] || 0) + 1;
 
@@ -72,6 +77,7 @@ export const useFavoritesStore = defineStore('favorites', {
 
         // Actualizar el estado local
         this.favorites = this.favorites.filter(fav => fav.id !== favoriteId);
+        this.totalFavorites = Math.max(0, this.totalFavorites - 1);
         if (this.favoritesCount[publicationId] > 0) {
           this.favoritesCount[publicationId]--;
         }
