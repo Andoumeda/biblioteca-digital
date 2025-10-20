@@ -60,50 +60,6 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/BadRequestError'
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
-        '404':
-          description: Perfil de usuario no encontrado
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 404
-                  error:
-                    type: string
-                    example: "Not Found"
-                  message:
-                    type: string
-                    example: "Perfil de usuario no encontrado con ID: 1"
-                  path:
-                    type: string
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 500
-                  error:
-                    type: string
-                    example: "Internal Server Error"
-                  message:
-                    type: string
-                    example: "Error al crear la publicación"
-                  path:
-                    type: string
 
   /publications/page/{page}/size/{size}:
     get:
@@ -163,8 +119,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron publicaciones
 
   /publications/title/{title}/page/{page}/size/{size}:
     get:
@@ -223,8 +177,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron publicaciones con el título especificado
 
   /publications/description/{desc}/page/{page}/size/{size}:
     get:
@@ -283,8 +235,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron publicaciones con la descripción especificada
 
   /publications/state/{state}/page/{page}/size/{size}:
     get:
@@ -352,8 +302,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron publicaciones con el estado especificado
 
   /publications/user/{user}/page/{page}/size/{size}:
     get:
@@ -413,8 +361,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron publicaciones para el usuario especificado
 
   /publications/category/{cat}/page/{page}/size/{size}:
     get:
@@ -474,8 +420,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron publicaciones para la categoría especificada
 
   /publications/{id}:
     get:
@@ -706,50 +650,6 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '403':
           $ref: './models/openapi.yaml#/components/responses/ForbiddenError'
-        '409':
-          description: Conflicto - Categoría ya existe
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 409
-                  error:
-                    type: string
-                    example: "Conflict"
-                  message:
-                    type: string
-                    example: "Categoría ya existe con nombre: Ciencia Ficción"
-                  path:
-                    type: string
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 500
-                  error:
-                    type: string
-                    example: "Internal Server Error"
-                  message:
-                    type: string
-                    example: "Error al crear la categoría"
-                  path:
-                    type: string
 
   /categories/page/{page}/size/{size}:
     get:
@@ -808,8 +708,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron categorías
 
   /categories/name/{name}/page/{page}/size/{size}:
     get:
@@ -865,8 +763,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron categorías con el nombre especificado
         '404':
           $ref: './models/openapi.yaml#/components/responses/NotFoundError'
 
@@ -947,28 +843,6 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/ForbiddenError'
         '404':
           $ref: './models/openapi.yaml#/components/responses/NotFoundError'
-        '409':
-          description: Conflicto - Categoría ya existe con ese nombre
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 409
-                  error:
-                    type: string
-                    example: "Conflict"
-                  message:
-                    type: string
-                    example: "Categoría ya existe con nombre: Ficción Científica"
-                  path:
-                    type: string
 
     delete:
       tags:
@@ -1035,72 +909,6 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/BadRequestError'
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
-        '404':
-          description: Usuario o publicación no encontrados
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 404
-                  error:
-                    type: string
-                    example: "Not Found"
-                  message:
-                    type: string
-                    example: "Perfil de usuario no encontrado con ID: 1"
-                  path:
-                    type: string
-        '409':
-          description: Conflicto - Publicación ya está en favoritos
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 409
-                  error:
-                    type: string
-                    example: "Conflict"
-                  message:
-                    type: string
-                    example: "Esta publicación ya está en favoritos"
-                  path:
-                    type: string
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  status:
-                    type: integer
-                    format: int32
-                    example: 500
-                  error:
-                    type: string
-                    example: "Internal Server Error"
-                  message:
-                    type: string
-                    example: "Error al agregar el favorito"
-                  path:
-                    type: string
 
   /favorites/page/{page}/size/{size}:
     get:
@@ -1156,8 +964,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron favoritos
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
 
@@ -1223,8 +1029,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron favoritos para el usuario especificado
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '404':
@@ -1292,8 +1096,6 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
-        '204':
-          description: No se encontraron favoritos para la publicación especificada
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '404':
