@@ -15,26 +15,21 @@ import java.util.Optional;
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Integer> {
     // Buscar todos los favoritos no eliminados con paginación
-    @Query("SELECT f FROM Favorite f WHERE f.isDeleted = false")
-    Page<Favorite> findAllNotDeleted(Pageable pageable);
+    Page<Favorite> findAllByIsDeletedFalse(Pageable pageable);
 
     // Buscar por perfil de usuario con paginación
-    @Query("SELECT f FROM Favorite f WHERE f.userProfile.id = :userProfileId AND f.isDeleted = false")
-    Page<Favorite> findByUserNotDeleted(@Param("userProfileId") Integer userProfileId, Pageable pageable);
+    Page<Favorite> findByUserProfileIdAndIsDeletedFalse(Integer userProfileId, Pageable pageable);
 
     // Buscar por publicación con paginación
-    @Query("SELECT f FROM Favorite f WHERE f.publication.id = :publicationId AND f.isDeleted = false")
-    Page<Favorite> findByPublicationNotDeleted(@Param("publicationId") Integer publicationId, Pageable pageable);
+    Page<Favorite> findByPublicationIdAndIsDeletedFalse(Integer publicationId, Pageable pageable);
 
     // Buscar por ID
-    @Query("SELECT f FROM Favorite f WHERE f.id = :id AND f.isDeleted = false")
-    Optional<Favorite> findByIdNotDeleted(@Param("id") Integer id);
+    Optional<Favorite> findByIdAndIsDeletedFalse(Integer id);
 
     // Buscar por usuario y publicación
-    @Query("SELECT f FROM Favorite f WHERE f.userProfile.id = :userProfileId AND f.publication.id = :publicationId AND f.isDeleted = false")
-    Optional<Favorite> findByUserAndPublicationNotDeleted(@Param("userProfileId") Integer userProfileId, @Param("publicationId") Integer publicationId);
+    Optional<Favorite> findByUserProfileIdAndPublicationIdAndIsDeletedFalse(Integer userProfileId, Integer publicationId);
 
-    // Buscar perfil de usuario por ID
+    // (Consulta personalizada) Buscar perfil de usuario por ID
     @Query("SELECT u FROM UserProfile u WHERE u.id = :id AND u.isDeleted = false")
     Optional<UserProfile> findUserByIdNotDeleted(@Param("id") Integer id);
 }

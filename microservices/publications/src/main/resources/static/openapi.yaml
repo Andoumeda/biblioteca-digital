@@ -60,13 +60,57 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/BadRequestError'
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
+        '404':
+          description: Perfil de usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 404
+                  error:
+                    type: string
+                    example: "Not Found"
+                  message:
+                    type: string
+                    example: "Perfil de usuario no encontrado con ID: 1"
+                  path:
+                    type: string
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 500
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+                  message:
+                    type: string
+                    example: "Error al crear la publicación"
+                  path:
+                    type: string
 
   /publications/page/{page}/size/{size}:
     get:
       tags:
         - Publications
       summary: Obtener todas las publicaciones (paginado)
-      description: Lista paginada de publicaciones. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de publicaciones
       operationId: getAllPublications
       parameters:
         - name: page
@@ -77,7 +121,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -87,7 +131,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de publicaciones
@@ -119,13 +163,15 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron publicaciones
 
   /publications/title/{title}/page/{page}/size/{size}:
     get:
       tags:
         - Publications
       summary: Obtener publicaciones por título (paginado)
-      description: Lista paginada de publicaciones filtradas por título. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de publicaciones filtradas por título
       operationId: getPublicationsByTitle
       parameters:
         - name: title
@@ -143,7 +189,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -153,7 +199,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de publicaciones filtradas por título
@@ -177,13 +223,15 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron publicaciones con el título especificado
 
   /publications/description/{desc}/page/{page}/size/{size}:
     get:
       tags:
         - Publications
       summary: Obtener publicaciones por descripción (paginado)
-      description: Lista paginada de publicaciones filtradas por descripción. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de publicaciones filtradas por descripción
       operationId: getPublicationsByDescription
       parameters:
         - name: desc
@@ -201,7 +249,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -211,7 +259,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de publicaciones filtradas por descripción
@@ -235,13 +283,15 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron publicaciones con la descripción especificada
 
   /publications/state/{state}/page/{page}/size/{size}:
     get:
       tags:
         - Publications
       summary: Obtener publicaciones por estado (paginado)
-      description: Lista paginada de publicaciones filtradas por estado. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de publicaciones filtradas por estado
       operationId: getPublicationsByState
       parameters:
         - name: state
@@ -260,7 +310,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -270,7 +320,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de publicaciones filtradas por estado
@@ -302,13 +352,15 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron publicaciones con el estado especificado
 
   /publications/user/{user}/page/{page}/size/{size}:
     get:
       tags:
         - Publications
       summary: Obtener publicaciones por usuario (paginado)
-      description: Lista paginada de publicaciones filtradas por usuario. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de publicaciones filtradas por usuario
       operationId: getPublicationsByUser
       parameters:
         - name: user
@@ -327,7 +379,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -337,7 +389,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de publicaciones filtradas por usuario
@@ -361,13 +413,15 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron publicaciones para el usuario especificado
 
   /publications/category/{cat}/page/{page}/size/{size}:
     get:
       tags:
         - Publications
       summary: Obtener publicaciones por categoría (paginado)
-      description: Lista paginada de publicaciones filtradas por categoría. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de publicaciones filtradas por categoría
       operationId: getPublicationsByCategory
       parameters:
         - name: cat
@@ -386,7 +440,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -396,7 +450,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de publicaciones filtradas por categoría
@@ -420,6 +474,8 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron publicaciones para la categoría especificada
 
   /publications/{id}:
     get:
@@ -650,6 +706,50 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '403':
           $ref: './models/openapi.yaml#/components/responses/ForbiddenError'
+        '409':
+          description: Conflicto - Categoría ya existe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 409
+                  error:
+                    type: string
+                    example: "Conflict"
+                  message:
+                    type: string
+                    example: "Categoría ya existe con nombre: Ciencia Ficción"
+                  path:
+                    type: string
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 500
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+                  message:
+                    type: string
+                    example: "Error al crear la categoría"
+                  path:
+                    type: string
 
   /categories/page/{page}/size/{size}:
     get:
@@ -667,7 +767,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -677,7 +777,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de categorías
@@ -708,6 +808,8 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron categorías
 
   /categories/name/{name}/page/{page}/size/{size}:
     get:
@@ -732,7 +834,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -742,7 +844,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Categorías encontradas (paginadas)
@@ -763,6 +865,8 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron categorías con el nombre especificado
         '404':
           $ref: './models/openapi.yaml#/components/responses/NotFoundError'
 
@@ -843,6 +947,28 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/ForbiddenError'
         '404':
           $ref: './models/openapi.yaml#/components/responses/NotFoundError'
+        '409':
+          description: Conflicto - Categoría ya existe con ese nombre
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 409
+                  error:
+                    type: string
+                    example: "Conflict"
+                  message:
+                    type: string
+                    example: "Categoría ya existe con nombre: Ficción Científica"
+                  path:
+                    type: string
 
     delete:
       tags:
@@ -909,6 +1035,72 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/BadRequestError'
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
+        '404':
+          description: Usuario o publicación no encontrados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 404
+                  error:
+                    type: string
+                    example: "Not Found"
+                  message:
+                    type: string
+                    example: "Perfil de usuario no encontrado con ID: 1"
+                  path:
+                    type: string
+        '409':
+          description: Conflicto - Publicación ya está en favoritos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 409
+                  error:
+                    type: string
+                    example: "Conflict"
+                  message:
+                    type: string
+                    example: "Esta publicación ya está en favoritos"
+                  path:
+                    type: string
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  status:
+                    type: integer
+                    format: int32
+                    example: 500
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+                  message:
+                    type: string
+                    example: "Error al agregar el favorito"
+                  path:
+                    type: string
 
   /favorites/page/{page}/size/{size}:
     get:
@@ -928,7 +1120,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -938,7 +1130,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Lista de favoritos
@@ -964,6 +1156,8 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron favoritos
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
 
@@ -993,7 +1187,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -1003,7 +1197,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Favoritos del usuario
@@ -1029,6 +1223,8 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron favoritos para el usuario especificado
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '404':
@@ -1039,7 +1235,7 @@ paths:
       tags:
         - Favorites
       summary: Obtener favoritos de una publicación (paginado)
-      description: Lista paginada de todos los usuarios que marcaron una publicación como favorita. Los parámetros page y size son opcionales en la URL
+      description: Lista paginada de todos los usuarios que marcaron una publicación como favorita
       operationId: getFavoritesByPublication
       security:
         - bearerAuth: []
@@ -1060,7 +1256,7 @@ paths:
             default: 0
             minimum: 0
           example: 0
-          description: Número de página (opcional, por defecto 0)
+          description: Número de página
         - name: size
           in: path
           required: true
@@ -1070,7 +1266,7 @@ paths:
             minimum: 1
             maximum: 100
           example: 20
-          description: Tamaño de página (opcional, por defecto 20)
+          description: Tamaño de página
       responses:
         '200':
           description: Favoritos de la publicación
@@ -1096,6 +1292,8 @@ paths:
                 totalPages: 1
                 prev: false
                 next: false
+        '204':
+          description: No se encontraron favoritos para la publicación especificada
         '401':
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '404':

@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
@@ -34,11 +36,10 @@ public class CategoryService {
     public CategoryResponseDTO create(CategoryRequestDTO dto) {
         try {
             // Validar que no exista una categoría con el mismo nombre
-            if (!categoryRepository.findByNameNotDeleted(dto.getName()).isEmpty()) {
-                logger.error("Una categoría ya existe con el nombre " + dto.getName());
-                throw new IllegalArgumentException(
-                    String.format("Categoría ya existe con nombre: %s", dto.getName())
-                );
+            logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')) AND c.isDeleted = false");
+            if (!categoryRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(dto.getName()).isEmpty()) {
+                logger.error("Una categoría ya existe con el nombre {}", dto.getName());
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Categoría ya existe con nombre: " + dto.getName());
             }
 
             Category category = new Category();
@@ -47,47 +48,48 @@ public class CategoryService {
             Category saved = categoryRepository.save(category);
             return modelMapper.map(saved, CategoryResponseDTO.class);
         } catch (Exception e) {
-            logger.error("Error al crear la categoría: " + e.getMessage(), e);
+            logger.error("Error al crear la categoría: {}", e.getMessage(), e);
             throw new RuntimeException("Error al crear la categoría: " + e.getMessage(), e);
         }
     }
 
     @Transactional(readOnly = true)
     public PaginatedResponseDTO getPaginated(Integer page, Integer size) {
+        logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.isDeleted = false");
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Category> categoriesPage = categoryRepository.findAllNotDeleted(pageable);
+        Page<Category> categoriesPage = categoryRepository.findAllByIsDeletedFalse(pageable);
 
         if (categoriesPage.isEmpty()) {
             logger.warn("No se encontraron categorías");
-            throw new IllegalArgumentException("No se encontraron categorías");
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No se encontraron categorías");
         } else
-            logger.info("Se encontraron " + categoriesPage.getTotalElements() + " categorías");
+            logger.info("Se encontraron {} categorías", categoriesPage.getTotalElements());
 
         return PaginationUtil.buildPaginatedResponse(categoriesPage, CategoryResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
     public PaginatedResponseDTO getPaginatedByName(String name, Integer page, Integer size) {
+        logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')) AND c.isDeleted = false");
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Category> categoriesPage = categoryRepository.findByNameNotDeleted(name, pageable);
+        Page<Category> categoriesPage = categoryRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(name, pageable);
 
         if (categoriesPage.isEmpty()) {
-            logger.warn("No se encontraron categorías con el nombre " + name);
-            throw new IllegalArgumentException("No se encontraron categorías con el nombre " + name);
+            logger.warn("No se encontraron categorías con el nombre {}", name);
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No se encontraron categorías con el nombre " + name);
         } else
-            logger.info("Se encontraron " + categoriesPage.getTotalElements() + " categorías con el nombre " + name);
+            logger.info("Se encontraron {} categorías con el nombre {}", categoriesPage.getTotalElements(), name);
 
         return PaginationUtil.buildPaginatedResponse(categoriesPage, CategoryResponseDTO.class);
     }
 
     @Transactional(readOnly = true)
     public CategoryResponseDTO getById(Integer id) {
-        Category category = categoryRepository.findByIdNotDeleted(id)
+        logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id = :id AND c.isDeleted = false");
+        Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> {
-                    logger.error("No se encontró la categoría con ID " + id);
-                    return new IllegalArgumentException(
-                        String.format("Categoría no encontrada con ID: %s", id)
-                    );
+                    logger.error("No se encontró la categoría con ID {}", id);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada con ID: " + id);
                 });
 
         return modelMapper.map(category, CategoryResponseDTO.class);
@@ -95,20 +97,20 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponseDTO update(Integer id, CategoryRequestDTO dto) {
-        Category category = categoryRepository.findByIdNotDeleted(id)
+        logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id = :id AND c.isDeleted = false");
+        Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> {
-                    logger.error("No se encontró la categoría con ID " + id);
-                    return new IllegalArgumentException(
-                        String.format("Categoría no encontrada con ID: %s", id)
-                    );
+                    logger.error("No se encontró la categoría con ID {}", id);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada con ID: " + id);
                 });
 
         // Cambiar sólo si no es nombre duplicado
-        if (dto.getName() == null || dto.getName().equals(category.getName()) || !categoryRepository.findByNameNotDeleted(dto.getName()).isEmpty()) {
-            logger.error("Una categoría ya existe con el nombre " + dto.getName());
-            throw new IllegalArgumentException(
-                String.format("Categoría ya existe con nombre: %s", dto.getName())
-            );
+        logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')) AND c.isDeleted = false");
+        if (dto.getName() == null ||
+                dto.getName().equals(category.getName()) ||
+                !categoryRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(dto.getName()).isEmpty()) {
+            logger.error("Una categoría ya existe con el nombre {}", dto.getName());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Categoría ya existe con nombre: " + dto.getName());
         }
 
         category.setName(dto.getName());
@@ -120,12 +122,11 @@ public class CategoryService {
 
     @Transactional
     public void delete(Integer id) {
-        Category category = categoryRepository.findByIdNotDeleted(id)
+        logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id = :id AND c.isDeleted = false");
+        Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> {
-                    logger.error("No se encontró la categoría con ID " + id);
-                    return new IllegalArgumentException(
-                        String.format("Categoría no encontrada con ID: %s", id)
-                    );
+                    logger.error("No se encontró la categoría con ID {}", id);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada con ID: " + id);
                 });
 
         // Soft delete (borrado lógico)
