@@ -141,7 +141,7 @@
           <div class="notification-group">
             <div class="notification-item">
               <div>
-                <h4>Nuevos Libros en Colecciones Seguidas</h4>
+                <h4>Nuevos Libros en Publicaciones Seguidas</h4>
                 <p>Recibe una notificación cuando se agreguen nuevos libros</p>
               </div>
               <label class="switch">
@@ -153,7 +153,7 @@
             <div class="notification-item">
               <div>
                 <h4>Comentarios en tus Publicaciones</h4>
-                <p>Cuando alguien comenta en tus colecciones</p>
+                <p>Cuando alguien comenta en tus publicaciones</p>
               </div>
               <label class="switch">
                 <input v-model="notifications.comments" type="checkbox" />
@@ -164,7 +164,7 @@
             <div class="notification-item">
               <div>
                 <h4>Favoritos en tus Publicaciones</h4>
-                <p>Cuando alguien guarda tus colecciones como favorita</p>
+                <p>Cuando alguien guarda tus publicaciones como favorita</p>
               </div>
               <label class="switch">
                 <input v-model="notifications.favorites" type="checkbox" />
@@ -206,7 +206,7 @@
             <div class="privacy-item">
               <div>
                 <h4>Perfil Público</h4>
-                <p>Permite que otros usuarios vean tu perfil y colecciones</p>
+                <p>Permite que otros usuarios vean tu perfil y publicaciones</p>
               </div>
               <label class="switch">
                 <input v-model="privacy.publicProfile" type="checkbox" />
@@ -217,7 +217,7 @@
             <div class="privacy-item">
               <div>
                 <h4>Mostrar Lista de Favoritos</h4>
-                <p>Otros usuarios pueden ver tus colecciones guardadas</p>
+                <p>Otros usuarios pueden ver tus publicaciones guardadas</p>
               </div>
               <label class="switch">
                 <input v-model="privacy.showFavorites" type="checkbox" />

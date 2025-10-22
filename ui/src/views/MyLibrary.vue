@@ -2,23 +2,23 @@
   <div class="my-library-container">
     <div class="library-header">
       <h2 class="library-title">Mi Biblioteca</h2>
-      <button @click="$emit('upload-click')" class="upload-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button @click="showUploadModal = true" class="upload-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" x2="12" y1="3" y2="15"/>
         </svg>
-        Subir Colección
+        Subir Publicación
       </button>
     </div>
 
     <div class="tabs-container">
       <div class="tabs-list">
-        <button @click="activeTab = 'collections'" :class="['tab', { active: activeTab === 'collections' }]">
+        <button @click="activeTab = 'publications'" :class="['tab', { active: activeTab === 'publications' }]">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
           </svg>
-          Mis Colecciones ({{ myCollections.length }})
+          Mis Publicaciones ({{ myPublications.length }})
         </button>
         <button @click="activeTab = 'bookmarks'" :class="['tab', { active: activeTab === 'bookmarks' }]">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -34,34 +34,34 @@
         </button>
       </div>
 
-      <!-- Pestaña de Colecciones -->
-      <div v-show="activeTab === 'collections'" class="tab-content">
-        <div v-if="myCollections.length > 0" class="collections-list">
-          <div v-for="collection in myCollections" :key="collection.id" class="collection-card">
-            <div class="collection-content">
+      <!-- Pestaña de Publicaciones -->
+      <div v-show="activeTab === 'publications'" class="tab-content">
+        <div v-if="myPublications.length > 0" class="publications-list">
+          <div v-for="publication in myPublications" :key="publication.id" class="publication-card">
+            <div class="publication-content">
               <img
-                :src="collection.cover || '/programming-book-cover.jpg'"
-                :alt="collection.title"
-                class="collection-cover"
+                :src="publication.cover || '/programming-book-cover.jpg'"
+                :alt="publication.title"
+                class="publication-cover"
                 @error="handleImageError"
               />
-              <div class="collection-info">
-                <div class="collection-header">
+              <div class="publication-info">
+                <div class="publication-header">
                   <div>
-                    <h3 class="collection-title">{{ collection.title }}</h3>
-                    <p class="collection-description">{{ collection.description }}</p>
+                    <h3 class="publication-title">{{ publication.title }}</h3>
+                    <p class="publication-description">{{ publication.description }}</p>
                   </div>
-                  <span :class="['status-badge', collection.status === 'approved' ? 'approved' : 'pending']">
-                    {{ collection.status === 'approved' ? 'Aprobada' : 'Pendiente' }}
+                  <span :class="['status-badge', publication.status === 'approved' ? 'approved' : 'pending']">
+                    {{ publication.status === 'approved' ? 'Aprobada' : 'Pendiente' }}
                   </span>
                 </div>
 
-                <div class="collection-stats">
+                <div class="publication-stats">
                   <div class="stat">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
                     </svg>
-                    {{ collection.bookCount }} libros
+                    {{ publication.bookCount }} libros
                   </div>
                   <div class="stat">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -69,13 +69,13 @@
                       <polyline points="7 10 12 15 17 10"/>
                       <line x1="12" x2="12" y1="15" y2="3"/>
                     </svg>
-                    {{ collection.totalDownloads }} descargas
+                    {{ publication.totalDownloads }} descargas
                   </div>
                   <div class="stat">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
-                    {{ collection.averageRating }} ({{ collection.totalRatings }})
+                    {{ publication.averageRating }} ({{ publication.totalRatings }})
                   </div>
                   <div class="stat">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -84,25 +84,25 @@
                       <rect width="18" height="18" x="3" y="4" rx="2"/>
                       <path d="M3 10h18"/>
                     </svg>
-                    {{ formatDate(collection.uploadDate) }}
+                    {{ formatDate(publication.uploadDate) }}
                   </div>
                 </div>
 
-                <div class="collection-actions">
-                  <button @click="handleViewDetails(collection)" class="action-btn outline">
+                <div class="publication-actions">
+                  <button @click="handleViewDetails(publication)" class="action-btn outline">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                       <circle cx="12" cy="12" r="3"/>
                     </svg>
                     Ver Detalles
                   </button>
-                  <button @click="handleEdit(collection)" class="action-btn outline">
+                  <button @click="handleEdit(publication)" class="action-btn outline">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                     </svg>
                     Editar
                   </button>
-                  <button @click="handleDelete(collection)" class="action-btn outline danger">
+                  <button @click="handleDelete(publication)" class="action-btn outline danger">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M3 6h18"/>
                       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
@@ -120,15 +120,15 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
           </svg>
-          <h3>No tienes colecciones aún</h3>
-          <p>Comienza subiendo tu primera colección de libros</p>
-          <button @click="$emit('upload-click')" class="upload-btn">
+          <h3>No tienes publicaciones aún</h3>
+          <p>Comienza subiendo tu primera publicación de libros</p>
+          <button @click="showUploadModal = true" class="upload-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" x2="12" y1="3" y2="15"/>
             </svg>
-            Subir Colección
+            Subir Publicación
           </button>
         </div>
       </div>
@@ -166,8 +166,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
           </svg>
-          <h3>No tienes colecciones guardadas</h3>
-          <p>Explora y guarda tus colecciones favoritas</p>
+          <h3>No tienes publicaciones guardadas</h3>
+          <p>Explora y guarda tus publicaciones favoritas</p>
         </div>
       </div>
 
@@ -224,23 +224,34 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Subir Publicación -->
+    <PublicationUploadModal
+      v-if="showUploadModal"
+      @close="showUploadModal = false"
+      @success="handleUploadSuccess"
+    />
   </div>
 </template>
 
 <script>
 import { ref } from 'vue';
+import PublicationUploadModal from '../components/PublicationUploadModal.vue';
 
 export default {
   name: 'MyLibrary',
-  emits: ['upload-click'],
+  components: {
+    PublicationUploadModal
+  },
   setup() {
-    const activeTab = ref('collections');
+    const activeTab = ref('publications');
+    const showUploadModal = ref(false);
 
-    const myCollections = ref([
+    const myPublications = ref([
       {
         id: 1,
         title: "Guías de Programación Completas",
-        description: "Una colección completa de guías para aprender programación",
+        description: "Una publicación completa de guías para aprender programación",
         bookCount: 3,
         totalDownloads: 1247,
         totalRatings: 124,
@@ -305,19 +316,19 @@ export default {
       event.target.src = '/programming-book-cover.jpg';
     };
 
-    const handleViewDetails = (collection) => {
-      console.log('Ver detalles:', collection);
+    const handleViewDetails = (publication) => {
+      console.log('Ver detalles:', publication);
       // TODO: Implementar navegación a detalles
     };
 
-    const handleEdit = (collection) => {
-      console.log('Editar:', collection);
+    const handleEdit = (publication) => {
+      console.log('Editar:', publication);
       // TODO: Implementar edición
     };
 
-    const handleDelete = (collection) => {
-      if (confirm(`¿Estás seguro de que deseas eliminar "${collection.title}"?`)) {
-        console.log('Eliminar:', collection);
+    const handleDelete = (publication) => {
+      if (confirm(`¿Estás seguro de que deseas eliminar "${publication.title}"?`)) {
+        console.log('Eliminar:', publication);
         // TODO: Implementar eliminación
       }
     };
@@ -339,11 +350,18 @@ export default {
       }
     };
 
+    const handleUploadSuccess = () => {
+      console.log('Publicación subida exitosamente');
+      // TODO: Recargar las publicaciones del usuario
+      showUploadModal.value = true;
+    };
+
     return {
       activeTab,
-      myCollections,
+      myPublications,
       myBookmarks,
       myComments,
+      showUploadModal,
       formatDate,
       handleImageError,
       handleViewDetails,
@@ -351,7 +369,8 @@ export default {
       handleDelete,
       handleBookmarkClick,
       handleEditComment,
-      handleDeleteComment
+      handleDeleteComment,
+      handleUploadSuccess
     };
   }
 };
@@ -445,14 +464,14 @@ export default {
   width: 100%;
 }
 
-.collections-list {
+.publications-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 94%;
 }
 
-.collection-card {
+.publication-card {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -460,17 +479,17 @@ export default {
   transition: all 0.3s;
 }
 
-.collection-card:hover {
+.publication-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: #cbd5e0;
 }
 
-.collection-content {
+.publication-content {
   display: flex;
   gap: 20px;
 }
 
-.collection-cover {
+.publication-cover {
   width: 96px;
   height: 128px;
   object-fit: cover;
@@ -478,27 +497,27 @@ export default {
   flex-shrink: 0;
 }
 
-.collection-info {
+.publication-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.collection-header {
+.publication-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
 
-.collection-title {
+.publication-title {
   font-size: 18px;
   font-weight: 600;
   color: #1a202c;
   margin-bottom: 4px;
 }
 
-.collection-description {
+.publication-description {
   font-size: 14px;
   color: #718096;
   margin: 0;
@@ -521,7 +540,7 @@ export default {
   color: #742a2a;
 }
 
-.collection-stats {
+.publication-stats {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
@@ -539,7 +558,7 @@ export default {
   color: #a0aec0;
 }
 
-.collection-actions {
+.publication-actions {
   display: flex;
   gap: 8px;
   padding-top: 8px;
@@ -813,11 +832,11 @@ export default {
     border-left: 3px solid #667eea;
   }
 
-  .collection-content {
+  .publication-content {
     flex-direction: column;
   }
 
-  .collection-cover {
+  .publication-cover {
     width: 100%;
     height: auto;
     aspect-ratio: 3/4;
@@ -825,34 +844,6 @@ export default {
 
   .bookmarks-grid {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 1920px) {
-  .my-library-container {
-    max-width: 1600px;
-  }
-
-  .tabs-container {
-    min-width: 1000px;
-  }
-
-  .bookmarks-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  }
-}
-
-@media (min-width: 2560px) {
-  .my-library-container {
-    max-width: 2000px;
-  }
-
-  .tabs-container {
-    min-width: 1200px;
-  }
-
-  .bookmarks-grid {
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   }
 }
 </style>

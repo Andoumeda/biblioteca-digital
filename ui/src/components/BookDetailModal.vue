@@ -6,11 +6,11 @@
           <div class="modal-header">
             <div>
               <h2 class="modal-title">{{ book.title }}</h2>
-              <div v-if="book.collectionTitle" class="collection-info">
+              <div v-if="book.publicationTitle" class="publication-info">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
                 </svg>
-                <span>Parte de la colección: <strong>{{ book.collectionTitle }}</strong></span>
+                <span>Parte de la publicación: <strong>{{ book.publicationTitle }}</strong></span>
               </div>
             </div>
             <button @click="handleClose" class="close-btn">
@@ -266,7 +266,7 @@ export default {
   margin: 0 0 8px 0;
 }
 
-.collection-info {
+.publication-info {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -274,7 +274,7 @@ export default {
   font-size: 14px;
 }
 
-.collection-info strong {
+.publication-info strong {
   color: #667eea;
 }
 
