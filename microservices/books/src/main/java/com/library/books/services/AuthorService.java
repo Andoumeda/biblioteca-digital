@@ -120,13 +120,13 @@ public class AuthorService {
         }
 
         // Nombre completo obligatorio
-        if (fullName == null || fullName.trim().isEmpty()) {
+        if (normalizedFullName != null && normalizedFullName.trim().isEmpty()) {
             log.error("Error al buscar autores: El nombre de búsqueda está vacío");
             throw new BadRequestException("El nombre de búsqueda no puede estar vacío");
         }
 
         // Nacionalidad obligatoria
-        if (nationality == null || nationality.trim().isEmpty()) {
+        if (normalizedNationality != null && normalizedNationality.trim().isEmpty()) {
             log.error("Error al buscar autores: La nacionalidad de búsqueda está vacía");
             throw new BadRequestException("La nacionalidad de búsqueda no puede estar vacía");
         }

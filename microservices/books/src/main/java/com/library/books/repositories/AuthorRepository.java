@@ -22,14 +22,13 @@ public interface AuthorRepository extends JpaRepository<Author, Integer> {
     /**
      * Buscar autores por múltiples filtros (nombre, rango de fechas, nacionalidad, y opcionalmente libro)
      */
-    @Query("SELECT a FROM Author a " +
-            "LEFT JOIN a.books b " +
-            "WHERE (:fullName IS NULL OR LOWER(a.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) " +
-            "AND (:minDate IS NULL OR a.birthDate >= :minDate) " +
-            "AND (:maxDate IS NULL OR a.birthDate <= :maxDate) " +
-            "AND (:nationality IS NULL OR LOWER(a.nationality) LIKE LOWER(CONCAT('%', :nationality, '%'))) " +
-            "AND (:bookId IS NULL OR b.id = :bookId) " +
-            "AND a.isDeleted = false")
+    @Query("SELECT DISTINCT a FROM Author a LEFT JOIN a.books b WHERE" +
+            "(:fullName IS NULL OR LOWER(a.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) AND " +
+            "(:minDate IS NULL OR a.birthDate >= :minDate) AND " +
+            "(:maxDate IS NULL OR a.birthDate <= :maxDate) AND " +
+            "(:nationality IS NULL OR LOWER(a.nationality) LIKE LOWER(CONCAT('%', :nationality, '%'))) AND " +
+            "(:bookId IS NULL OR b.id = :bookId) AND " +
+            "a.isDeleted = false")
     Page<Author> findByFilters(
             @Param("bookId") Integer bookId,
             @Param("fullName") String fullName,
