@@ -131,20 +131,62 @@
     </div>
 
     <!-- Paginación -->
-    <div class="pagination" v-if="!store.loading && store.totalPages > 1">
-      <button @click="store.previousPage()" :disabled="store.currentPage === 0" class="pagination-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
-        Anterior
-      </button>
-      <span class="pagination-info">Página {{ store.currentPage + 1 }} de {{ store.totalPages }}</span>
-      <button @click="store.nextPage()" :disabled="!store.hasMore" class="pagination-btn">
-        Siguiente
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
-      </button>
+    <div class="pagination-section" v-if="!store.loading && store.totalPages > 0">
+      <div class="pagination-controls">
+        <button
+          @click="goToPreviousPage()"
+          :disabled="store.currentPage === 0"
+          class="pagination-btn"
+          v-if="store.currentPage > 0"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Anterior
+        </button>
+
+        <div class="pagination-info-container">
+          <span class="pagination-text">Página</span>
+          <input
+            type="number"
+            v-model.number="manualPage"
+            @keyup.enter="goToManualPage"
+            @blur="goToManualPage"
+            :min="1"
+            :max="store.totalPages"
+            class="page-input"
+          />
+          <span class="pagination-text">de {{ store.totalPages }}</span>
+        </div>
+
+        <button
+          @click="goToNextPage()"
+          :disabled="!store.hasMore"
+          class="pagination-btn"
+          v-if="store.hasMore"
+        >
+          Siguiente
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="page-size-control">
+        <label for="pageSize" class="page-size-label">Elementos por página:</label>
+        <select
+          id="pageSize"
+          v-model.number="pageSize"
+          @change="changePageSize"
+          class="page-size-select"
+        >
+          <option :value="10">10</option>
+          <option :value="20">20</option>
+          <option :value="30">30</option>
+          <option :value="50">50</option>
+        </select>
+        <span class="total-items-info">Total: {{ store.totalItems }} publicaciones</span>
+      </div>
     </div>
 
     <!-- Publication Detail Modal -->
@@ -178,6 +220,18 @@ export default {
     const sortBy = ref('trending');
     const selectedPublication = ref(null);
     const showPublicationModal = ref(false);
+    const manualPage = ref(1);
+    const pageSize = ref(20);
+
+    // Watch for store page changes to update manual page input
+    watch(() => store.currentPage, (newPage) => {
+      manualPage.value = newPage + 1;
+    });
+
+    // Watch for store page size changes
+    watch(() => store.pageSize, (newSize) => {
+      pageSize.value = newSize;
+    });
 
     const filteredPublications = computed(() => {
       // Only show APPROVED publications
@@ -283,8 +337,54 @@ export default {
       }
     };
 
+    const goToPreviousPage = async () => {
+      if (store.currentPage > 0) {
+        await store.fetchPublications(store.currentPage - 1, pageSize.value);
+        await store.fetchCurrentPublicationsFavorites();
+        await loadBooksRatings();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const goToNextPage = async () => {
+      if (store.hasMore) {
+        await store.fetchPublications(store.currentPage + 1, pageSize.value);
+        await store.fetchCurrentPublicationsFavorites();
+        await loadBooksRatings();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const goToManualPage = async () => {
+      // Validate page number
+      if (manualPage.value < 1) {
+        manualPage.value = 1;
+        return;
+      }
+      if (manualPage.value > store.totalPages) {
+        manualPage.value = store.totalPages;
+        return;
+      }
+
+      const targetPage = manualPage.value - 1; // Convert to 0-indexed
+      if (targetPage !== store.currentPage) {
+        await store.fetchPublications(targetPage, pageSize.value);
+        await store.fetchCurrentPublicationsFavorites();
+        await loadBooksRatings();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const changePageSize = async () => {
+      // Reset to first page when changing page size
+      await store.fetchPublications(0, pageSize.value);
+      await store.fetchCurrentPublicationsFavorites();
+      await loadBooksRatings();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     onMounted(async () => {
-      await store.fetchPublications();
+      await store.fetchPublications(0, pageSize.value);
       await store.fetchCategories();
       await favoritesStore.fetchFavorites();
       await store.fetchCurrentPublicationsFavorites();
@@ -297,13 +397,19 @@ export default {
       sortBy,
       selectedPublication,
       showPublicationModal,
+      manualPage,
+      pageSize,
       sortedPublications,
       formatDate,
       handlePublicationClick,
       closePublicationModal,
       handleBookmark,
       isPublicationFavorited,
-      handleImageError
+      handleImageError,
+      goToPreviousPage,
+      goToNextPage,
+      goToManualPage,
+      changePageSize
     };
   }
 }
@@ -639,12 +745,21 @@ export default {
   margin: 0;
 }
 
-.pagination {
+/* Pagination Styles */
+.pagination-section {
+  margin-top: 40px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.pagination-controls {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
-  padding: 24px;
+  margin-bottom: 20px;
 }
 
 .pagination-btn {
@@ -665,12 +780,100 @@ export default {
 .pagination-btn:hover:not(:disabled) {
   background: #5568d3;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .pagination-btn:disabled {
   background: #cbd5e0;
   cursor: not-allowed;
   transform: none;
+  opacity: 0.6;
+}
+
+.pagination-info-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.pagination-text {
+  font-size: 14px;
+}
+
+.page-input {
+  width: 60px;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  transition: all 0.2s;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.page-size-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.page-size-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.page-size-select {
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.page-size-select:hover {
+  border-color: #cbd5e0;
+}
+
+.total-items-info {
+  font-size: 13px;
+  color: #718096;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
 }
 
 .pagination-info {
