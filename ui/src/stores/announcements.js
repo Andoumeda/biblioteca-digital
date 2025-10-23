@@ -5,7 +5,7 @@ export const useAnnouncementsStore = defineStore('announcements', {
   state: () => ({
     announcements: [],
     currentPage: 0,
-    pageSize: 10,
+    pageSize: 20,
     totalPages: 0,
     totalItems: 0,
     loading: false,
@@ -17,23 +17,26 @@ export const useAnnouncementsStore = defineStore('announcements', {
   },
 
   actions: {
-    async fetchAnnouncements(page = 0, size = 10) {
+    async fetchAnnouncements(page = 0, size = 20) {
       this.loading = true;
       this.error = null;
+      console.log('Fetching announcements:', { page, size }); // Debug log
 
       try {
         const response = await announcementsAPI.getAll(page, size);
+        console.log('Announcements response:', response.data); // Debug log
 
         if (response.data) {
-          this.announcements = response.data.data || [];
-          this.totalItems = response.data.totalItems || 0;
-          this.totalPages = response.data.totalPages || 0;
+          this.announcements = response.data.content || [];
+          this.totalItems = response.data.totalElements || 0;
+          this.totalPages = response.data.totalPages || 1;
           this.currentPage = page;
           this.pageSize = size;
         }
       } catch (error) {
-        this.error = error.message || 'Error al cargar anuncios';
-        console.error('Error fetching announcements:', error);
+        console.error('Error fetching announcements:', error.response || error);
+        this.error = error.response?.data?.message || error.message || 'Error al cargar anuncios';
+        this.announcements = [];
       } finally {
         this.loading = false;
       }
@@ -118,4 +121,3 @@ export const useAnnouncementsStore = defineStore('announcements', {
     },
   },
 });
-

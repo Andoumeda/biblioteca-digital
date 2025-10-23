@@ -442,19 +442,18 @@
 </template>
 
 <script>
-import { usePublicationsStore } from '../stores/publicationsStore';
-import { computed, onMounted, ref } from 'vue';
-import { categoriesAPI, favoritesAPI, publicationsAPI } from '../api/publicationsService';
+import { ref, onMounted, computed } from 'vue';
+import { publicationsAPI } from '../api/publicationsService';
+import { categoriesAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI } from '../api/booksService';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 
 export default {
   name: 'Moderation',
   setup() {
-    const publicationsStore = usePublicationsStore();
     const activeTab = ref('publications');
     const filterStatus = ref('all');
-
+    const publications = ref([]);
     const categories = ref([]);
     const allFavorites = ref([]);
     const authors = ref([]);
@@ -471,7 +470,7 @@ export default {
     const ratingsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
 
     const filteredPublications = computed(() => {
-      let pubs = publicationsStore.publications;
+      let pubs = publications.value;
 
       if (filterStatus.value !== 'all') {
         pubs = pubs.filter(pub => pub.state === filterStatus.value);
@@ -479,6 +478,15 @@ export default {
 
       return pubs;
     });
+
+    const loadPublications = async () => {
+      try {
+        const response = await publicationsAPI.getPublications(0, 100);
+        publications.value = response.data?.data || [];
+      } catch (error) {
+        console.error('Error loading publications:', error);
+      }
+    };
 
     const loadCategories = async () => {
       try {
@@ -594,21 +602,19 @@ export default {
 
     const handleApprove = async (publicationId) => {
       try {
-        await publicationsStore.updatePublicationState(publicationId, 'APPROVED');
-        alert('Publicación aprobada exitosamente');
+        await publicationsAPI.updateState(publicationId, 'APPROVED');
+        await loadPublications();
       } catch (error) {
         console.error('Error approving publication:', error);
-        alert('Error al aprobar la publicación');
       }
     };
 
     const handleReject = async (publicationId) => {
       try {
-        await publicationsStore.updatePublicationState(publicationId, 'REJECTED');
-        alert('Publicación rechazada exitosamente');
+        await publicationsAPI.updateState(publicationId, 'REJECTED');
+        await loadPublications();
       } catch (error) {
         console.error('Error rejecting publication:', error);
-        alert('Error al rechazar la publicación');
       }
     };
 
@@ -673,7 +679,7 @@ export default {
     };
 
     onMounted(async () => {
-      await publicationsStore.fetchPublications();
+      await loadPublications();
       await loadCategories();
       await loadFavoritesPage(0);
       await loadAuthors();
@@ -720,121 +726,97 @@ export default {
 
 <style scoped>
 .moderation-container {
-  padding: 24px;
-  max-width: 1400px;
+  padding: 2rem;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .moderation-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 2rem;
 }
 
 .moderation-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1a202c;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
 .tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #e2e8f0;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
 }
 
 .tab-button {
-  padding: 12px 24px;
-  background: none;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: #718096;
-  font-size: 15px;
+  background: none;
+  color: #6b7280;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  margin-bottom: -2px;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
 }
 
 .tab-button:hover {
-  color: #667eea;
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
 .tab-button.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
-}
-
-.badge {
-  display: inline-block;
-  background: #ef4444;
+  background: #667eea;
   color: white;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  margin-left: 6px;
 }
 
-.tab-content {
-  animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.publications-list {
+.section-header {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.filter-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: white;
 }
 
 .moderation-card {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  transition: all 0.2s;
-}
-
-.moderation-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.publication-info {
-  flex: 1;
+  margin-bottom: 1rem;
 }
 
 .publication-title {
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #1a202c;
-  margin: 0 0 4px 0;
+  margin: 0;
+  color: #1f2937;
 }
 
 .publication-meta {
-  font-size: 13px;
-  color: #718096;
-  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
 }
 
 .status-badge {
-  padding: 6px 14px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .status-badge.pending {
@@ -853,92 +835,79 @@ export default {
 }
 
 .publication-description {
-  color: #4a5568;
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 16px;
+  color: #4b5563;
+  margin-bottom: 1rem;
 }
 
 .publication-details {
   display: flex;
-  gap: 20px;
-  margin-bottom: 12px;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #718096;
-  font-size: 14px;
-}
-
-.detail-item svg {
-  color: #a0aec0;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
 .categories {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .category-tag {
-  padding: 4px 12px;
-  background: #edf2f7;
-  color: #4a5568;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  background: #f3f4f6;
+  color: #4b5563;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
 }
 
 .action-buttons {
   display: flex;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  gap: 0.75rem;
 }
 
 .btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
 }
 
 .btn-approve {
-  background: #10b981;
+  background: #059669;
   color: white;
 }
 
 .btn-approve:hover {
-  background: #059669;
+  background: #047857;
 }
 
 .btn-reject {
-  background: #ef4444;
+  background: #dc2626;
   color: white;
 }
 
 .btn-reject:hover {
-  background: #dc2626;
+  background: #b91c1c;
 }
 
 .btn-view {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background: white;
+  border-color: #d1d5db;
+  color: #374151;
 }
 
 .btn-view:hover {
-  background: #edf2f7;
+  background: #f3f4f6;
 }
 
 .no-results,

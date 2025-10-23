@@ -325,9 +325,11 @@ export default {
     const loadUserPublications = async () => {
       try {
         isLoading.value = true;
+        console.log('Cargando publicaciones...');
         const response = await publicationsAPI.getByUser(CURRENT_USER_PROFILE_ID, 0, 100);
+        console.log('Respuesta de publicaciones:', response);
 
-        if (response.data && response.data.data) {
+        if (response?.data?.data) {
           const publications = response.data.data;
 
           // Enriquecer cada publicación con sus libros y estadísticas
@@ -358,21 +360,26 @@ export default {
           }
 
           myPublications.value = publications;
+        } else {
+          console.error('Formato de respuesta inválido:', response);
+          myPublications.value = [];
         }
       } catch (error) {
         console.error('Error al cargar publicaciones del usuario:', error);
+        myPublications.value = [];
       } finally {
         isLoading.value = false;
       }
     };
 
-    // Cargar favoritos del usuario (filtrado por USER_PROFILE_ID)
     const loadUserFavorites = async () => {
       try {
         isLoadingFavorites.value = true;
+        console.log('Cargando favoritos...');
         const response = await favoritesAPI.getByUser(CURRENT_USER_PROFILE_ID, 0, 100);
+        console.log('Respuesta de favoritos:', response);
 
-        if (response.data && response.data.data) {
+        if (response?.data?.data) {
           const favorites = response.data.data;
 
           // Enriquecer cada favorito con los datos de la publicación
@@ -408,9 +415,13 @@ export default {
           }
 
           myFavorites.value = favorites;
+        } else {
+          console.error('Formato de respuesta inválido:', response);
+          myFavorites.value = [];
         }
       } catch (error) {
-        console.error('Error al cargar favoritos del usuario:', error);
+        console.error('Error al cargar favoritos:', error);
+        myFavorites.value = [];
       } finally {
         isLoadingFavorites.value = false;
       }
@@ -527,6 +538,17 @@ export default {
           console.error('Error al eliminar comentario:', error);
           alert('Error al eliminar el comentario');
         }
+      }
+    };
+
+    const handleEditComment = async (comment, newText) => {
+      try {
+        await ratingsAPI.updateRating(comment.id, { comment: newText });
+        await loadUserComments();
+        alert('Comentario actualizado exitosamente');
+      } catch (error) {
+        console.error('Error al actualizar comentario:', error);
+        alert('Error al actualizar el comentario');
       }
     };
 

@@ -28,7 +28,6 @@ public class ApplicationConfig {
             }
         };
 
-        //los converters al ModelMapper
         modelMapper.addConverter(localDateTimeToOffsetDateTime);
 
         return modelMapper;
