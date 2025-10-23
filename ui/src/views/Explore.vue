@@ -5,21 +5,28 @@
       <p class="explore-subtitle">Descubre las mejores publicaciones de la comunidad</p>
     </div>
 
-    <div class="filters-section">
-      <select v-model="sortBy" class="select-input">
-        <option value="trending">Más populares</option>
-        <option value="recent">Más recientes</option>
-        <option value="rating">Mejor valoradas</option>
-        <option value="popular">Más favoritos</option>
-      </select>
+    <!-- Searchbar y Filtros en una sola sección -->
+    <div class="search-filter-section">
+      <div class="search-box">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          v-model="searchTerm"
+          type="text"
+          placeholder="Buscar publicaciones por título, descripción o autor..."
+          class="search-input"
+        />
+      </div>
 
-      <div class="filter-buttons">
-        <button @click="handleFilterChange('all')" :class="['filter-btn', { active: currentFilter === 'all' }]">
-          Todas
-        </button>
-        <button @click="handleFilterChange('approved')" :class="['filter-btn', { active: currentFilter === 'approved' }]">
-          Aprobadas
-        </button>
+      <div class="filters-container">
+        <select v-model="sortBy" class="select-input">
+          <option value="trending">Más populares</option>
+          <option value="recent">Más recientes</option>
+          <option value="rating">Mejor valoradas</option>
+          <option value="popular">Más favoritos</option>
+        </select>
       </div>
     </div>
 
@@ -41,7 +48,7 @@
         <!-- Imagen de portada -->
         <div class="cover-image">
           <img
-            :src="publication.coverImage || '/programming-book-cover.png'"
+            :src="publication.coverImage || '/default-book-cover.svg'"
             :alt="publication.title"
             @error="handleImageError"
           />
@@ -68,7 +75,7 @@
 
           <div class="publication-categories">
             <span
-              v-for="category in publication.categories?.slice(0, 3)"
+              v-for="category in publication.categories"
               :key="category.id"
               class="category-badge"
             >
@@ -98,16 +105,6 @@
           </div>
 
           <div class="publication-actions">
-            <button @click.stop="handleShare(publication)" class="action-button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="18" cy="5" r="3"/>
-                <circle cx="6" cy="12" r="3"/>
-                <circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
-                <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
-              </svg>
-              Compartir
-            </button>
             <button
               @click.stop="handleBookmark(publication)"
               :class="['action-button', 'primary', { 'saved': isPublicationFavorited(publication.id) }]"
@@ -166,6 +163,7 @@ import { useFavoritesStore } from '../stores/favorites';
 import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref, watch } from 'vue';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
+import { DEFAULT_BOOK_COVER } from '../utils/constants';
 
 export default {
   name: 'Explore',
@@ -178,18 +176,19 @@ export default {
     const booksStore = useBooksStore();
     const searchTerm = ref('');
     const sortBy = ref('trending');
-    const currentFilter = ref('all');
     const selectedPublication = ref(null);
     const showPublicationModal = ref(false);
 
     const filteredPublications = computed(() => {
+      // Only show APPROVED publications
       let pubs = store.publications.filter(pub => {
+        const isApproved = pub.state === 'APPROVED' || pub.state === 'approved';
         const matchesSearch =
           pub.title?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
           pub.description?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
           pub.userProfile?.displayName?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
           pub.userProfile?.user?.username?.toLowerCase().includes(searchTerm.value.toLowerCase());
-        return matchesSearch;
+        return isApproved && matchesSearch;
       });
 
       // Add favorites count and book ratings
@@ -204,7 +203,7 @@ export default {
         return {
           ...pub,
           favoritesCount: favoritesStore.getFavoriteCountByPublication(pub.id),
-          coverImage: books[0]?.coverImg || '/programming-book-cover.jpg',
+          coverImage: books[0]?.coverImg || DEFAULT_BOOK_COVER,
           averageRating: parseFloat(averageRating.toFixed(1)),
           totalRatings: books.reduce((sum, book) => {
             const rating = booksStore.getBookRating(book.id);
@@ -250,24 +249,16 @@ export default {
       selectedPublication.value = null;
     };
 
-    const handleShare = (publication) => {
-      console.log('Share publication:', publication.title);
-      // TODO: Implement share functionality
-    };
-
     const handleBookmark = async (publication) => {
       try {
         const isFavorited = favoritesStore.isFavorite(publication.id, 'publication');
 
         if (isFavorited) {
-          // Eliminar de favoritos
           await favoritesStore.removeFavorite(publication.id, 'publication');
         } else {
-          // Agregar a favoritos
           await favoritesStore.addFavorite(publication.id, 'publication');
         }
 
-        // Actualizar el conteo de favoritos en la publicación
         await store.fetchCurrentPublicationsFavorites();
       } catch (error) {
         console.error('Error al actualizar favorito:', error);
@@ -279,45 +270,22 @@ export default {
     };
 
     const handleImageError = (event) => {
-      event.target.src = '/programming-book-cover.jpg';
-    };
-
-    const handleFilterChange = async (filter) => {
-      currentFilter.value = filter;
-      await store.setFilter(filter);
-      await store.fetchCurrentPublicationsFavorites();
-      await loadBooksRatings();
+      event.target.src = DEFAULT_BOOK_COVER;
     };
 
     const loadBooksRatings = async () => {
-      // Obtener todos los IDs de libros de las publicaciones actuales
       const bookIds = store.publications.flatMap(pub =>
         (pub.books || []).map(book => book.id)
       );
 
-      // Cargar ratings de todos los libros
       if (bookIds.length > 0) {
         await booksStore.fetchMultipleBookRatings(bookIds);
       }
     };
 
-    // Watch for search changes with debounce
-    let searchTimeout = null;
-    watch(searchTerm, () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(async () => {
-        if (searchTerm.value.trim()) {
-          await store.searchPublications(searchTerm.value);
-        } else {
-          await store.fetchPublications();
-        }
-        await store.fetchCurrentPublicationsFavorites();
-        await loadBooksRatings();
-      }, 500);
-    });
-
     onMounted(async () => {
       await store.fetchPublications();
+      await store.fetchCategories();
       await favoritesStore.fetchFavorites();
       await store.fetchCurrentPublicationsFavorites();
       await loadBooksRatings();
@@ -327,19 +295,15 @@ export default {
       store,
       searchTerm,
       sortBy,
-      currentFilter,
-      filteredPublications,
-      sortedPublications,
       selectedPublication,
       showPublicationModal,
+      sortedPublications,
       formatDate,
       handlePublicationClick,
       closePublicationModal,
-      handleShare,
       handleBookmark,
-      handleImageError,
-      handleFilterChange,
-      isPublicationFavorited
+      isPublicationFavorited,
+      handleImageError
     };
   }
 }
@@ -353,38 +317,78 @@ export default {
 }
 
 .explore-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  text-align: center;
 }
 
 .explore-title {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: bold;
   color: #1a202c;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .explore-subtitle {
   color: #718096;
-  font-size: 16px;
+  font-size: 18px;
 }
 
-.filters-section {
+.search-filter-section {
+  margin-bottom: 24px;
   display: flex;
+  justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+}
+
+.search-box {
+  position: relative;
+  max-width: 700px;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 50px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  background: white;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.filters-container {
+  display: flex;
+  gap: 16px;
   align-items: center;
 }
 
-
 .select-input {
-  padding: 10px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 12px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
   font-size: 14px;
+  font-weight: 500;
   background: white;
   cursor: pointer;
-  min-width: 180px;
+  min-width: 200px;
+  transition: all 0.2s;
 }
 
 .select-input:focus {
@@ -392,37 +396,16 @@ export default {
   border-color: #667eea;
 }
 
-.filter-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-btn {
-  padding: 10px 20px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
-  color: #4a5568;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.filter-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
-}
-
-.filter-btn.active {
-  background: #667eea;
-  color: white;
-  border-color: #667eea;
+.select-input:hover {
+  border-color: #cbd5e0;
 }
 
 .results-info {
   color: #718096;
-  font-size: 14px;
-  margin-bottom: 20px;
+  font-size: 15px;
+  margin-bottom: 24px;
+  text-align: center;
+  font-weight: 500;
 }
 
 .error-message {

@@ -1,5 +1,12 @@
 // Constantes de la aplicación
 
+// ID del usuario actual (hardcodeado)
+export const CURRENT_USER_ID = 1;
+export const CURRENT_USER_PROFILE_ID = 1;
+
+// Imagen por defecto
+export const DEFAULT_BOOK_COVER = '/programming-book-cover.jpg';
+
 // Estados de publicación
 export const PUBLICATION_STATES = {
   APPROVED: 'APPROVED',

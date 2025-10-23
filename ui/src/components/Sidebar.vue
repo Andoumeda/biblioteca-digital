@@ -21,6 +21,13 @@
         </svg>
         Mi Biblioteca
       </router-link>
+      <router-link to="/announcements" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
+          <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
+        </svg>
+        Anuncios
+      </router-link>
       <router-link to="/moderation" class="nav-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>

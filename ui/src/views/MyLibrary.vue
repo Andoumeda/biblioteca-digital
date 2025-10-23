@@ -147,41 +147,50 @@
           </svg>
           <p>Cargando favoritos...</p>
         </div>
-        <div v-else-if="myFavorites.length > 0" class="bookmarks-grid">
-          <div v-for="favorite in myFavorites" :key="favorite.id" class="bookmark-card">
-            <div class="bookmark-cover-container" @click="handleFavoriteClick(favorite)">
-              <img
-                :src="favorite.publication?.coverImage || (favorite.publication?.books?.[0]?.coverImg) || '/programming-book-cover.jpg'"
-                :alt="favorite.publication?.title || 'Publicación'"
-                class="bookmark-cover"
-                @error="handleImageError"
-              />
-              <span class="book-count-badge">{{ favorite.publication?.books?.length || 0 }} libros</span>
-            </div>
-            <div class="bookmark-info" @click="handleFavoriteClick(favorite)">
-              <div>
-                <h3 class="bookmark-title">{{ favorite.publication?.title || 'Sin título' }}</h3>
-                <p class="bookmark-author">por {{ favorite.publication?.userProfile?.displayName || 'Desconocido' }}</p>
+        <div v-else-if="myFavorites.length > 0" class="favorites-section">
+          <h3 class="section-title">Publicaciones Favoritas</h3>
+          <div class="publications-grid">
+            <div v-for="favorite in myFavorites" :key="favorite.id" class="publication-card-compact">
+              <div class="card-cover" @click="handleFavoriteClick(favorite)">
+                <img
+                  :src="favorite.publication?.coverImage || (favorite.publication?.books?.[0]?.coverImg) || '/programming-book-cover.jpg'"
+                  :alt="favorite.publication?.title || 'Publicación'"
+                  class="cover-img"
+                  @error="handleImageError"
+                />
+                <span class="book-count-badge">{{ favorite.publication?.books?.length || 0 }} libros</span>
               </div>
-              <div class="bookmark-footer">
-                <div class="rating">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                  <span>{{ favorite.averageRating || 'N/A' }}</span>
+              <div class="card-body" @click="handleFavoriteClick(favorite)">
+                <h4 class="card-title">{{ favorite.publication?.title || 'Sin título' }}</h4>
+                <p class="card-author">por {{ favorite.publication?.userProfile?.displayName || 'Desconocido' }}</p>
+                <div class="card-stats">
+                  <div class="stat-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span>{{ favorite.averageRating || 'N/A' }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M8 2v4"/>
+                      <path d="M16 2v4"/>
+                      <rect width="18" height="18" x="3" y="4" rx="2"/>
+                      <path d="M3 10h18"/>
+                    </svg>
+                    <span>{{ formatDate(favorite.createdAt) }}</span>
+                  </div>
                 </div>
-                <span class="saved-date">Agregado {{ formatDate(favorite.createdAt) }}</span>
               </div>
+              <button @click.stop="handleDeleteFavorite(favorite)" class="delete-btn" title="Eliminar de favoritos">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                  <line x1="10" x2="10" y1="11" y2="17"/>
+                  <line x1="14" x2="14" y1="11" y2="17"/>
+                </svg>
+              </button>
             </div>
-            <button @click.stop="handleDeleteFavorite(favorite)" class="delete-favorite-btn" title="Eliminar de favoritos">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18"/>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                <line x1="10" x2="10" y1="11" y2="17"/>
-                <line x1="14" x2="14" y1="11" y2="17"/>
-              </svg>
-            </button>
           </div>
         </div>
 
@@ -203,41 +212,46 @@
           <p>Cargando comentarios...</p>
         </div>
         <div v-else-if="myComments.length > 0" class="comments-list">
-          <div v-for="comment in myComments" :key="comment.id" class="comment-card">
-            <div class="comment-header">
-              <div>
-                <h4 class="comment-book-title">{{ comment.book?.title || 'Libro desconocido' }}</h4>
-                <div class="comment-meta">
-                  <div class="stars">
-                    <svg v-for="star in 5" :key="star" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                      :fill="star <= comment.valoration ? 'currentColor' : 'none'"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      :class="star <= comment.valoration ? 'star-filled' : 'star-empty'">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
+          <div v-for="comment in myComments" :key="comment.id" class="comment-item">
+            <div class="comment-avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="comment-content">
+              <div class="comment-header">
+                <div class="comment-info">
+                  <h4 class="comment-book-title">{{ comment.book?.title || 'Libro desconocido' }}</h4>
+                  <div class="comment-meta">
+                    <div class="stars">
+                      <svg v-for="star in 5" :key="star" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                        :fill="star <= comment.valoration ? 'currentColor' : 'none'"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        :class="star <= comment.valoration ? 'star-filled' : 'star-empty'">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    </div>
+                    <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
                   </div>
-                  <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                </div>
+                <div class="comment-actions">
+                  <button @click="handleEditComment(comment)" class="icon-btn" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    </svg>
+                  </button>
+                  <button @click="handleDeleteComment(comment)" class="icon-btn danger" title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 6h18"/>
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
-              <div class="comment-actions">
-                <button @click="handleEditComment(comment)" class="icon-btn">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                  </svg>
-                </button>
-                <button @click="handleDeleteComment(comment)" class="icon-btn danger">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <p class="comment-text">{{ comment.comment || 'Sin comentario' }}</p>
-            <div class="comment-stats">
-              <span class="comment-rating-label">Calificación: {{ comment.valoration }}/5</span>
+              <p class="comment-text">{{ comment.comment || 'Sin comentario' }}</p>
             </div>
           </div>
         </div>
@@ -284,6 +298,7 @@ import PublicationUploadModal from '../components/PublicationUploadModal.vue';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
 import { publicationsAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI } from '../api/booksService';
+import { CURRENT_USER_PROFILE_ID, DEFAULT_BOOK_COVER } from '../utils/constants';
 
 export default {
   name: 'MyLibrary',
@@ -302,18 +317,60 @@ export default {
     const isLoadingFavorites = ref(false);
     const isLoadingComments = ref(false);
 
-    // ID del usuario hardcoded
-    const USER_PROFILE_ID = 1;
-
     const myPublications = ref([]);
     const myFavorites = ref([]);
     const myComments = ref([]);
 
-    // Cargar favoritos del usuario desde la API
+    // Cargar publicaciones del usuario desde la API (filtrado por USER_PROFILE_ID)
+    const loadUserPublications = async () => {
+      try {
+        isLoading.value = true;
+        const response = await publicationsAPI.getByUser(CURRENT_USER_PROFILE_ID, 0, 100);
+
+        if (response.data && response.data.data) {
+          const publications = response.data.data;
+
+          // Enriquecer cada publicación con sus libros y estadísticas
+          for (const publication of publications) {
+            const booksResponse = await booksAPI.getBooksByPublication(publication.id, 0);
+            publication.books = booksResponse.data?.data || [];
+            publication.bookCount = publication.books.length;
+            publication.cover = publication.books[0]?.coverImg || DEFAULT_BOOK_COVER;
+
+            // Calcular rating promedio
+            let totalRatings = 0;
+            let sumRatings = 0;
+
+            for (const book of publication.books) {
+              try {
+                const ratingData = await ratingsAPI.getBookAverageRating(book.id);
+                totalRatings += ratingData.count || 0;
+                sumRatings += (ratingData.average || 0) * (ratingData.count || 0);
+              } catch (error) {
+                console.error(`Error al cargar rating del libro ${book.id}:`, error);
+              }
+            }
+
+            publication.averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : '0.0';
+            publication.totalRatings = totalRatings;
+            publication.uploadDate = publication.createdAt;
+            publication.status = publication.state?.toLowerCase() || 'pending';
+          }
+
+          myPublications.value = publications;
+        }
+      } catch (error) {
+        console.error('Error al cargar publicaciones del usuario:', error);
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Cargar favoritos del usuario (filtrado por USER_PROFILE_ID)
     const loadUserFavorites = async () => {
       try {
         isLoadingFavorites.value = true;
-        const response = await favoritesAPI.getByUser(USER_PROFILE_ID, 0, 100);
+        const response = await favoritesAPI.getByUser(CURRENT_USER_PROFILE_ID, 0, 100);
 
         if (response.data && response.data.data) {
           const favorites = response.data.data;
@@ -334,12 +391,16 @@ export default {
                 let sumRatings = 0;
 
                 for (const book of favorite.publication.books) {
-                  const ratingData = await ratingsAPI.getBookAverageRating(book.id);
-                  totalRatings += ratingData.count;
-                  sumRatings += ratingData.average * ratingData.count;
+                  try {
+                    const ratingData = await ratingsAPI.getBookAverageRating(book.id);
+                    totalRatings += ratingData.count || 0;
+                    sumRatings += (ratingData.average || 0) * (ratingData.count || 0);
+                  } catch (error) {
+                    console.error(`Error al cargar rating del libro ${book.id}:`, error);
+                  }
                 }
 
-                favorite.averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 0;
+                favorite.averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 'N/A';
               }
             } catch (error) {
               console.error(`Error al cargar publicación ${favorite.publicationId}:`, error);
@@ -355,11 +416,11 @@ export default {
       }
     };
 
-    // Cargar comentarios/ratings del usuario desde la API
+    // Cargar comentarios/ratings del usuario (filtrado por USER_PROFILE_ID)
     const loadUserComments = async () => {
       try {
         isLoadingComments.value = true;
-        const response = await ratingsAPI.getRatingsByUserProfile(USER_PROFILE_ID, 0);
+        const response = await ratingsAPI.getRatingsByUserProfile(CURRENT_USER_PROFILE_ID, 0);
 
         if (response.data && response.data.data) {
           const ratings = response.data.data;
@@ -385,60 +446,6 @@ export default {
       }
     };
 
-    // Cargar publicaciones del usuario desde la API
-    const loadUserPublications = async () => {
-      try {
-        isLoading.value = true;
-        const response = await publicationsAPI.getByUser(USER_PROFILE_ID, 0, 100);
-
-        if (response.data && response.data.data) {
-          const publications = response.data.data;
-
-          // Enriquecer cada publicación con sus libros y estadísticas
-          for (const publication of publications) {
-            // Cargar libros de la publicación
-            const booksResponse = await booksAPI.getBooksByPublication(publication.id, 0);
-            publication.books = booksResponse.data?.data || [];
-            publication.bookCount = publication.books.length;
-
-            // Calcular estadísticas de ratings
-            let totalRatings = 0;
-            let sumRatings = 0;
-
-            for (const book of publication.books) {
-              const ratingData = await ratingsAPI.getBookAverageRating(book.id);
-              totalRatings += ratingData.count;
-              sumRatings += ratingData.average * ratingData.count;
-            }
-
-            publication.totalRatings = totalRatings;
-            publication.averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 0;
-
-            // Contar favoritos
-            publication.favoriteCount = await favoritesAPI.countByPublication(publication.id);
-
-            // Calcular descargas totales (placeholder)
-            publication.totalDownloads = publication.books.reduce((sum, book) => sum + (book.downloadCount || 0), 0);
-
-            // Determinar estado
-            publication.status = publication.state || 'pending';
-            publication.uploadDate = publication.createdAt;
-
-            // Obtener portada del primer libro
-            if (publication.books.length > 0 && publication.books[0].coverImg) {
-              publication.cover = publication.books[0].coverImg;
-            }
-          }
-
-          myPublications.value = publications;
-        }
-      } catch (error) {
-        console.error('Error al cargar publicaciones del usuario:', error);
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
     const formatDate = (dateString) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -449,149 +456,36 @@ export default {
       });
     };
 
-    const handleImageError = (event) => {
-      event.target.src = '/programming-book-cover.jpg';
+    const handleViewDetails = (publication) => {
+      selectedPublication.value = publication;
+      showDetailModal.value = true;
     };
 
-    const handleViewDetails = async (publication) => {
-      try {
-        // Cargar detalles completos de la publicación
-        const response = await publicationsAPI.getById(publication.id);
-
-        if (response.data) {
-          selectedPublication.value = {
-            ...response.data,
-            books: publication.books || [],
-            favoriteCount: publication.favoriteCount || 0
-          };
-          showDetailModal.value = true;
-        }
-      } catch (error) {
-        console.error('Error al cargar detalles de la publicación:', error);
-        alert('Error al cargar los detalles de la publicación');
-      }
-    };
-
-    const handleEdit = async (publication) => {
-      try {
-        // Cargar detalles completos para editar
-        const response = await publicationsAPI.getById(publication.id);
-
-        if (response.data) {
-          publicationToEdit.value = {
-            ...response.data,
-            books: publication.books || []
-          };
-          showEditModal.value = true;
-        }
-      } catch (error) {
-        console.error('Error al cargar publicación para editar:', error);
-        alert('Error al cargar la publicación para editar');
-      }
+    const handleEdit = (publication) => {
+      publicationToEdit.value = publication;
+      showEditModal.value = true;
     };
 
     const handleDelete = async (publication) => {
-      if (!confirm('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.')) {
-        return;
-      }
-
-      try {
-        // Primero eliminar todos los libros de la publicación
-        if (publication.books && publication.books.length > 0) {
-          for (const book of publication.books) {
-            await booksAPI.deleteBook(book.id);
-            console.log(`Libro eliminado: ${book.id}`);
-          }
-        }
-
-        // Luego eliminar la publicación
-        await publicationsAPI.delete(publication.id);
-        console.log(`Publicación eliminada: ${publication.id}`);
-
-        // Recargar las publicaciones
-        await loadUserPublications();
-
-        alert('Publicación eliminada exitosamente');
-      } catch (error) {
-        console.error('Error al eliminar la publicación:', error);
-        alert('Error al eliminar la publicación. Por favor, intenta de nuevo.');
-      }
-    };
-
-    const handleFavoriteClick = async (favorite) => {
-      if (favorite.publication) {
-        selectedPublication.value = favorite.publication;
-        showDetailModal.value = true;
-      }
-    };
-
-    const handleDeleteFavorite = async (favorite) => {
-      if (!confirm('¿Estás seguro de que deseas eliminar esta publicación de favoritos?')) {
-        return;
-      }
-
-      try {
-        await favoritesAPI.deleteFavorite(favorite.id);
-        alert('Publicación eliminada de favoritos exitosamente');
-        // Recargar la lista de favoritos
-        await loadUserFavorites();
-      } catch (error) {
-        console.error('Error al eliminar favorito:', error);
-        alert('Error al eliminar la publicación de favoritos. Por favor, intenta de nuevo.');
-      }
-    };
-
-    const handleEditComment = async (comment) => {
-      // TODO: Implementar modal de edición de comentario
-      const newComment = prompt('Edita tu comentario:', comment.comment);
-      const newRating = prompt('Edita tu calificación (1-5):', comment.valoration);
-
-      if (newComment !== null && newRating !== null) {
+      if (confirm(`¿Estás seguro de eliminar la publicación "${publication.title}"?`)) {
         try {
-          const payload = {
-            bookId: comment.bookId,
-            userProfileId: comment.userProfileId,
-            valoration: parseInt(newRating),
-            comment: newComment
-          };
-
-          await ratingsAPI.updateRating(comment.id, payload);
-          alert('Comentario actualizado exitosamente');
-          await loadUserComments();
+          await publicationsAPI.delete(publication.id);
+          await loadUserPublications();
+          alert('Publicación eliminada exitosamente');
         } catch (error) {
-          console.error('Error al editar comentario:', error);
-          alert('Error al editar el comentario');
+          console.error('Error al eliminar publicación:', error);
+          alert('Error al eliminar la publicación');
         }
-      }
-    };
-
-    const handleDeleteComment = async (comment) => {
-      if (!confirm('¿Estás seguro de que deseas eliminar este comentario?')) {
-        return;
-      }
-
-      try {
-        await ratingsAPI.deleteRating(comment.id);
-        alert('Comentario eliminado exitosamente');
-        await loadUserComments();
-      } catch (error) {
-        console.error('Error al eliminar comentario:', error);
-        alert('Error al eliminar el comentario');
       }
     };
 
     const handleUploadSuccess = async () => {
-      console.log('Publicación subida exitosamente');
       showUploadModal.value = false;
-      // Recargar las publicaciones del usuario
       await loadUserPublications();
     };
 
     const handleEditSuccess = async () => {
-      console.log('Publicación editada exitosamente');
-      showEditModal.value = false;
-      publicationToEdit.value = null;
-      // Recargar las publicaciones del usuario
+      closeEditModal();
       await loadUserPublications();
     };
 
@@ -605,11 +499,47 @@ export default {
       publicationToEdit.value = null;
     };
 
-    // Cargar datos al montar el componente
-    onMounted(() => {
-      loadUserPublications();
-      loadUserFavorites();
-      loadUserComments();
+    const handleFavoriteClick = (favorite) => {
+      selectedPublication.value = favorite.publication;
+      showDetailModal.value = true;
+    };
+
+    const handleDeleteFavorite = async (favorite) => {
+      if (confirm('¿Estás seguro de eliminar este favorito?')) {
+        try {
+          await favoritesAPI.delete(favorite.id);
+          await loadUserFavorites();
+          alert('Favorito eliminado exitosamente');
+        } catch (error) {
+          console.error('Error al eliminar favorito:', error);
+          alert('Error al eliminar el favorito');
+        }
+      }
+    };
+
+    const handleDeleteComment = async (comment) => {
+      if (confirm('¿Estás seguro de eliminar este comentario?')) {
+        try {
+          await ratingsAPI.deleteRating(comment.id);
+          await loadUserComments();
+          alert('Comentario eliminado exitosamente');
+        } catch (error) {
+          console.error('Error al eliminar comentario:', error);
+          alert('Error al eliminar el comentario');
+        }
+      }
+    };
+
+    const handleImageError = (event) => {
+      event.target.src = DEFAULT_BOOK_COVER;
+    };
+
+    onMounted(async () => {
+      await Promise.all([
+        loadUserPublications(),
+        loadUserFavorites(),
+        loadUserComments()
+      ]);
     });
 
     return {
@@ -626,21 +556,21 @@ export default {
       myFavorites,
       myComments,
       formatDate,
-      handleImageError,
       handleViewDetails,
       handleEdit,
       handleDelete,
+      handleUploadSuccess,
+      handleEditSuccess,
+      closeDetailModal,
+      closeEditModal,
       handleFavoriteClick,
       handleDeleteFavorite,
       handleEditComment,
       handleDeleteComment,
-      handleUploadSuccess,
-      handleEditSuccess,
-      closeDetailModal,
-      closeEditModal
+      handleImageError
     };
   }
-};
+}
 </script>
 
 <style scoped>
@@ -1157,6 +1087,181 @@ export default {
   margin: 0 0 1.5rem 0;
 }
 
+/* Estilos para favoritos con grid */
+.favorites-section {
+  width: 100%;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 1.5rem 0;
+}
+
+.publications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.publication-card-compact {
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.publication-card-compact:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.card-cover {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.publication-card-compact:hover .cover-img {
+  transform: scale(1.05);
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.card-author {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0 0 0.75rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-stats {
+  display: flex;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.stat-item svg {
+  color: #999;
+}
+
+.stat-item:first-child {
+  color: #f39c12;
+}
+
+.stat-item:first-child svg {
+  color: #f39c12;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  color: #dc3545;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+}
+
+.publication-card-compact:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Estilos para comentarios mejorados */
+.comment-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e0;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+}
+
+.comment-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-info {
+  flex: 1;
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .my-library-container {
     padding: 1rem;
@@ -1185,8 +1290,30 @@ export default {
     flex-direction: column;
   }
 
-  .bookmarks-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  .publications-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .comment-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .comment-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .comment-actions {
+    margin-top: 0.5rem;
+  }
+
+  .loading-state,
+  .publications-list,
+  .bookmarks-grid,
+  .comments-list {
+    width: 100%;
   }
 }
 </style>

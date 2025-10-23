@@ -6,6 +6,8 @@ import Explore from '../src/views/Explore.vue';
 import Moderation from '../src/views/Moderation.vue';
 import MyLibrary from '../src/views/MyLibrary.vue';
 import Settings from '../src/views/Settings.vue';
+import Announcements from '../src/views/Announcements.vue';
+import AnnouncementDetail from '../src/views/AnnouncementDetail.vue';
 
 const routes = [
   {
@@ -37,6 +39,16 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings
+  },
+  {
+    path: '/announcements',
+    name: 'Announcements',
+    component: Announcements
+  },
+  {
+    path: '/announcements/:id',
+    name: 'AnnouncementDetail',
+    component: AnnouncementDetail
   },
   {
     path: '/:pathMatch(.*)*',

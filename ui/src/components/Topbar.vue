@@ -21,67 +21,6 @@
         </div>
       </div>
 
-      <div class="topbar-center">
-        <div class="search-box">
-          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Buscar libros, publicaciones..."
-            class="search-input"
-            @keyup.enter="handleSearch"
-            @input="handleSearchInput"
-          />
-
-          <!-- Resultados de búsqueda -->
-          <div v-if="showSearchResults && searchResults.length > 0" class="search-results-dropdown">
-            <div class="search-results-header">
-              <span>Resultados ({{ searchResults.length }})</span>
-              <button @click="closeSearchResults" class="close-search-btn">×</button>
-            </div>
-            <div class="search-results-list">
-              <div
-                v-for="result in searchResults"
-                :key="result.id"
-                @click="handleResultClick(result)"
-                class="search-result-item"
-              >
-                <div class="result-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-                  </svg>
-                </div>
-                <div class="result-content">
-                  <div class="result-title">{{ result.title }}</div>
-                  <div class="result-meta">
-                    por {{ result.userProfile?.displayName || 'Desconocido' }} •
-                    {{ result.books?.length || 0 }} libros
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="search-results-footer">
-              <button @click="viewAllResults" class="view-all-search-btn">
-                Ver todos los resultados
-              </button>
-            </div>
-          </div>
-
-          <div v-else-if="showSearchResults && searchQuery.length > 0 && searchResults.length === 0" class="search-results-dropdown">
-            <div class="no-results">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-              </svg>
-              <p>No se encontraron resultados</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="topbar-right">
         <div class="notifications-menu">
           <button @click="toggleNotifications" class="icon-button" title="Notificaciones">
@@ -125,6 +64,11 @@
                 </div>
               </div>
             </div>
+            <div class="notifications-footer">
+              <button @click="handleViewAllNotifications" class="view-all-notifications-btn">
+                Ver todas las notificaciones
+              </button>
+            </div>
           </div>
         </div>
 
@@ -133,7 +77,7 @@
             <div class="user-avatar">
               {{ userInitial }}
             </div>
-            <span class="user-name">{{ userName }}</span>
+            <span class="user-name">{{ currentUserProfile?.displayName || 'Usuario' }}</span>
             <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
@@ -142,8 +86,9 @@
           <div v-if="showUserMenu" class="user-dropdown" @click.stop>
             <div class="dropdown-header">
               <div class="user-info">
-                <p class="user-display-name">{{ userName }}</p>
-                <p class="user-email">usuario@ejemplo.com</p>
+                <p class="user-display-name">{{ currentUserProfile?.displayName || 'Usuario' }}</p>
+                <p class="user-email">{{ currentUserProfile?.user?.username || 'usuario' }}@biblioteca.com</p>
+                <p class="user-id">ID: {{ CURRENT_USER_PROFILE_ID }}</p>
               </div>
             </div>
             <div class="dropdown-divider"></div>
@@ -170,24 +115,23 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { announcementsAPI } from '../api/usersService';
-import { publicationsAPI } from '../api/publicationsService';
+import { announcementsAPI, userProfilesAPI } from '../api/usersService';
+import { CURRENT_USER_PROFILE_ID } from '../utils/constants';
 
 export default {
   name: "Topbar",
   setup() {
     const router = useRouter();
-    const searchQuery = ref('');
     const showUserMenu = ref(false);
     const showNotifications = ref(false);
-    const showSearchResults = ref(false);
-    const userName = ref('Usuario');
-    const userInitial = ref('U');
     const announcements = ref([]);
-    const searchResults = ref([]);
-    const searchTimeout = ref(null);
+    const currentUserProfile = ref(null);
+
+    const userInitial = computed(() => {
+      return currentUserProfile.value?.displayName?.[0]?.toUpperCase() || 'U';
+    });
 
     const toggleUserMenu = () => {
       showUserMenu.value = !showUserMenu.value;
@@ -197,6 +141,16 @@ export default {
     const toggleNotifications = () => {
       showNotifications.value = !showNotifications.value;
       showUserMenu.value = false;
+    };
+
+    const loadCurrentUser = async () => {
+      try {
+        const response = await userProfilesAPI.getProfileById(CURRENT_USER_PROFILE_ID);
+        currentUserProfile.value = response.data;
+      } catch (error) {
+        console.error('Error loading current user:', error);
+        currentUserProfile.value = null;
+      }
     };
 
     const loadAnnouncements = async () => {
@@ -209,90 +163,10 @@ export default {
       }
     };
 
-    const handleSearchInput = () => {
-      clearTimeout(searchTimeout.value);
-
-      if (searchQuery.value.length < 2) {
-        showSearchResults.value = false;
-        searchResults.value = [];
-        return;
-      }
-
-      searchTimeout.value = setTimeout(async () => {
-        await performSearch();
-      }, 500);
-    };
-
-    const performSearch = async () => {
-      try {
-        const query = searchQuery.value.trim();
-        if (!query) {
-          showSearchResults.value = false;
-          return;
-        }
-
-        const results = [];
-
-        // Buscar por título
-        try {
-          const titleResponse = await publicationsAPI.searchByTitle(query, 0, 5);
-          if (titleResponse.data?.data) {
-            results.push(...titleResponse.data.data);
-          }
-        } catch (error) {
-          console.log('No results by title');
-        }
-
-        // Buscar por descripción
-        try {
-          const descResponse = await publicationsAPI.searchByDescription(query, 0, 5);
-          if (descResponse.data?.data) {
-            results.push(...descResponse.data.data);
-          }
-        } catch (error) {
-          console.log('No results by description');
-        }
-
-        // Eliminar duplicados
-        const uniqueResults = Array.from(
-          new Map(results.map(item => [item.id, item])).values()
-        );
-
-        searchResults.value = uniqueResults.slice(0, 5);
-        showSearchResults.value = true;
-      } catch (error) {
-        console.error('Error performing search:', error);
-        searchResults.value = [];
-        showSearchResults.value = true;
-      }
-    };
-
-    const handleSearch = async () => {
-      if (searchQuery.value.trim()) {
-        await performSearch();
-        // Navegar a explorar con el término de búsqueda
-        router.push({
-          path: '/explore'
-        });
-        closeSearchResults();
-      }
-    };
-
-    const handleResultClick = (result) => {
-      console.log('Result clicked:', result);
-      closeSearchResults();
-      // TODO: Navigate to publication detail
-    };
-
-    const viewAllResults = () => {
-      router.push({
-        path: '/explore'
-      });
-      closeSearchResults();
-    };
-
-    const closeSearchResults = () => {
-      showSearchResults.value = false;
+    const handleViewAllNotifications = () => {
+      showNotifications.value = false;
+      // Navigate to notifications page or show all
+      console.log('Ver todas las notificaciones');
     };
 
     const handleSettings = () => {
@@ -322,14 +196,12 @@ export default {
       if (showNotifications.value && !event.target.closest('.notifications-menu')) {
         showNotifications.value = false;
       }
-      if (showSearchResults.value && !event.target.closest('.search-box')) {
-        showSearchResults.value = false;
-      }
     };
 
     onMounted(() => {
       document.addEventListener('click', closeMenuOnClickOutside);
       loadAnnouncements();
+      loadCurrentUser();
     });
 
     onUnmounted(() => {
@@ -337,21 +209,15 @@ export default {
     });
 
     return {
-      searchQuery,
       showUserMenu,
       showNotifications,
-      showSearchResults,
-      userName,
       userInitial,
       announcements,
-      searchResults,
+      currentUserProfile,
+      CURRENT_USER_PROFILE_ID,
       toggleUserMenu,
       toggleNotifications,
-      handleSearchInput,
-      handleSearch,
-      handleResultClick,
-      viewAllResults,
-      closeSearchResults,
+      handleViewAllNotifications,
       handleSettings,
       handleLogout,
       formatDate
@@ -397,44 +263,7 @@ export default {
   margin: 0;
 }
 
-.topbar-center {
-  flex: 1;
-  max-width: 600px;
-  margin: 0 24px;
-}
-
-.search-box {
-  position: relative;
-  width: 100%;
-}
-
-.search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #a0aec0;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px 14px 10px 42px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.95);
-  transition: all 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-}
-
 .topbar-right {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -442,12 +271,12 @@ export default {
 
 .icon-button {
   position: relative;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   border-radius: 8px;
-  padding: 10px;
-  color: white;
+  padding: 8px;
   cursor: pointer;
+  color: white;
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -455,21 +284,162 @@ export default {
 }
 
 .icon-button:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .notification-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -4px;
+  right: -4px;
   background: #ef4444;
   color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 5px;
   border-radius: 10px;
-  min-width: 16px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.notifications-menu {
+  position: relative;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  width: 380px;
+  max-height: 500px;
+  overflow: hidden;
+  z-index: 1000;
+  color: #333;
+}
+
+.notifications-header {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notifications-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-notifications-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-notifications-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.notifications-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notification-item:hover {
+  background: #f9fafb;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: #eff6ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b82f6;
+}
+
+.notification-content h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.notification-content p {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.no-notifications {
+  padding: 48px 24px;
   text-align: center;
+  color: #9ca3af;
+}
+
+.no-notifications svg {
+  color: #d1d5db;
+  margin-bottom: 16px;
+}
+
+.no-notifications p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.notifications-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.view-all-notifications-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.view-all-notifications-btn:hover {
+  background: #eff6ff;
 }
 
 .user-menu {
@@ -479,23 +449,23 @@ export default {
 .user-button {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.15);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  border-radius: 8px;
+  border-radius: 24px;
   padding: 6px 12px 6px 6px;
-  color: white;
   cursor: pointer;
+  color: white;
   transition: all 0.2s;
 }
 
 .user-button:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: white;
   color: #667eea;
@@ -503,7 +473,7 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .user-name {
@@ -511,82 +481,65 @@ export default {
   font-weight: 500;
 }
 
-.chevron-icon {
-  transition: transform 0.2s;
-}
-
-.user-button:hover .chevron-icon {
-  transform: translateY(2px);
-}
-
 .user-dropdown {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 220px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  overflow: hidden;
   z-index: 1000;
-  animation: dropdownFade 0.2s;
-}
-
-@keyframes dropdownFade {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  color: #333;
 }
 
 .dropdown-header {
   padding: 16px;
-}
-
-.user-info {
-  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
 .user-display-name {
-  font-weight: 600;
-  color: #1a202c;
   margin: 0 0 4px 0;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .user-email {
+  margin: 0 0 4px 0;
   font-size: 13px;
-  color: #718096;
+  opacity: 0.9;
+}
+
+.user-id {
   margin: 0;
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .dropdown-divider {
   height: 1px;
-  background: #e2e8f0;
-  margin: 0;
+  background: #e5e7eb;
 }
 
 .dropdown-item {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
   padding: 12px 16px;
-  border: none;
   background: none;
-  color: #4a5568;
-  font-size: 14px;
+  border: none;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 14px;
+  color: #374151;
+  transition: background 0.2s;
 }
 
 .dropdown-item:hover {
-  background: #f7fafc;
-  color: #1a202c;
+  background: #f9fafb;
 }
 
 .dropdown-item.logout {
@@ -597,267 +550,7 @@ export default {
   background: #fef2f2;
 }
 
-/* Search Results Dropdown */
-.search-results-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1001;
-  max-height: 400px;
-  overflow: hidden;
-  animation: dropdownFade 0.2s;
-}
-
-.search-results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e2e8f0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.close-search-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #718096;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.close-search-btn:hover {
-  background: #f7fafc;
-  color: #1a202c;
-}
-
-.search-results-list {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.search-result-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.search-result-item:hover {
-  background: #f7fafc;
-}
-
-.result-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.chevron-icon {
   color: white;
-  flex-shrink: 0;
-}
-
-.result-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.result-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1a202c;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.result-meta {
-  font-size: 12px;
-  color: #718096;
-}
-
-.search-results-footer {
-  border-top: 1px solid #e2e8f0;
-  padding: 12px 16px;
-}
-
-.view-all-search-btn {
-  width: 100%;
-  padding: 8px;
-  background: #f7fafc;
-  border: none;
-  border-radius: 6px;
-  color: #667eea;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-all-search-btn:hover {
-  background: #edf2f7;
-}
-
-.no-results {
-  padding: 40px 20px;
-  text-align: center;
-  color: #718096;
-}
-
-.no-results svg {
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
-
-.no-results p {
-  margin: 0;
-  font-size: 14px;
-}
-
-/* Notifications */
-.notifications-menu {
-  position: relative;
-}
-
-.notifications-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 360px;
-  max-width: 420px;
-  max-height: 500px;
-  z-index: 1000;
-  animation: dropdownFade 0.2s;
-}
-
-.notifications-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.notifications-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a202c;
-}
-
-.close-notifications-btn {
-  background: none;
-  border: none;
-  font-size: 28px;
-  color: #718096;
-  cursor: pointer;
-  padding: 0;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-  line-height: 1;
-}
-
-.close-notifications-btn:hover {
-  background: #f7fafc;
-  color: #1a202c;
-}
-
-.notifications-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.no-notifications {
-  padding: 60px 20px;
-  text-align: center;
-  color: #718096;
-}
-
-.no-notifications svg {
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.no-notifications p {
-  margin: 0;
-  font-size: 14px;
-}
-
-.notification-item {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-  transition: background 0.2s;
-}
-
-.notification-item:last-child {
-  border-bottom: none;
-}
-
-.notification-item:hover {
-  background: #f7fafc;
-}
-
-.notification-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #edf2f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #667eea;
-  flex-shrink: 0;
-}
-
-.notification-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.notification-content h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a202c;
-  margin: 0 0 4px 0;
-}
-
-.notification-content p {
-  font-size: 13px;
-  color: #4a5568;
-  margin: 0 0 6px 0;
-  line-height: 1.5;
-}
-
-.notification-time {
-  font-size: 11px;
-  color: #a0aec0;
 }
 </style>

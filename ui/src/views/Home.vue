@@ -68,12 +68,12 @@
       <div class="stat-card">
         <div class="stat-icon" style="background: linear-gradient(135deg, #48bb78 0%, #38b2ac 100%);">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
           </svg>
         </div>
         <div class="stat-content">
-          <h3 class="stat-number">{{ stats.totalFavorites }}</h3>
-          <p class="stat-label">Favoritos</p>
+          <h3 class="stat-number">{{ stats.totalBooks }}</h3>
+          <p class="stat-label">Libros</p>
         </div>
       </div>
 
@@ -111,7 +111,7 @@
         >
           <div class="featured-image">
             <img
-              :src="publication.coverImage || '/programming-book-cover.jpg'"
+              :src="publication.coverImage || '/default-book-cover.svg'"
               :alt="publication.title"
               @error="handleImageError"
             />
@@ -167,35 +167,13 @@
       </div>
     </div>
 
-    <!-- Recent Activity Section -->
-    <div class="activity-section">
-      <div class="section-header">
-        <h2 class="section-title">Actividad Reciente</h2>
-      </div>
-
-      <div class="activity-list">
-        <div
-          v-for="publication in recentPublications"
-          :key="publication.id"
-          class="activity-item"
-        >
-          <div class="activity-avatar">
-            {{ publication.userProfile?.user?.username?.[0]?.toUpperCase() || 'U' }}
-          </div>
-          <div class="activity-content">
-            <p class="activity-text">
-              <strong>{{ publication.userProfile?.displayName || 'Usuario' }}</strong>
-              publicó
-              <strong>{{ publication.title }}</strong>
-            </p>
-            <p class="activity-time">{{ formatTimeAgo(publication.createdAt) }}</p>
-          </div>
-          <button @click="handlePublicationClick(publication)" class="activity-action">
-            Ver
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Publication Detail Modal -->
+    <PublicationDetailModal
+      v-if="selectedPublication"
+      :publication="selectedPublication"
+      :is-open="showPublicationModal"
+      @close="closePublicationModal"
+    />
   </div>
 </template>
 
@@ -206,11 +184,14 @@ import { useUsersStore } from '../stores/users';
 import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { usersAPI } from '../api/usersService';
-import { publicationsAPI } from '../api/publicationsService';
+import PublicationDetailModal from '../components/PublicationDetailModal.vue';
+import { DEFAULT_BOOK_COVER } from '../utils/constants';
 
 export default {
   name: 'Home',
+  components: {
+    PublicationDetailModal
+  },
   setup() {
     const router = useRouter();
     const publicationsStore = usePublicationsStore();
@@ -219,11 +200,13 @@ export default {
     const booksStore = useBooksStore();
     const loading = ref(true);
     const showUploadModal = ref(false);
+    const selectedPublication = ref(null);
+    const showPublicationModal = ref(false);
 
     const stats = computed(() => ({
       totalPublications: publicationsStore.totalItems || 0,
       totalUsers: usersStore.totalUsers || 0,
-      totalFavorites: favoritesStore.totalFavorites || 0,
+      totalBooks: booksStore.books?.length || 0,
       totalCategories: publicationsStore.categories?.length || 0
     }));
 
@@ -233,14 +216,8 @@ export default {
         .map(pub => ({
           ...pub,
           favoritesCount: favoritesStore.getFavoriteCountByPublication(pub.id),
-          coverImage: pub.books?.[0]?.coverImg || '/programming-book-cover.jpg'
+          coverImage: pub.books?.[0]?.coverImg || DEFAULT_BOOK_COVER
         }));
-    });
-
-    const recentPublications = computed(() => {
-      return [...publicationsStore.publications]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5);
     });
 
     const categories = computed(() => publicationsStore.categories || []);
@@ -269,32 +246,24 @@ export default {
       ).length;
     };
 
-    const formatTimeAgo = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMins / 60);
-      const diffDays = Math.floor(diffHours / 24);
-
-      if (diffMins < 60) return `hace ${diffMins} minutos`;
-      if (diffHours < 24) return `hace ${diffHours} horas`;
-      return `hace ${diffDays} días`;
-    };
-
     const handlePublicationClick = (publication) => {
-      console.log('Publication clicked:', publication);
-      // TODO: Navigate to publication detail
+      selectedPublication.value = publication;
+      showPublicationModal.value = true;
     };
 
-    const handleCategoryClick = (category) => {
+    const closePublicationModal = () => {
+      showPublicationModal.value = false;
+      selectedPublication.value = null;
+    };
+
+    const handleCategoryClick = async (category) => {
+      // Apply category filter in the store
+      await publicationsStore.fetchPublicationsByCategory(category.id);
       router.push('/explore');
-      // TODO: Filter by category
     };
 
     const handleImageError = (event) => {
-      event.target.src = '/programming-book-cover.jpg';
+      event.target.src = DEFAULT_BOOK_COVER;
     };
 
     onMounted(async () => {
@@ -318,14 +287,15 @@ export default {
     return {
       loading,
       showUploadModal,
+      selectedPublication,
+      showPublicationModal,
       stats,
       featuredPublications,
-      recentPublications,
       categories,
       getCategoryEmoji,
       getCategoryCount,
-      formatTimeAgo,
       handlePublicationClick,
+      closePublicationModal,
       handleCategoryClick,
       handleImageError
     };
