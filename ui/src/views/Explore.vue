@@ -108,11 +108,17 @@
               </svg>
               Compartir
             </button>
-            <button @click.stop="handleBookmark(publication)" class="action-button primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button
+              @click.stop="handleBookmark(publication)"
+              :class="['action-button', 'primary', { 'saved': isPublicationFavorited(publication.id) }]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                :fill="isPublicationFavorited(publication.id) ? 'currentColor' : 'none'"
+                stroke="currentColor"
+                stroke-width="2">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
               </svg>
-              Guardar
+              {{ isPublicationFavorited(publication.id) ? 'Guardado' : 'Guardar' }}
             </button>
           </div>
         </div>
@@ -143,6 +149,14 @@
         </svg>
       </button>
     </div>
+
+    <!-- Publication Detail Modal -->
+    <PublicationDetailModal
+      v-if="selectedPublication"
+      :publication="selectedPublication"
+      :is-open="showPublicationModal"
+      @close="closePublicationModal"
+    />
   </div>
 </template>
 
@@ -151,9 +165,13 @@ import { usePublicationsStore } from '../stores/publicationsStore';
 import { useFavoritesStore } from '../stores/favorites';
 import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref, watch } from 'vue';
+import PublicationDetailModal from '../components/PublicationDetailModal.vue';
 
 export default {
   name: 'Explore',
+  components: {
+    PublicationDetailModal
+  },
   setup() {
     const store = usePublicationsStore();
     const favoritesStore = useFavoritesStore();
@@ -161,6 +179,8 @@ export default {
     const searchTerm = ref('');
     const sortBy = ref('trending');
     const currentFilter = ref('all');
+    const selectedPublication = ref(null);
+    const showPublicationModal = ref(false);
 
     const filteredPublications = computed(() => {
       let pubs = store.publications.filter(pub => {
@@ -221,8 +241,13 @@ export default {
     };
 
     const handlePublicationClick = (publication) => {
-      console.log('Publication clicked:', publication);
-      // TODO: Navigate to publication detail
+      selectedPublication.value = publication;
+      showPublicationModal.value = true;
+    };
+
+    const closePublicationModal = () => {
+      showPublicationModal.value = false;
+      selectedPublication.value = null;
     };
 
     const handleShare = (publication) => {
@@ -230,9 +255,27 @@ export default {
       // TODO: Implement share functionality
     };
 
-    const handleBookmark = (publication) => {
-      console.log('Bookmark publication:', publication.title);
-      // TODO: Implement bookmark functionality
+    const handleBookmark = async (publication) => {
+      try {
+        const isFavorited = favoritesStore.isFavorite(publication.id, 'publication');
+
+        if (isFavorited) {
+          // Eliminar de favoritos
+          await favoritesStore.removeFavorite(publication.id, 'publication');
+        } else {
+          // Agregar a favoritos
+          await favoritesStore.addFavorite(publication.id, 'publication');
+        }
+
+        // Actualizar el conteo de favoritos en la publicación
+        await store.fetchCurrentPublicationsFavorites();
+      } catch (error) {
+        console.error('Error al actualizar favorito:', error);
+      }
+    };
+
+    const isPublicationFavorited = (publicationId) => {
+      return favoritesStore.isFavorite(publicationId, 'publication');
     };
 
     const handleImageError = (event) => {
@@ -287,12 +330,16 @@ export default {
       currentFilter,
       filteredPublications,
       sortedPublications,
+      selectedPublication,
+      showPublicationModal,
       formatDate,
       handlePublicationClick,
+      closePublicationModal,
       handleShare,
       handleBookmark,
       handleImageError,
-      handleFilterChange
+      handleFilterChange,
+      isPublicationFavorited
     };
   }
 }
@@ -582,6 +629,15 @@ export default {
 
 .action-button.primary:hover {
   background: #5568d3;
+}
+
+.action-button.primary.saved {
+  background: #48bb78;
+  border-color: #48bb78;
+}
+
+.action-button.primary.saved:hover {
+  background: #38a169;
 }
 
 .no-results {

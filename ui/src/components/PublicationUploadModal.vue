@@ -7,10 +7,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
             </svg>
-            Subir Nueva Publicación de Libros
+            {{ editMode ? 'Editar Publicación' : 'Subir Nueva Publicación de Libros' }}
           </h2>
           <p class="modal-description">
-            Crea una publicación con uno o más libros. Todos los campos marcados con * son obligatorios.
+            {{ editMode ? 'Edita los detalles de tu publicación y sus libros.' : 'Crea una publicación con uno o más libros.' }} Todos los campos marcados con * son obligatorios.
           </p>
         </div>
         <button @click="$emit('close')" class="close-btn">
@@ -301,7 +301,7 @@
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" x2="12" y1="3" y2="15"/>
             </svg>
-            {{ isUploading ? 'Subiendo...' : 'Subir Publicación' }}
+            {{ isUploading ? (editMode ? 'Actualizando...' : 'Subiendo...') : (editMode ? 'Actualizar Publicación' : 'Subir Publicación') }}
           </button>
         </div>
       </form>
@@ -310,15 +310,26 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { categoriesAPI, publicationsAPI } from '../api/publicationsService';
 import { booksAPI, authorsAPI } from '../api/booksService';
 
 export default {
   name: 'PublicationUploadModal',
+  props: {
+    editMode: {
+      type: Boolean,
+      default: false
+    },
+    publicationData: {
+      type: Object,
+      default: null
+    }
+  },
   emits: ['close', 'success'],
   setup(props, { emit }) {
     const publicationData = ref({
+      id: null,
       title: '',
       description: '',
       categoryId: '',
@@ -365,11 +376,44 @@ export default {
       }
     };
 
+    // Cargar datos en modo de edición
+    const loadEditData = () => {
+      if (props.editMode && props.publicationData) {
+        publicationData.value = {
+          id: props.publicationData.id,
+          title: props.publicationData.title || '',
+          description: props.publicationData.description || '',
+          categoryId: props.publicationData.categories?.[0]?.id || '',
+          userProfileId: props.publicationData.userProfileId || 1
+        };
+
+        // Cargar libros si están disponibles
+        if (props.publicationData.books && props.publicationData.books.length > 0) {
+          books.value = props.publicationData.books.map(book => ({
+            id: book.id.toString(),
+            title: book.title || '',
+            selectedAuthors: book.authors || [],
+            description: book.description || '',
+            bookUrl: book.bookUrl || '',
+            coverImg: book.coverImg || ''
+          }));
+        }
+      }
+    };
+
     // Cargar categorías al montar el componente
     onMounted(() => {
       loadCategories();
       loadAuthors(); // Cargar autores iniciales
+      loadEditData(); // Cargar datos si está en modo edición
     });
+
+    // Observar cambios en los props
+    watch(() => props.publicationData, () => {
+      if (props.editMode && props.publicationData) {
+        loadEditData();
+      }
+    }, { immediate: true });
 
     // Cargar autores desde la API
     const loadAuthors = async (fullname = '-') => {
@@ -496,53 +540,115 @@ export default {
       uploadProgress.value = 0;
 
       try {
-        // 1. Crear la publicación
-        uploadProgress.value = 20;
-        const publicationPayload = {
-          title: publicationData.value.title,
-          description: publicationData.value.description,
-          userProfileId: publicationData.value.userProfileId,
-          categoryIds: [publicationData.value.categoryId]
-        };
+        let publicationId;
 
-        console.log('Creando publicación:', publicationPayload);
-        const publicationResponse = await publicationsAPI.createPublication(publicationPayload);
-
-        if (!publicationResponse.data) {
-          throw new Error('Error al crear la publicación');
-        }
-
-        const publicationId = publicationResponse.data.id;
-        console.log('Publicación creada con ID:', publicationId);
-
-        uploadProgress.value = 40;
-
-        // 2. Crear los libros asociados a la publicación
-        const booksCount = books.value.length;
-        const progressPerBook = 60 / booksCount;
-
-        for (let i = 0; i < books.value.length; i++) {
-          const book = books.value[i];
-
-          const bookPayload = {
-            title: book.title,
-            description: book.description,
-            bookUrl: book.bookUrl,
-            coverImg: book.coverImg,
-            publicationId: publicationId,
-            authorIds: book.selectedAuthors.map(author => author.id)
+        if (props.editMode && publicationData.value.id) {
+          // MODO EDICIÓN: Actualizar publicación existente
+          uploadProgress.value = 10;
+          const publicationPayload = {
+            title: publicationData.value.title,
+            description: publicationData.value.description,
+            userProfileId: publicationData.value.userProfileId,
+            categoryIds: [publicationData.value.categoryId]
           };
 
-          console.log('Creando libro:', bookPayload);
-          const bookResponse = await booksAPI.createBook(bookPayload);
+          console.log('Actualizando publicación:', publicationData.value.id, publicationPayload);
+          await publicationsAPI.update(publicationData.value.id, publicationPayload);
+          publicationId = publicationData.value.id;
 
-          if (!bookResponse.data) {
-            console.error('Error al crear libro:', book.title);
-          } else {
-            console.log('Libro creado con ID:', bookResponse.data.id);
+          uploadProgress.value = 30;
+
+          // Eliminar libros antiguos que no están en la lista actual
+          const currentBookIds = books.value
+            .filter(book => !isNaN(parseInt(book.id)))
+            .map(book => parseInt(book.id));
+
+          const originalBooks = props.publicationData?.books || [];
+          for (const oldBook of originalBooks) {
+            if (!currentBookIds.includes(oldBook.id)) {
+              console.log('Eliminando libro:', oldBook.id);
+              await booksAPI.deleteBook(oldBook.id);
+            }
           }
 
-          uploadProgress.value = 40 + ((i + 1) * progressPerBook);
+          uploadProgress.value = 40;
+
+          // Actualizar o crear libros
+          const booksCount = books.value.length;
+          const progressPerBook = 60 / booksCount;
+
+          for (let i = 0; i < books.value.length; i++) {
+            const book = books.value[i];
+            const bookPayload = {
+              title: book.title,
+              description: book.description,
+              bookUrl: book.bookUrl,
+              coverImg: book.coverImg,
+              publicationId: publicationId,
+              authorIds: book.selectedAuthors.map(author => author.id)
+            };
+
+            // Si el ID es numérico, es un libro existente que se debe actualizar
+            if (!isNaN(parseInt(book.id))) {
+              console.log('Actualizando libro:', book.id, bookPayload);
+              await booksAPI.updateBook(parseInt(book.id), bookPayload);
+            } else {
+              // Si no es numérico, es un libro nuevo
+              console.log('Creando nuevo libro:', bookPayload);
+              await booksAPI.createBook(bookPayload);
+            }
+
+            uploadProgress.value = 40 + ((i + 1) * progressPerBook);
+          }
+        } else {
+          // MODO CREACIÓN: Crear nueva publicación
+          uploadProgress.value = 20;
+          const publicationPayload = {
+            title: publicationData.value.title,
+            description: publicationData.value.description,
+            userProfileId: publicationData.value.userProfileId,
+            categoryIds: [publicationData.value.categoryId]
+          };
+
+          console.log('Creando publicación:', publicationPayload);
+          const publicationResponse = await publicationsAPI.createPublication(publicationPayload);
+
+          if (!publicationResponse.data) {
+            throw new Error('Error al crear la publicación');
+          }
+
+          publicationId = publicationResponse.data.id;
+          console.log('Publicación creada con ID:', publicationId);
+
+          uploadProgress.value = 40;
+
+          // 2. Crear los libros asociados a la publicación
+          const booksCount = books.value.length;
+          const progressPerBook = 60 / booksCount;
+
+          for (let i = 0; i < books.value.length; i++) {
+            const book = books.value[i];
+
+            const bookPayload = {
+              title: book.title,
+              description: book.description,
+              bookUrl: book.bookUrl,
+              coverImg: book.coverImg,
+              publicationId: publicationId,
+              authorIds: book.selectedAuthors.map(author => author.id)
+            };
+
+            console.log('Creando libro:', bookPayload);
+            const bookResponse = await booksAPI.createBook(bookPayload);
+
+            if (!bookResponse.data) {
+              console.error('Error al crear libro:', book.title);
+            } else {
+              console.log('Libro creado con ID:', bookResponse.data.id);
+            }
+
+            uploadProgress.value = 40 + ((i + 1) * progressPerBook);
+          }
         }
 
         uploadProgress.value = 100;

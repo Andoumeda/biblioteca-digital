@@ -47,23 +47,16 @@
                   </svg>
                   {{ isDownloading ? 'Descargando...' : 'Descargar' }}
                 </button>
-                <div class="secondary-actions">
-                  <button @click="handleFavorite" :class="['btn', 'btn-icon', { 'active': isFavorite }]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    {{ favoriteCount }}
-                  </button>
-                  <button @click="handleShare" class="btn btn-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="18" cy="5" r="3"/>
-                      <circle cx="6" cy="12" r="3"/>
-                      <circle cx="18" cy="19" r="3"/>
-                      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
-                      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
-                    </svg>
-                  </button>
-                </div>
+                <button @click="handleShare" class="btn btn-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/>
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                    <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+                  </svg>
+                  Compartir
+                </button>
               </div>
             </div>
 
@@ -71,11 +64,11 @@
               <div class="book-metadata">
                 <div class="metadata-item">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <path d="M19 21v-2a4 4 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
-                  <span class="label">Autor:</span>
-                  <span class="value">{{ book.author }}</span>
+                  <span class="label">{{ authorsLabel }}:</span>
+                  <span class="value">{{ formattedAuthors }}</span>
                 </div>
 
                 <div v-if="book.uploadDate" class="metadata-item">
@@ -143,7 +136,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import RatingSystem from './RatingSystem.vue';
 
 export default {
@@ -163,10 +156,23 @@ export default {
   },
   emits: ['close'],
   setup(props, { emit }) {
-    const isFavorite = ref(props.book.isFavorite || false);
-    const favoriteCount = ref(props.book.favorites || props.book.likes || 0);
     const userRating = ref(props.book.userRating || 0);
     const isDownloading = ref(false);
+
+    // Computed properties for authors
+    const formattedAuthors = computed(() => {
+      if (props.book.authors && Array.isArray(props.book.authors) && props.book.authors.length > 0) {
+        return props.book.authors.map(a => a.fullName).join(', ');
+      }
+      return props.book.author || 'Autor desconocido';
+    });
+
+    const authorsLabel = computed(() => {
+      if (props.book.authors && Array.isArray(props.book.authors) && props.book.authors.length > 1) {
+        return 'Autores';
+      }
+      return 'Autor';
+    });
 
     const handleClose = () => {
       emit('close');
@@ -180,11 +186,6 @@ export default {
       }, 2000);
     };
 
-    const handleFavorite = () => {
-      isFavorite.value = !isFavorite.value;
-      favoriteCount.value += isFavorite.value ? 1 : -1;
-      console.log('Favorito:', props.book.id, isFavorite.value);
-    };
 
     const handleShare = () => {
       console.log('Compartir libro:', props.book.id, props.book.title);
@@ -210,13 +211,12 @@ export default {
     };
 
     return {
-      isFavorite,
-      favoriteCount,
       userRating,
       isDownloading,
+      formattedAuthors,
+      authorsLabel,
       handleClose,
       handleDownload,
-      handleFavorite,
       handleShare,
       handleAddRating,
       handleImageError,
@@ -371,28 +371,17 @@ export default {
   cursor: not-allowed;
 }
 
-.secondary-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-icon {
-  flex: 1;
+.btn-secondary {
   background: white;
   border: 1px solid #e2e8f0;
   color: #4a5568;
 }
 
-.btn-icon:hover {
+.btn-secondary:hover {
   background: #f7fafc;
   border-color: #cbd5e0;
 }
 
-.btn-icon.active {
-  background: #667eea;
-  color: white;
-  border-color: #667eea;
-}
 
 .book-content {
   display: flex;

@@ -20,11 +20,11 @@
           </svg>
           Mis Publicaciones ({{ myPublications.length }})
         </button>
-        <button @click="activeTab = 'bookmarks'" :class="['tab', { active: activeTab === 'bookmarks' }]">
+        <button @click="activeTab = 'favorites'" :class="['tab', { active: activeTab === 'favorites' }]">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
           </svg>
-          Guardados ({{ myBookmarks.length }})
+          Favoritos ({{ myFavorites.length }})
         </button>
         <button @click="activeTab = 'comments'" :class="['tab', { active: activeTab === 'comments' }]">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -36,7 +36,13 @@
 
       <!-- Pestaña de Publicaciones -->
       <div v-show="activeTab === 'publications'" class="tab-content">
-        <div v-if="myPublications.length > 0" class="publications-list">
+        <div v-if="isLoading" class="loading-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <p>Cargando publicaciones...</p>
+        </div>
+        <div v-else-if="myPublications.length > 0" class="publications-list">
           <div v-for="publication in myPublications" :key="publication.id" class="publication-card">
             <div class="publication-content">
               <img
@@ -133,32 +139,49 @@
         </div>
       </div>
 
-      <!-- Pestaña de Guardados -->
-      <div v-show="activeTab === 'bookmarks'" class="tab-content">
-        <div v-if="myBookmarks.length > 0" class="bookmarks-grid">
-          <div v-for="bookmark in myBookmarks" :key="bookmark.id" class="bookmark-card" @click="handleBookmarkClick(bookmark)">
-            <div class="bookmark-cover-container">
+      <!-- Pestaña de Favoritos -->
+      <div v-show="activeTab === 'favorites'" class="tab-content">
+        <div v-if="isLoadingFavorites" class="loading-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <p>Cargando favoritos...</p>
+        </div>
+        <div v-else-if="myFavorites.length > 0" class="bookmarks-grid">
+          <div v-for="favorite in myFavorites" :key="favorite.id" class="bookmark-card">
+            <div class="bookmark-cover-container" @click="handleFavoriteClick(favorite)">
               <img
-                :src="bookmark.cover || '/programming-book-cover.jpg'"
-                :alt="bookmark.title"
+                :src="favorite.publication?.coverImage || (favorite.publication?.books?.[0]?.coverImg) || '/programming-book-cover.jpg'"
+                :alt="favorite.publication?.title || 'Publicación'"
                 class="bookmark-cover"
                 @error="handleImageError"
               />
-              <span class="book-count-badge">{{ bookmark.bookCount }} libros</span>
+              <span class="book-count-badge">{{ favorite.publication?.books?.length || 0 }} libros</span>
             </div>
-            <div class="bookmark-info">
-              <h3 class="bookmark-title">{{ bookmark.title }}</h3>
-              <p class="bookmark-author">por {{ bookmark.author }}</p>
+            <div class="bookmark-info" @click="handleFavoriteClick(favorite)">
+              <div>
+                <h3 class="bookmark-title">{{ favorite.publication?.title || 'Sin título' }}</h3>
+                <p class="bookmark-author">por {{ favorite.publication?.userProfile?.displayName || 'Desconocido' }}</p>
+              </div>
               <div class="bookmark-footer">
                 <div class="rating">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
-                  <span>{{ bookmark.rating }}</span>
+                  <span>{{ favorite.averageRating || 'N/A' }}</span>
                 </div>
-                <span class="saved-date">Guardado {{ formatDate(bookmark.savedDate) }}</span>
+                <span class="saved-date">Agregado {{ formatDate(favorite.createdAt) }}</span>
               </div>
             </div>
+            <button @click.stop="handleDeleteFavorite(favorite)" class="delete-favorite-btn" title="Eliminar de favoritos">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                <line x1="10" x2="10" y1="11" y2="17"/>
+                <line x1="14" x2="14" y1="11" y2="17"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -166,29 +189,35 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
           </svg>
-          <h3>No tienes publicaciones guardadas</h3>
-          <p>Explora y guarda tus publicaciones favoritas</p>
+          <h3>No tienes publicaciones favoritas</h3>
+          <p>Explora y marca tus publicaciones favoritas</p>
         </div>
       </div>
 
       <!-- Pestaña de Comentarios -->
       <div v-show="activeTab === 'comments'" class="tab-content">
-        <div v-if="myComments.length > 0" class="comments-list">
+        <div v-if="isLoadingComments" class="loading-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <p>Cargando comentarios...</p>
+        </div>
+        <div v-else-if="myComments.length > 0" class="comments-list">
           <div v-for="comment in myComments" :key="comment.id" class="comment-card">
             <div class="comment-header">
               <div>
-                <h4 class="comment-book-title">{{ comment.bookTitle }}</h4>
+                <h4 class="comment-book-title">{{ comment.book?.title || 'Libro desconocido' }}</h4>
                 <div class="comment-meta">
                   <div class="stars">
                     <svg v-for="star in 5" :key="star" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                      :fill="star <= comment.rating ? 'currentColor' : 'none'"
+                      :fill="star <= comment.valoration ? 'currentColor' : 'none'"
                       stroke="currentColor"
                       stroke-width="2"
-                      :class="star <= comment.rating ? 'star-filled' : 'star-empty'">
+                      :class="star <= comment.valoration ? 'star-filled' : 'star-empty'">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                   </div>
-                  <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                  <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
                 </div>
               </div>
               <div class="comment-actions">
@@ -201,16 +230,14 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18"/>
                     <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
                   </svg>
                 </button>
               </div>
             </div>
-            <p class="comment-text">{{ comment.comment }}</p>
-            <div class="comment-likes">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-              {{ comment.likes }} personas encontraron esto útil
+            <p class="comment-text">{{ comment.comment || 'Sin comentario' }}</p>
+            <div class="comment-stats">
+              <span class="comment-rating-label">Calificación: {{ comment.valoration }}/5</span>
             </div>
           </div>
         </div>
@@ -231,76 +258,186 @@
       @close="showUploadModal = false"
       @success="handleUploadSuccess"
     />
+
+    <!-- Modal de Detalles de Publicación -->
+    <PublicationDetailModal
+      v-if="showDetailModal && selectedPublication"
+      :publication="selectedPublication"
+      :is-open="showDetailModal"
+      @close="closeDetailModal"
+    />
+
+    <!-- Modal de Editar Publicación -->
+    <PublicationUploadModal
+      v-if="showEditModal && publicationToEdit"
+      :edit-mode="true"
+      :publication-data="publicationToEdit"
+      @close="closeEditModal"
+      @success="handleEditSuccess"
+    />
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import PublicationUploadModal from '../components/PublicationUploadModal.vue';
+import PublicationDetailModal from '../components/PublicationDetailModal.vue';
+import { publicationsAPI, favoritesAPI } from '../api/publicationsService';
+import { booksAPI, ratingsAPI } from '../api/booksService';
 
 export default {
   name: 'MyLibrary',
   components: {
-    PublicationUploadModal
+    PublicationUploadModal,
+    PublicationDetailModal
   },
   setup() {
     const activeTab = ref('publications');
     const showUploadModal = ref(false);
+    const showDetailModal = ref(false);
+    const showEditModal = ref(false);
+    const selectedPublication = ref(null);
+    const publicationToEdit = ref(null);
+    const isLoading = ref(false);
+    const isLoadingFavorites = ref(false);
+    const isLoadingComments = ref(false);
 
-    const myPublications = ref([
-      {
-        id: 1,
-        title: "Guías de Programación Completas",
-        description: "Una publicación completa de guías para aprender programación",
-        bookCount: 3,
-        totalDownloads: 1247,
-        totalRatings: 124,
-        averageRating: 4.8,
-        status: "approved",
-        uploadDate: "2025-10-05",
-        cover: "/programming-book-cover.jpg",
-      },
-    ]);
+    // ID del usuario hardcoded
+    const USER_PROFILE_ID = 1;
 
-    const myBookmarks = ref([
-      {
-        id: 1,
-        title: "Cuentos de Misterio Clásicos",
-        author: "Carlos Escritor",
-        cover: "/mystery-book-cover.png",
-        rating: 4.6,
-        bookCount: 2,
-        savedDate: "2025-10-08",
-      },
-      {
-        id: 2,
-        title: "Recetarios Veganos",
-        author: "María Chef",
-        cover: "/vegan-cooking-book-cover.png",
-        rating: 4.9,
-        bookCount: 3,
-        savedDate: "2025-10-02",
-      },
-    ]);
+    const myPublications = ref([]);
+    const myFavorites = ref([]);
+    const myComments = ref([]);
 
-    const myComments = ref([
-      {
-        id: 1,
-        bookTitle: "Fundamentos de Programación",
-        comment: "Excelente libro, muy bien explicado y con ejemplos prácticos.",
-        rating: 5,
-        date: "2025-10-12",
-        likes: 12,
-      },
-      {
-        id: 2,
-        bookTitle: "El Misterio de la Casa Antigua",
-        comment: "Muy entretenido, me mantuvo enganchado hasta el final.",
-        rating: 4,
-        date: "2025-10-10",
-        likes: 8,
-      },
-    ]);
+    // Cargar favoritos del usuario desde la API
+    const loadUserFavorites = async () => {
+      try {
+        isLoadingFavorites.value = true;
+        const response = await favoritesAPI.getByUser(USER_PROFILE_ID, 0, 100);
+
+        if (response.data && response.data.data) {
+          const favorites = response.data.data;
+
+          // Enriquecer cada favorito con los datos de la publicación
+          for (const favorite of favorites) {
+            try {
+              const pubResponse = await publicationsAPI.getById(favorite.publicationId);
+              if (pubResponse.data) {
+                favorite.publication = pubResponse.data;
+
+                // Cargar libros de la publicación
+                const booksResponse = await booksAPI.getBooksByPublication(favorite.publicationId, 0);
+                favorite.publication.books = booksResponse.data?.data || [];
+
+                // Calcular rating promedio
+                let totalRatings = 0;
+                let sumRatings = 0;
+
+                for (const book of favorite.publication.books) {
+                  const ratingData = await ratingsAPI.getBookAverageRating(book.id);
+                  totalRatings += ratingData.count;
+                  sumRatings += ratingData.average * ratingData.count;
+                }
+
+                favorite.averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 0;
+              }
+            } catch (error) {
+              console.error(`Error al cargar publicación ${favorite.publicationId}:`, error);
+            }
+          }
+
+          myFavorites.value = favorites;
+        }
+      } catch (error) {
+        console.error('Error al cargar favoritos del usuario:', error);
+      } finally {
+        isLoadingFavorites.value = false;
+      }
+    };
+
+    // Cargar comentarios/ratings del usuario desde la API
+    const loadUserComments = async () => {
+      try {
+        isLoadingComments.value = true;
+        const response = await ratingsAPI.getRatingsByUserProfile(USER_PROFILE_ID, 0);
+
+        if (response.data && response.data.data) {
+          const ratings = response.data.data;
+
+          // Enriquecer cada rating con información del libro
+          for (const rating of ratings) {
+            try {
+              const bookResponse = await booksAPI.getBookById(rating.bookId);
+              if (bookResponse.data) {
+                rating.book = bookResponse.data;
+              }
+            } catch (error) {
+              console.error(`Error al cargar libro ${rating.bookId}:`, error);
+            }
+          }
+
+          myComments.value = ratings;
+        }
+      } catch (error) {
+        console.error('Error al cargar comentarios del usuario:', error);
+      } finally {
+        isLoadingComments.value = false;
+      }
+    };
+
+    // Cargar publicaciones del usuario desde la API
+    const loadUserPublications = async () => {
+      try {
+        isLoading.value = true;
+        const response = await publicationsAPI.getByUser(USER_PROFILE_ID, 0, 100);
+
+        if (response.data && response.data.data) {
+          const publications = response.data.data;
+
+          // Enriquecer cada publicación con sus libros y estadísticas
+          for (const publication of publications) {
+            // Cargar libros de la publicación
+            const booksResponse = await booksAPI.getBooksByPublication(publication.id, 0);
+            publication.books = booksResponse.data?.data || [];
+            publication.bookCount = publication.books.length;
+
+            // Calcular estadísticas de ratings
+            let totalRatings = 0;
+            let sumRatings = 0;
+
+            for (const book of publication.books) {
+              const ratingData = await ratingsAPI.getBookAverageRating(book.id);
+              totalRatings += ratingData.count;
+              sumRatings += ratingData.average * ratingData.count;
+            }
+
+            publication.totalRatings = totalRatings;
+            publication.averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 0;
+
+            // Contar favoritos
+            publication.favoriteCount = await favoritesAPI.countByPublication(publication.id);
+
+            // Calcular descargas totales (placeholder)
+            publication.totalDownloads = publication.books.reduce((sum, book) => sum + (book.downloadCount || 0), 0);
+
+            // Determinar estado
+            publication.status = publication.state || 'pending';
+            publication.uploadDate = publication.createdAt;
+
+            // Obtener portada del primer libro
+            if (publication.books.length > 0 && publication.books[0].coverImg) {
+              publication.cover = publication.books[0].coverImg;
+            }
+          }
+
+          myPublications.value = publications;
+        }
+      } catch (error) {
+        console.error('Error al cargar publicaciones del usuario:', error);
+      } finally {
+        isLoading.value = false;
+      }
+    };
 
     const formatDate = (dateString) => {
       if (!dateString) return '';
@@ -316,61 +453,191 @@ export default {
       event.target.src = '/programming-book-cover.jpg';
     };
 
-    const handleViewDetails = (publication) => {
-      console.log('Ver detalles:', publication);
-      // TODO: Implementar navegación a detalles
-    };
+    const handleViewDetails = async (publication) => {
+      try {
+        // Cargar detalles completos de la publicación
+        const response = await publicationsAPI.getById(publication.id);
 
-    const handleEdit = (publication) => {
-      console.log('Editar:', publication);
-      // TODO: Implementar edición
-    };
-
-    const handleDelete = (publication) => {
-      if (confirm(`¿Estás seguro de que deseas eliminar "${publication.title}"?`)) {
-        console.log('Eliminar:', publication);
-        // TODO: Implementar eliminación
+        if (response.data) {
+          selectedPublication.value = {
+            ...response.data,
+            books: publication.books || [],
+            favoriteCount: publication.favoriteCount || 0
+          };
+          showDetailModal.value = true;
+        }
+      } catch (error) {
+        console.error('Error al cargar detalles de la publicación:', error);
+        alert('Error al cargar los detalles de la publicación');
       }
     };
 
-    const handleBookmarkClick = (bookmark) => {
-      console.log('Bookmark clicked:', bookmark);
-      // TODO: Navegar a detalles del bookmark
-    };
+    const handleEdit = async (publication) => {
+      try {
+        // Cargar detalles completos para editar
+        const response = await publicationsAPI.getById(publication.id);
 
-    const handleEditComment = (comment) => {
-      console.log('Editar comentario:', comment);
-      // TODO: Implementar edición de comentario
-    };
-
-    const handleDeleteComment = (comment) => {
-      if (confirm('¿Estás seguro de que deseas eliminar este comentario?')) {
-        console.log('Eliminar comentario:', comment);
-        // TODO: Implementar eliminación de comentario
+        if (response.data) {
+          publicationToEdit.value = {
+            ...response.data,
+            books: publication.books || []
+          };
+          showEditModal.value = true;
+        }
+      } catch (error) {
+        console.error('Error al cargar publicación para editar:', error);
+        alert('Error al cargar la publicación para editar');
       }
     };
 
-    const handleUploadSuccess = () => {
+    const handleDelete = async (publication) => {
+      if (!confirm('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.')) {
+        return;
+      }
+
+      try {
+        // Primero eliminar todos los libros de la publicación
+        if (publication.books && publication.books.length > 0) {
+          for (const book of publication.books) {
+            await booksAPI.deleteBook(book.id);
+            console.log(`Libro eliminado: ${book.id}`);
+          }
+        }
+
+        // Luego eliminar la publicación
+        await publicationsAPI.delete(publication.id);
+        console.log(`Publicación eliminada: ${publication.id}`);
+
+        // Recargar las publicaciones
+        await loadUserPublications();
+
+        alert('Publicación eliminada exitosamente');
+      } catch (error) {
+        console.error('Error al eliminar la publicación:', error);
+        alert('Error al eliminar la publicación. Por favor, intenta de nuevo.');
+      }
+    };
+
+    const handleFavoriteClick = async (favorite) => {
+      if (favorite.publication) {
+        selectedPublication.value = favorite.publication;
+        showDetailModal.value = true;
+      }
+    };
+
+    const handleDeleteFavorite = async (favorite) => {
+      if (!confirm('¿Estás seguro de que deseas eliminar esta publicación de favoritos?')) {
+        return;
+      }
+
+      try {
+        await favoritesAPI.deleteFavorite(favorite.id);
+        alert('Publicación eliminada de favoritos exitosamente');
+        // Recargar la lista de favoritos
+        await loadUserFavorites();
+      } catch (error) {
+        console.error('Error al eliminar favorito:', error);
+        alert('Error al eliminar la publicación de favoritos. Por favor, intenta de nuevo.');
+      }
+    };
+
+    const handleEditComment = async (comment) => {
+      // TODO: Implementar modal de edición de comentario
+      const newComment = prompt('Edita tu comentario:', comment.comment);
+      const newRating = prompt('Edita tu calificación (1-5):', comment.valoration);
+
+      if (newComment !== null && newRating !== null) {
+        try {
+          const payload = {
+            bookId: comment.bookId,
+            userProfileId: comment.userProfileId,
+            valoration: parseInt(newRating),
+            comment: newComment
+          };
+
+          await ratingsAPI.updateRating(comment.id, payload);
+          alert('Comentario actualizado exitosamente');
+          await loadUserComments();
+        } catch (error) {
+          console.error('Error al editar comentario:', error);
+          alert('Error al editar el comentario');
+        }
+      }
+    };
+
+    const handleDeleteComment = async (comment) => {
+      if (!confirm('¿Estás seguro de que deseas eliminar este comentario?')) {
+        return;
+      }
+
+      try {
+        await ratingsAPI.deleteRating(comment.id);
+        alert('Comentario eliminado exitosamente');
+        await loadUserComments();
+      } catch (error) {
+        console.error('Error al eliminar comentario:', error);
+        alert('Error al eliminar el comentario');
+      }
+    };
+
+    const handleUploadSuccess = async () => {
       console.log('Publicación subida exitosamente');
-      // TODO: Recargar las publicaciones del usuario
-      showUploadModal.value = true;
+      showUploadModal.value = false;
+      // Recargar las publicaciones del usuario
+      await loadUserPublications();
     };
+
+    const handleEditSuccess = async () => {
+      console.log('Publicación editada exitosamente');
+      showEditModal.value = false;
+      publicationToEdit.value = null;
+      // Recargar las publicaciones del usuario
+      await loadUserPublications();
+    };
+
+    const closeDetailModal = () => {
+      showDetailModal.value = false;
+      selectedPublication.value = null;
+    };
+
+    const closeEditModal = () => {
+      showEditModal.value = false;
+      publicationToEdit.value = null;
+    };
+
+    // Cargar datos al montar el componente
+    onMounted(() => {
+      loadUserPublications();
+      loadUserFavorites();
+      loadUserComments();
+    });
 
     return {
       activeTab,
-      myPublications,
-      myBookmarks,
-      myComments,
       showUploadModal,
+      showDetailModal,
+      showEditModal,
+      selectedPublication,
+      publicationToEdit,
+      isLoading,
+      isLoadingFavorites,
+      isLoadingComments,
+      myPublications,
+      myFavorites,
+      myComments,
       formatDate,
       handleImageError,
       handleViewDetails,
       handleEdit,
       handleDelete,
-      handleBookmarkClick,
+      handleFavoriteClick,
+      handleDeleteFavorite,
       handleEditComment,
       handleDeleteComment,
-      handleUploadSuccess
+      handleUploadSuccess,
+      handleEditSuccess,
+      closeDetailModal,
+      closeEditModal
     };
   }
 };
@@ -378,56 +645,54 @@ export default {
 
 <style scoped>
 .my-library-container {
-  padding: 24px;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 2rem;
 }
 
 .library-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
 }
 
 .library-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #1a202c;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
 .upload-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: #667eea;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .upload-btn:hover {
-  background: #5568d3;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .tabs-container {
   background: white;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  min-width: 800px;
-  max-width: 100%;
 }
 
 .tabs-list {
   display: flex;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f7fafc;
+  border-bottom: 2px solid #f0f0f0;
+  background: #fafafa;
 }
 
 .tab {
@@ -435,63 +700,93 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 16px 24px;
-  background: transparent;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: none;
   border: none;
-  color: #718096;
-  font-size: 14px;
+  color: #666;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .tab:hover {
-  background: white;
-  color: #4a5568;
+  background: #f0f0f0;
+  color: #333;
 }
 
 .tab.active {
-  background: white;
   color: #667eea;
-  border-bottom-color: #667eea;
+  background: white;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #667eea;
 }
 
 .tab-content {
-  padding: 24px;
-  min-height: 400px;
-  width: 100%;
+  padding: 2rem;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #666;
+  width: 56.25rem;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .publications-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 94%;
+  gap: 1.5rem;
+  width: 56.25rem;
 }
 
 .publication-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
-  padding: 20px;
-  transition: all 0.3s;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .publication-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #cbd5e0;
+  transform: translateY(-2px);
 }
 
 .publication-content {
   display: flex;
-  gap: 20px;
+  gap: 1.5rem;
+  padding: 1.5rem;
 }
 
 .publication-cover {
-  width: 96px;
-  height: 128px;
+  width: 150px;
+  height: 200px;
   object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
@@ -501,123 +796,162 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1rem;
 }
 
 .publication-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 1rem;
 }
 
 .publication-title {
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #1a202c;
-  margin-bottom: 4px;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
 }
 
 .publication-description {
-  font-size: 14px;
-  color: #718096;
+  color: #666;
   margin: 0;
 }
 
 .status-badge {
-  padding: 4px 12px;
+  padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-badge.approved {
-  background: #c6f6d5;
-  color: #22543d;
+  background: #d4edda;
+  color: #155724;
 }
 
 .status-badge.pending {
-  background: #fed7d7;
-  color: #742a2a;
+  background: #fff3cd;
+  color: #856404;
 }
 
 .publication-stats {
   display: flex;
-  gap: 20px;
+  gap: 1.5rem;
   flex-wrap: wrap;
 }
 
 .stat {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #718096;
-  font-size: 13px;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.875rem;
 }
 
 .stat svg {
-  color: #a0aec0;
+  color: #999;
 }
 
 .publication-actions {
   display: flex;
-  gap: 8px;
-  padding-top: 8px;
+  gap: 0.75rem;
+  margin-top: auto;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 1px solid #e2e8f0;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
   border-radius: 6px;
   background: white;
-  color: #4a5568;
-  font-size: 13px;
+  color: #333;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
+  background: #f5f5f5;
+  border-color: #bbb;
 }
 
 .action-btn.danger {
-  color: #e53e3e;
+  color: #dc3545;
+  border-color: #dc3545;
 }
 
 .action-btn.danger:hover {
-  background: #fff5f5;
-  border-color: #fc8181;
+  background: #dc3545;
+  color: white;
 }
 
 .bookmarks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  width: 94%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 56.25rem;
 }
 
 .bookmark-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: row;
+  height: 180px;
+  position: relative;
 }
 
 .bookmark-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  border-color: #667eea;
+}
+
+.bookmark-cover-container,
+.bookmark-info {
+  cursor: pointer;
+}
+
+.delete-favorite-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  color: #dc3545;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.delete-favorite-btn:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
 }
 
 .bookmark-cover-container {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
+  width: 130px;
+  min-width: 130px;
+  height: 100%;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .bookmark-cover {
@@ -628,89 +962,106 @@ export default {
 
 .book-count-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 6px 12px;
-  background: rgba(102, 126, 234, 0.9);
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  border-radius: 16px;
-  font-size: 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
 .bookmark-info {
-  padding: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
 }
 
 .bookmark-title {
-  font-size: 16px;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: #1a202c;
-  margin-bottom: 4px;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.4;
 }
 
 .bookmark-author {
-  font-size: 13px;
-  color: #718096;
-  margin: 0 0 12px 0;
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0 0 auto 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bookmark-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 0.875rem;
+  color: #999;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
 }
 
 .rating {
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: #f6ad55;
-  font-size: 14px;
-  font-weight: 500;
+  gap: 0.25rem;
+  color: #f39c12;
 }
 
 .saved-date {
-  font-size: 11px;
-  color: #a0aec0;
+  color: #999;
 }
 
 .comments-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 94%;
+  gap: 1rem;
+  width: 56.25rem;
 }
 
 .comment-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.comment-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 1rem;
 }
 
 .comment-book-title {
-  font-size: 16px;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: #1a202c;
-  margin: 0 0 8px 0;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
 }
 
 .comment-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .stars {
@@ -719,117 +1070,105 @@ export default {
 }
 
 .star-filled {
-  color: #f6ad55;
+  color: #f39c12;
 }
 
 .star-empty {
-  color: #e2e8f0;
+  color: #ddd;
 }
 
 .comment-date {
-  font-size: 11px;
-  color: #a0aec0;
+  font-size: 0.875rem;
+  color: #999;
 }
 
 .comment-actions {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .icon-btn {
-  padding: 6px;
-  background: transparent;
-  border: none;
-  color: #718096;
+  padding: 0.5rem;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icon-btn:hover {
-  background: #f7fafc;
-  color: #4a5568;
+  background: #f5f5f5;
 }
 
 .icon-btn.danger {
-  color: #e53e3e;
+  color: #dc3545;
+  border-color: #dc3545;
 }
 
 .icon-btn.danger:hover {
-  background: #fff5f5;
+  background: #dc3545;
+  color: white;
 }
 
 .comment-text {
-  color: #4a5568;
-  font-size: 14px;
+  color: #333;
   line-height: 1.6;
-  margin: 0 0 12px 0;
+  margin: 0 0 1rem 0;
 }
 
-.comment-likes {
+.comment-stats {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: #a0aec0;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.comment-rating-label {
+  font-weight: 500;
 }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
   text-align: center;
-  padding: 80px 20px;
-  color: #718096;
+  color: #999;
 }
 
 .empty-state svg {
-  margin: 0 auto 20px;
-  color: #cbd5e0;
+  margin-bottom: 1.5rem;
+  color: #ddd;
 }
 
 .empty-state h3 {
-  font-size: 20px;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #2d3748;
-  margin: 0 0 8px 0;
+  color: #333;
+  margin: 0 0 0.5rem 0;
 }
 
 .empty-state p {
-  font-size: 14px;
-  margin: 0 0 20px 0;
-}
-
-/* Responsive design */
-@media (max-width: 1024px) {
-  .tabs-container {
-    min-width: 600px;
-  }
-
-  .bookmarks-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  }
+  margin: 0 0 1.5rem 0;
 }
 
 @media (max-width: 768px) {
-  .tabs-container {
-    min-width: 100%;
+  .my-library-container {
+    padding: 1rem;
   }
 
-  .tab-content {
-    padding: 16px;
-    min-height: 300px;
+  .library-header {
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .tabs-list {
     flex-direction: column;
-  }
-
-  .tab {
-    border-bottom: 1px solid #e2e8f0;
-    justify-content: flex-start;
-  }
-
-  .tab.active {
-    border-bottom-color: #667eea;
-    border-left: 3px solid #667eea;
   }
 
   .publication-content {
@@ -838,12 +1177,16 @@ export default {
 
   .publication-cover {
     width: 100%;
-    height: auto;
-    aspect-ratio: 3/4;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  .publication-actions {
+    flex-direction: column;
   }
 
   .bookmarks-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
 </style>

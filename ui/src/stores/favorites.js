@@ -19,6 +19,12 @@ export const useFavoritesStore = defineStore('favorites', {
       return state.favorites.some(
         fav => fav.publication?.id === publicationId && fav.userProfile?.userId === userId
       );
+    },
+
+    isFavorite: (state) => (id, type = 'publication') => {
+      if (type === 'publication') {
+        return state.favorites.some(fav => fav.publication?.id === id);
+      }
     }
   },
 
@@ -50,8 +56,11 @@ export const useFavoritesStore = defineStore('favorites', {
       }
     },
 
-    async addFavorite(publicationId, userProfileId) {
+    async addFavorite(publicationId, type = 'publication') {
       try {
+        // Get current user profile ID (you may need to get this from auth store)
+        const userProfileId = 1; // TODO: Get from auth store
+
         const response = await favoritesAPI.createFavorite({
           publicationId,
           userProfileId
@@ -71,12 +80,20 @@ export const useFavoritesStore = defineStore('favorites', {
       }
     },
 
-    async removeFavorite(favoriteId, publicationId) {
+    async removeFavorite(publicationId, type = 'publication') {
       try {
-        await favoritesAPI.deleteFavorite(favoriteId);
+        // Find the favorite by publication ID
+        const favorite = this.favorites.find(fav => fav.publication?.id === publicationId);
+
+        if (!favorite) {
+          console.warn('Favorite not found for publication:', publicationId);
+          return;
+        }
+
+        await favoritesAPI.deleteFavorite(favorite.id);
 
         // Actualizar el estado local
-        this.favorites = this.favorites.filter(fav => fav.id !== favoriteId);
+        this.favorites = this.favorites.filter(fav => fav.id !== favorite.id);
         this.totalFavorites = Math.max(0, this.totalFavorites - 1);
         if (this.favoritesCount[publicationId] > 0) {
           this.favoritesCount[publicationId]--;
