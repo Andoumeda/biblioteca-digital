@@ -238,19 +238,27 @@
         </button>
       </div>
 
-      <div class="crud-table">
+      <div v-if="authors.length === 0" class="no-results">
+        No hay autores disponibles
+      </div>
+
+      <div v-else class="crud-table">
         <table class="table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nombre</th>
+              <th>Nombre Completo</th>
+              <th>Fecha de Nacimiento</th>
+              <th>Nacionalidad</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="author in authors" :key="author.id">
               <td>{{ author.id }}</td>
-              <td>{{ author.name }}</td>
+              <td>{{ author.fullName }}</td>
+              <td>{{ author.birthDate ? formatDate(author.birthDate) : 'N/A' }}</td>
+              <td>{{ author.nationality || 'N/A' }}</td>
               <td>
                 <button @click="handleEditAuthor(author)" class="btn-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -269,6 +277,23 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination for Authors -->
+      <div class="pagination-controls" v-if="authorsPagination.totalPages > 1">
+        <button @click="loadAuthors(authorsPagination.currentPage - 1)" :disabled="authorsPagination.currentPage === 0" class="pagination-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Anterior
+        </button>
+        <span class="pagination-info">Página {{ authorsPagination.currentPage + 1 }} de {{ authorsPagination.totalPages }}</span>
+        <button @click="loadAuthors(authorsPagination.currentPage + 1)" :disabled="authorsPagination.currentPage >= authorsPagination.totalPages - 1" class="pagination-btn">
+          Siguiente
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -414,20 +439,151 @@
       </div>
     </div>
 
-    <!-- Simple Modals (placeholders for CRUD operations) -->
+    <!-- Category Modals -->
     <div v-if="showCreateCategoryModal" class="modal-overlay" @click="showCreateCategoryModal = false">
       <div class="modal-content" @click.stop>
         <h3>Crear Nueva Categoría</h3>
-        <p>Funcionalidad de creación de categoría (por implementar con formulario completo)</p>
-        <button @click="showCreateCategoryModal = false" class="btn">Cerrar</button>
+        <form @submit.prevent="handleCreateCategory" class="category-form">
+          <div class="form-group">
+            <label for="categoryName">Nombre de la Categoría</label>
+            <input
+              id="categoryName"
+              v-model="newCategoryName"
+              type="text"
+              placeholder="Ej: Ciencia Ficción"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showCreateCategoryModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Crear Categoría
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
+    <div v-if="showEditCategoryModal" class="modal-overlay" @click="showEditCategoryModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>Editar Categoría</h3>
+        <form @submit.prevent="handleUpdateCategory" class="category-form">
+          <div class="form-group">
+            <label for="editCategoryName">Nombre de la Categoría</label>
+            <input
+              id="editCategoryName"
+              v-model="editingCategory.name"
+              type="text"
+              placeholder="Ej: Ciencia Ficción"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showEditCategoryModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Author Modals -->
     <div v-if="showCreateAuthorModal" class="modal-overlay" @click="showCreateAuthorModal = false">
       <div class="modal-content" @click.stop>
         <h3>Crear Nuevo Autor</h3>
-        <p>Funcionalidad de creación de autor (por implementar con formulario completo)</p>
-        <button @click="showCreateAuthorModal = false" class="btn">Cerrar</button>
+        <form @submit.prevent="handleCreateAuthor" class="author-form">
+          <div class="form-group">
+            <label for="authorFullName">Nombre Completo</label>
+            <input
+              id="authorFullName"
+              v-model="newAuthor.fullName"
+              type="text"
+              placeholder="Ej: Gabriel García Márquez"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="authorBirthDate">Fecha de Nacimiento</label>
+            <input
+              id="authorBirthDate"
+              v-model="newAuthor.birthDate"
+              type="date"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="authorNationality">Nacionalidad</label>
+            <input
+              id="authorNationality"
+              v-model="newAuthor.nationality"
+              type="text"
+              placeholder="Ej: Colombiana"
+              class="form-input"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showCreateAuthorModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Crear Autor
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div v-if="showEditAuthorModal" class="modal-overlay" @click="showEditAuthorModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>Editar Autor</h3>
+        <form @submit.prevent="handleUpdateAuthor" class="author-form">
+          <div class="form-group">
+            <label for="editAuthorFullName">Nombre Completo</label>
+            <input
+              id="editAuthorFullName"
+              v-model="editingAuthor.fullName"
+              type="text"
+              placeholder="Ej: Gabriel García Márquez"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editAuthorBirthDate">Fecha de Nacimiento</label>
+            <input
+              id="editAuthorBirthDate"
+              v-model="editingAuthor.birthDate"
+              type="date"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editAuthorNationality">Nacionalidad</label>
+            <input
+              id="editAuthorNationality"
+              v-model="editingAuthor.nationality"
+              type="text"
+              placeholder="Ej: Colombiana"
+              class="form-input"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showEditAuthorModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -445,7 +601,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { publicationsAPI } from '../api/publicationsService';
 import { categoriesAPI, favoritesAPI } from '../api/publicationsService';
-import { booksAPI, ratingsAPI } from '../api/booksService';
+import { booksAPI, ratingsAPI, authorsAPI } from '../api/booksService';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 
 export default {
@@ -461,11 +617,20 @@ export default {
     const ratings = ref([]);
 
     const showCreateCategoryModal = ref(false);
+    const showEditCategoryModal = ref(false);
     const showCreateAuthorModal = ref(false);
+    const showEditAuthorModal = ref(false);
     const showCreateBookModal = ref(false);
+
+    // Form states
+    const newCategoryName = ref('');
+    const editingCategory = ref({ id: null, name: '' });
+    const newAuthor = ref({ fullName: '', birthDate: '', nationality: '' });
+    const editingAuthor = ref({ id: null, fullName: '', birthDate: '', nationality: '' });
 
     // Pagination states
     const favoritesPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
+    const authorsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
     const booksPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
     const ratingsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
 
@@ -522,19 +687,14 @@ export default {
       }
     };
 
-    const loadAuthors = async () => {
+    const loadAuthors = async (page = 0) => {
       try {
-        const response = await booksAPI.getBooksByFilters({}, 0);
-        const booksData = response.data?.data || [];
-        const authorsMap = new Map();
+        const response = await authorsAPI.getAuthorsByFilters({}, page);
+        authors.value = response.data?.data || [];
 
-        booksData.forEach(book => {
-          if (book.author && !authorsMap.has(book.author.id)) {
-            authorsMap.set(book.author.id, book.author);
-          }
-        });
-
-        authors.value = Array.from(authorsMap.values());
+        // Update pagination info
+        authorsPagination.value.currentPage = page;
+        authorsPagination.value.totalPages = response.data?.totalPages || 1;
       } catch (error) {
         console.error('Error loading authors:', error);
       }
@@ -623,9 +783,34 @@ export default {
     };
 
     const handleEditCategory = (category) => {
-      // TODO: Implement edit functionality
-      console.log('Edit category:', category);
-      alert('Funcionalidad de edición en desarrollo');
+      editingCategory.value = { ...category };
+      showEditCategoryModal.value = true;
+    };
+
+    const handleCreateCategory = async () => {
+      try {
+        await categoriesAPI.create({ name: newCategoryName.value });
+        showCreateCategoryModal.value = false;
+        newCategoryName.value = '';
+        await loadCategories();
+        alert('Categoría creada exitosamente');
+      } catch (error) {
+        console.error('Error creating category:', error);
+        alert('Error al crear la categoría');
+      }
+    };
+
+    const handleUpdateCategory = async () => {
+      try {
+        await categoriesAPI.update(editingCategory.value.id, { name: editingCategory.value.name });
+        showEditCategoryModal.value = false;
+        editingCategory.value = { id: null, name: '' };
+        await loadCategories();
+        alert('Categoría actualizada exitosamente');
+      } catch (error) {
+        console.error('Error updating category:', error);
+        alert('Error al actualizar la categoría');
+      }
     };
 
     const handleDeleteCategory = async (categoryId) => {
@@ -655,15 +840,47 @@ export default {
     };
 
     const handleEditAuthor = (author) => {
-      // TODO: Implement edit functionality
-      console.log('Edit author:', author);
-      alert('Funcionalidad de edición en desarrollo');
+      editingAuthor.value = { ...author };
+      showEditAuthorModal.value = true;
+    };
+
+    const handleCreateAuthor = async () => {
+      try {
+        await authorsAPI.create(newAuthor.value);
+        showCreateAuthorModal.value = false;
+        newAuthor.value = { fullName: '', birthDate: '', nationality: '' };
+        await loadAuthors(authorsPagination.value.currentPage);
+        alert('Autor creado exitosamente');
+      } catch (error) {
+        console.error('Error creating author:', error);
+        alert('Error al crear el autor');
+      }
+    };
+
+    const handleUpdateAuthor = async () => {
+      try {
+        await authorsAPI.update(editingAuthor.value.id, editingAuthor.value);
+        showEditAuthorModal.value = false;
+        editingAuthor.value = { id: null, fullName: '', birthDate: '', nationality: '' };
+        await loadAuthors(authorsPagination.value.currentPage);
+        alert('Autor actualizado exitosamente');
+      } catch (error) {
+        console.error('Error updating author:', error);
+        alert('Error al actualizar el autor');
+      }
     };
 
     const handleDeleteAuthor = async (authorId) => {
-      // TODO: Implement delete functionality
-      console.log('Delete author:', authorId);
-      alert('Funcionalidad de eliminación en desarrollo');
+      if (confirm('¿Está seguro de eliminar este autor?')) {
+        try {
+          await authorsAPI.delete(authorId);
+          await loadAuthors(authorsPagination.value.currentPage);
+          alert('Autor eliminado exitosamente');
+        } catch (error) {
+          console.error('Error deleting author:', error);
+          alert('Error al eliminar el autor');
+        }
+      }
     };
 
     const handleEditBook = (book) => {
@@ -721,19 +938,30 @@ export default {
       books,
       ratings,
       favoritesPagination,
+      authorsPagination,
       booksPagination,
       ratingsPagination,
       showCreateCategoryModal,
+      showEditCategoryModal,
       showCreateAuthorModal,
+      showEditAuthorModal,
       showCreateBookModal,
+      newCategoryName,
+      editingCategory,
+      newAuthor,
+      editingAuthor,
       formatDate,
       getStatusLabel,
       handleApprove,
       handleReject,
       handleViewDetails,
+      handleCreateCategory,
+      handleUpdateCategory,
       handleEditCategory,
       handleDeleteCategory,
       handleDeleteFavorite,
+      handleCreateAuthor,
+      handleUpdateAuthor,
       handleEditAuthor,
       handleDeleteAuthor,
       handleEditBook,
@@ -741,6 +969,7 @@ export default {
       handleDeleteRating,
       handleImageError,
       loadFavoritesPage,
+      loadAuthors,
       loadBooksPage,
       loadRatingsPage
     };
@@ -978,18 +1207,59 @@ export default {
   margin-top: 12px;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+/* Category Form Styles */
+.category-form {
+  margin-top: 20px;
 }
 
-.section-header h3 {
-  font-size: 20px;
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
   font-weight: 600;
-  color: #1a202c;
-  margin: 0;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
 }
 
 .filter-select {
@@ -1018,14 +1288,15 @@ export default {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+/* CRUD Table Styles */
 .crud-table {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .table {
@@ -1035,92 +1306,87 @@ export default {
 
 .table thead {
   background: #f7fafc;
-}
-
-.table th {
-  padding: 14px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 13px;
-  color: #4a5568;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   border-bottom: 2px solid #e2e8f0;
 }
 
-.table td {
-  padding: 14px 16px;
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #2d3748;
   font-size: 14px;
-  color: #1a202c;
-  border-bottom: 1px solid #e2e8f0;
 }
 
-.table tbody tr:last-child td {
-  border-bottom: none;
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-size: 14px;
 }
 
 .table tbody tr:hover {
-  background: #f9fafb;
+  background: #f7fafc;
 }
 
 .btn-icon {
-  padding: 8px;
   background: none;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #4a5568;
+  border: none;
+  padding: 8px;
   cursor: pointer;
+  color: #4a5568;
+  border-radius: 4px;
+  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  margin-right: 8px;
 }
 
 .btn-icon:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
+  background: #edf2f7;
+  color: #2d3748;
 }
 
 .btn-icon.danger {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: #e53e3e;
 }
 
 .btn-icon.danger:hover {
-  background: #ef4444;
-  color: white;
+  background: #fff5f5;
+  color: #c53030;
 }
 
+/* Favorites Grid */
 .favorites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .favorite-card {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
+  position: relative;
 }
 
 .favorite-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .favorite-cover {
-  height: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
   background: #f7fafc;
 }
 
 .favorite-cover img {
-  max-height: 100%;
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -1130,81 +1396,104 @@ export default {
 
 .favorite-title {
   font-size: 16px;
-  font-weight: 500;
-  color: #1a202c;
+  font-weight: 600;
+  color: #2d3748;
   margin: 0 0 8px 0;
+  line-height: 1.4;
 }
 
 .favorite-user,
 .favorite-date {
-  font-size: 14px;
+  font-size: 13px;
   color: #718096;
-  margin: 0;
+  margin: 4px 0;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .delete-btn {
-  background: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
   border: none;
-  color: #ef4444;
+  padding: 8px;
+  border-radius: 6px;
   cursor: pointer;
+  color: #e53e3e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
+  opacity: 0;
+}
+
+.favorite-card:hover .delete-btn {
+  opacity: 1;
 }
 
 .delete-btn:hover {
-  transform: scale(1.1);
+  background: #fff5f5;
+  color: #c53030;
 }
 
+/* Books Grid */
 .books-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .book-card {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
+  display: flex;
+  gap: 16px;
+  padding: 16px;
 }
 
 .book-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .book-cover {
+  width: 80px;
   height: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
   background: #f7fafc;
 }
 
 .book-cover img {
-  max-height: 100%;
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
 .book-content {
-  padding: 16px;
+  flex: 1;
+  min-width: 0;
 }
 
 .book-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1a202c;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
   margin: 0 0 8px 0;
+  line-height: 1.4;
 }
 
 .book-author,
 .book-isbn {
-  font-size: 14px;
+  font-size: 13px;
   color: #718096;
-  margin: 0;
+  margin: 4px 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1213,10 +1502,10 @@ export default {
 .book-actions {
   display: flex;
   gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #e2e8f0;
+  align-items: flex-start;
 }
 
+/* Ratings List */
 .ratings-list {
   display: flex;
   flex-direction: column;
@@ -1225,14 +1514,14 @@ export default {
 
 .rating-card {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
 }
 
 .rating-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .rating-header {
@@ -1249,42 +1538,55 @@ export default {
 }
 
 .user-avatar-small {
-  width: 32px;
-  height: 32px;
-  background: #edf2f7;
-  color: #4a5568;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 14px;
-  font-weight: 500;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.rating-book-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.rating-user-name {
+  font-size: 13px;
+  color: #718096;
+  margin: 4px 0 0 0;
 }
 
 .rating-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .stars-display {
   display: flex;
-  align-items: center;
   gap: 2px;
 }
 
 .star-filled {
-  color: #fbbf24;
+  color: #f59e0b;
 }
 
 .star-empty {
-  color: #e2e8f0;
+  color: #d1d5db;
 }
 
 .rating-comment {
   color: #4a5568;
   font-size: 14px;
-  margin: 8px 0;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
 }
 
 .rating-footer {
@@ -1295,33 +1597,60 @@ export default {
   color: #718096;
 }
 
+.rating-date,
+.rating-score {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Pagination */
 .pagination-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 20px 0;
 }
 
 .pagination-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 10px 16px;
-  background: #f7fafc;
-  color: #4a5568;
+  background: white;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
+  color: #4a5568;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.pagination-btn:hover {
-  background: #edf2f7;
+.pagination-btn:hover:not(:disabled) {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .pagination-info {
   font-size: 14px;
   color: #4a5568;
+  font-weight: 500;
+}
+
+/* Author Form Styles */
+.author-form {
+  margin-top: 20px;
+}
+
+.author-form .form-group {
+  margin-bottom: 20px;
 }
 </style>
