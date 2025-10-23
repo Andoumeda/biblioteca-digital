@@ -1111,7 +1111,7 @@ export default {
 
 /* Estilos para favoritos con grid */
 .favorites-section {
-  width: 100%;
+  width: 56.25rem;
 }
 
 .section-title {
@@ -1333,7 +1333,7 @@ export default {
 
   .loading-state,
   .publications-list,
-  .bookmarks-grid,
+  .favorites-section,
   .comments-list {
     width: 100%;
   }

@@ -622,6 +622,12 @@ export default {
       console.log('View details:', publication);
     };
 
+    const handleEditCategory = (category) => {
+      // TODO: Implement edit functionality
+      console.log('Edit category:', category);
+      alert('Funcionalidad de edición en desarrollo');
+    };
+
     const handleDeleteCategory = async (categoryId) => {
       if (confirm('¿Está seguro de eliminar esta categoría?')) {
         try {
@@ -646,6 +652,24 @@ export default {
           alert('Error al eliminar el favorito');
         }
       }
+    };
+
+    const handleEditAuthor = (author) => {
+      // TODO: Implement edit functionality
+      console.log('Edit author:', author);
+      alert('Funcionalidad de edición en desarrollo');
+    };
+
+    const handleDeleteAuthor = async (authorId) => {
+      // TODO: Implement delete functionality
+      console.log('Delete author:', authorId);
+      alert('Funcionalidad de eliminación en desarrollo');
+    };
+
+    const handleEditBook = (book) => {
+      // TODO: Implement edit functionality
+      console.log('Edit book:', book);
+      alert('Funcionalidad de edición en desarrollo');
     };
 
     const handleDeleteBook = async (bookId) => {
