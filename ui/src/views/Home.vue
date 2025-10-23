@@ -8,21 +8,6 @@
           Descubre, comparte y disfruta de miles de publicaciones y libros digitales de la comunidad
         </p>
         <div class="hero-actions">
-          <button @click="$router.push('/explore')" class="btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-            </svg>
-            Explorar Publicaciones
-          </button>
-          <button @click="showUploadModal = true" class="btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" x2="12" y1="3" y2="15"/>
-            </svg>
-            Subir Publicación
-          </button>
         </div>
       </div>
       <div class="hero-illustration">

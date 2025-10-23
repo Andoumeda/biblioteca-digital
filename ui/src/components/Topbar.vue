@@ -90,9 +90,11 @@
           <div v-if="showUserMenu" class="user-dropdown" @click.stop>
             <div class="dropdown-header">
               <div class="user-info">
+                <div class="user-avatar">
+                  {{ userInitial }}
+                </div>
                 <p class="user-display-name">{{ currentUserProfile?.displayName || 'Usuario' }}</p>
                 <p class="user-email">{{ currentUserProfile?.user?.username || 'usuario' }}@biblioteca.com</p>
-                <p class="user-id">ID: {{ CURRENT_USER_PROFILE_ID }}</p>
               </div>
             </div>
             <div class="dropdown-divider"></div>
