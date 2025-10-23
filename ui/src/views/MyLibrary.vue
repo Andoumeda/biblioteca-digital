@@ -137,6 +137,65 @@
             Subir Publicación
           </button>
         </div>
+
+        <!-- Paginación para Mis Publicaciones -->
+        <div class="pagination-section" v-if="!isLoading && publicationsPagination.totalPages > 0">
+          <div class="pagination-controls">
+            <button
+              @click="goToPreviousPublicationsPage()"
+              :disabled="publicationsPagination.currentPage === 0"
+              class="pagination-btn"
+              v-if="publicationsPagination.currentPage > 0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              Anterior
+            </button>
+
+            <div class="pagination-info-container">
+              <span class="pagination-text">Página</span>
+              <input
+                type="number"
+                v-model.number="manualPublicationsPage"
+                @keyup.enter="goToManualPublicationsPage"
+                @blur="goToManualPublicationsPage"
+                :min="1"
+                :max="publicationsPagination.totalPages"
+                class="page-input"
+              />
+              <span class="pagination-text">de {{ publicationsPagination.totalPages }}</span>
+            </div>
+
+            <button
+              @click="goToNextPublicationsPage()"
+              :disabled="publicationsPagination.currentPage >= publicationsPagination.totalPages - 1"
+              class="pagination-btn"
+              v-if="publicationsPagination.currentPage < publicationsPagination.totalPages - 1"
+            >
+              Siguiente
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="page-size-control">
+            <label for="publicationsPageSize" class="page-size-label">Elementos por página:</label>
+            <select
+              id="publicationsPageSize"
+              v-model.number="publicationsPageSize"
+              @change="changePublicationsPageSize"
+              class="page-size-select"
+            >
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="30">30</option>
+              <option :value="50">50</option>
+            </select>
+            <span class="total-items-info">Total: {{ publicationsPagination.totalItems }} publicaciones</span>
+          </div>
+        </div>
       </div>
 
       <!-- Pestaña de Favoritos -->
@@ -293,7 +352,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import PublicationUploadModal from '../components/PublicationUploadModal.vue';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
 import { publicationsAPI, favoritesAPI } from '../api/publicationsService';
@@ -321,16 +380,37 @@ export default {
     const myFavorites = ref([]);
     const myComments = ref([]);
 
+    // Pagination states for publications
+    const publicationsPagination = ref({
+      currentPage: 0,
+      totalPages: 1,
+      totalItems: 0,
+      pageSize: 20
+    });
+    const manualPublicationsPage = ref(1);
+    const publicationsPageSize = ref(20);
+
+    // Watch for pagination changes
+    watch(() => publicationsPagination.value.currentPage, (newPage) => {
+      manualPublicationsPage.value = newPage + 1;
+    });
+
     // Cargar publicaciones del usuario desde la API (filtrado por USER_PROFILE_ID)
-    const loadUserPublications = async () => {
+    const loadUserPublications = async (page = 0, size = 20) => {
       try {
         isLoading.value = true;
-        console.log('Cargando publicaciones...');
-        const response = await publicationsAPI.getByUser(CURRENT_USER_PROFILE_ID, 0, 100);
+        console.log(`Cargando publicaciones... (página ${page}, tamaño ${size})`);
+        const response = await publicationsAPI.getByUser(CURRENT_USER_PROFILE_ID, page, size);
         console.log('Respuesta de publicaciones:', response);
 
         if (response?.data?.data) {
           const publications = response.data.data;
+
+          // Update pagination info
+          publicationsPagination.value.currentPage = response.data.currentPage || page;
+          publicationsPagination.value.totalPages = response.data.totalPages || 1;
+          publicationsPagination.value.totalItems = response.data.totalItems || 0;
+          publicationsPagination.value.pageSize = response.data.pageSize || size;
 
           // Enriquecer cada publicación con sus libros y estadísticas
           for (const publication of publications) {
@@ -357,6 +437,7 @@ export default {
             publication.totalRatings = totalRatings;
             publication.uploadDate = publication.createdAt;
             publication.status = publication.state?.toLowerCase() || 'pending';
+            publication.totalDownloads = publication.books.reduce((sum, book) => sum + (book.downloads || 0), 0);
           }
 
           myPublications.value = publications;
@@ -455,6 +536,45 @@ export default {
       } finally {
         isLoadingComments.value = false;
       }
+    };
+
+    // Pagination navigation functions for publications
+    const goToPreviousPublicationsPage = async () => {
+      if (publicationsPagination.value.currentPage > 0) {
+        await loadUserPublications(publicationsPagination.value.currentPage - 1, publicationsPageSize.value);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const goToNextPublicationsPage = async () => {
+      if (publicationsPagination.value.currentPage < publicationsPagination.value.totalPages - 1) {
+        await loadUserPublications(publicationsPagination.value.currentPage + 1, publicationsPageSize.value);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const goToManualPublicationsPage = async () => {
+      // Validate page number
+      if (manualPublicationsPage.value < 1) {
+        manualPublicationsPage.value = 1;
+        return;
+      }
+      if (manualPublicationsPage.value > publicationsPagination.value.totalPages) {
+        manualPublicationsPage.value = publicationsPagination.value.totalPages;
+        return;
+      }
+
+      const targetPage = manualPublicationsPage.value - 1; // Convert to 0-indexed
+      if (targetPage !== publicationsPagination.value.currentPage) {
+        await loadUserPublications(targetPage, publicationsPageSize.value);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const changePublicationsPageSize = async () => {
+      // Reset to first page when changing page size
+      await loadUserPublications(0, publicationsPageSize.value);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const formatDate = (dateString) => {
@@ -558,7 +678,7 @@ export default {
 
     onMounted(async () => {
       await Promise.all([
-        loadUserPublications(),
+        loadUserPublications(0, publicationsPageSize.value),
         loadUserFavorites(),
         loadUserComments()
       ]);
@@ -577,6 +697,9 @@ export default {
       myPublications,
       myFavorites,
       myComments,
+      publicationsPagination,
+      manualPublicationsPage,
+      publicationsPageSize,
       formatDate,
       handleViewDetails,
       handleEdit,
@@ -589,7 +712,11 @@ export default {
       handleDeleteFavorite,
       handleEditComment,
       handleDeleteComment,
-      handleImageError
+      handleImageError,
+      goToPreviousPublicationsPage,
+      goToNextPublicationsPage,
+      goToManualPublicationsPage,
+      changePublicationsPageSize
     };
   }
 }
@@ -1214,128 +1341,126 @@ export default {
   color: #f39c12;
 }
 
-.delete-btn {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #dc3545;
-  border-radius: 8px;
-  color: #dc3545;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  opacity: 0;
+/* Pagination Styles */
+.pagination-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
-.publication-card-compact:hover .delete-btn {
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 1rem;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.pagination-btn:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+.pagination-info-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.pagination-text {
+  font-size: 14px;
+}
+
+.page-input {
+  width: 60px;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  transition: all 0.2s;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
   opacity: 1;
 }
 
-.delete-btn:hover {
-  background: #dc3545;
-  color: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-}
-
-/* Estilos para comentarios mejorados */
-.comment-item {
+.page-size-control {
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
 }
 
-.comment-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.page-size-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.page-size-select {
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.page-size-select:hover {
   border-color: #cbd5e0;
 }
 
-.comment-avatar {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 50%;
-}
-
-.comment-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.comment-info {
-  flex: 1;
-  min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .my-library-container {
-    padding: 1rem;
-  }
-
-  .library-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .tabs-list {
-    flex-direction: column;
-  }
-
-  .publication-content {
-    flex-direction: column;
-  }
-
-  .publication-cover {
-    width: 100%;
-    max-width: 200px;
-    margin: 0 auto;
-  }
-
-  .publication-actions {
-    flex-direction: column;
-  }
-
-  .publications-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-
-  .comment-item {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .comment-header {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .comment-actions {
-    margin-top: 0.5rem;
-  }
-
-  .loading-state,
-  .publications-list,
-  .favorites-section,
-  .comments-list {
-    width: 100%;
-  }
+.total-items-info {
+  font-size: 13px;
+  color: #718096;
+  font-weight: 500;
+  margin-left: 8px;
 }
 </style>

@@ -496,11 +496,11 @@
 
     <!-- Author Modals -->
     <div v-if="showCreateAuthorModal" class="modal-overlay" @click="showCreateAuthorModal = false">
-      <div class="modal-content" @click.stop>
+      <div class="modal-content modal-content-large" @click.stop>
         <h3>Crear Nuevo Autor</h3>
         <form @submit.prevent="handleCreateAuthor" class="author-form">
           <div class="form-group">
-            <label for="authorFullName">Nombre Completo</label>
+            <label for="authorFullName">Nombre Completo *</label>
             <input
               id="authorFullName"
               v-model="newAuthor.fullName"
@@ -508,6 +508,16 @@
               placeholder="Ej: Gabriel García Márquez"
               required
               class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="authorBio">Biografía</label>
+            <textarea
+              id="authorBio"
+              v-model="newAuthor.bio"
+              placeholder="Escribe una breve biografía del autor..."
+              rows="4"
+              class="form-input form-textarea"
             />
           </div>
           <div class="form-group">
@@ -542,11 +552,11 @@
     </div>
 
     <div v-if="showEditAuthorModal" class="modal-overlay" @click="showEditAuthorModal = false">
-      <div class="modal-content" @click.stop>
+      <div class="modal-content modal-content-large" @click.stop>
         <h3>Editar Autor</h3>
         <form @submit.prevent="handleUpdateAuthor" class="author-form">
           <div class="form-group">
-            <label for="editAuthorFullName">Nombre Completo</label>
+            <label for="editAuthorFullName">Nombre Completo *</label>
             <input
               id="editAuthorFullName"
               v-model="editingAuthor.fullName"
@@ -554,6 +564,16 @@
               placeholder="Ej: Gabriel García Márquez"
               required
               class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editAuthorBio">Biografía</label>
+            <textarea
+              id="editAuthorBio"
+              v-model="editingAuthor.bio"
+              placeholder="Escribe una breve biografía del autor..."
+              rows="4"
+              class="form-input form-textarea"
             />
           </div>
           <div class="form-group">
@@ -625,8 +645,8 @@ export default {
     // Form states
     const newCategoryName = ref('');
     const editingCategory = ref({ id: null, name: '' });
-    const newAuthor = ref({ fullName: '', birthDate: '', nationality: '' });
-    const editingAuthor = ref({ id: null, fullName: '', birthDate: '', nationality: '' });
+    const newAuthor = ref({ fullName: '', bio: '', birthDate: '', nationality: '' });
+    const editingAuthor = ref({ id: null, fullName: '', bio: '', birthDate: '', nationality: '' });
 
     // Pagination states
     const favoritesPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
@@ -846,9 +866,17 @@ export default {
 
     const handleCreateAuthor = async () => {
       try {
-        await authorsAPI.create(newAuthor.value);
+        // Ensure bio is always sent (empty string if not provided)
+        const authorData = {
+          fullName: newAuthor.value.fullName,
+          bio: newAuthor.value.bio || '',
+          birthDate: newAuthor.value.birthDate,
+          nationality: newAuthor.value.nationality
+        };
+
+        await authorsAPI.create(authorData);
         showCreateAuthorModal.value = false;
-        newAuthor.value = { fullName: '', birthDate: '', nationality: '' };
+        newAuthor.value = { fullName: '', bio: '', birthDate: '', nationality: '' };
         await loadAuthors(authorsPagination.value.currentPage);
         alert('Autor creado exitosamente');
       } catch (error) {
@@ -859,9 +887,17 @@ export default {
 
     const handleUpdateAuthor = async () => {
       try {
-        await authorsAPI.update(editingAuthor.value.id, editingAuthor.value);
+        // Ensure bio is always sent (empty string if not provided)
+        const authorData = {
+          fullName: editingAuthor.value.fullName,
+          bio: editingAuthor.value.bio || '',
+          birthDate: editingAuthor.value.birthDate,
+          nationality: editingAuthor.value.nationality
+        };
+
+        await authorsAPI.update(editingAuthor.value.id, authorData);
         showEditAuthorModal.value = false;
-        editingAuthor.value = { id: null, fullName: '', birthDate: '', nationality: '' };
+        editingAuthor.value = { id: null, fullName: '', bio: '', birthDate: '', nationality: '' };
         await loadAuthors(authorsPagination.value.currentPage);
         alert('Autor actualizado exitosamente');
       } catch (error) {
@@ -1194,6 +1230,10 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.modal-content-large {
+  max-width: 600px;
+}
+
 .modal-content h3 {
   margin-top: 0;
 }
@@ -1231,6 +1271,13 @@ export default {
   border-radius: 6px;
   font-size: 14px;
   transition: all 0.2s;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  line-height: 1.5;
 }
 
 .form-input:focus {

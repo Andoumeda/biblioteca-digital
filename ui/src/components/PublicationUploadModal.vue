@@ -204,7 +204,7 @@
                 <div class="form-group">
                   <label>Nombre Completo *</label>
                   <input
-                    v-model="newAuthorData[book.id].fullname"
+                    v-model="newAuthorData[book.id].fullName"
                     type="text"
                     placeholder="Ej: Gabriel García Márquez"
                     required
@@ -220,20 +220,18 @@
                 </div>
               </div>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Fecha de Nacimiento</label>
-                  <input
-                    v-model="newAuthorData[book.id].birthdate"
-                    type="date"
-                  />
-                </div>
+              <div class="form-group">
+                <label>Fecha de Nacimiento</label>
+                <input
+                  v-model="newAuthorData[book.id].birthDate"
+                  type="date"
+                />
               </div>
 
               <div class="form-group">
                 <label>Biografía</label>
                 <textarea
-                  v-model="newAuthorData[book.id].biography"
+                  v-model="newAuthorData[book.id].bio"
                   rows="3"
                   placeholder="Breve biografía del autor..."
                 ></textarea>
@@ -463,10 +461,10 @@ export default {
       showAuthorForm.value[bookId] = !showAuthorForm.value[bookId];
       if (showAuthorForm.value[bookId]) {
         newAuthorData.value[bookId] = {
-          fullname: '',
-          birthdate: '',
+          fullName: '',
+          birthDate: '',
           nationality: '',
-          biography: ''
+          bio: ''
         };
       }
     };
@@ -474,17 +472,17 @@ export default {
     // Crear nuevo autor
     const createNewAuthor = async (bookId) => {
       const authorData = newAuthorData.value[bookId];
-      if (!authorData.fullname || !authorData.fullname.trim()) {
+      if (!authorData.fullName || !authorData.fullName.trim()) {
         alert('El nombre del autor es obligatorio');
         return;
       }
 
       try {
         const payload = {
-          fullname: authorData.fullname,
-          birthdate: authorData.birthdate || null,
-          nationality: authorData.nationality || null,
-          biography: authorData.biography || null
+          fullName: authorData.fullName,
+          bio: authorData.bio || '', // Bio is required by API, send empty string if not provided
+          birthDate: authorData.birthDate || null,
+          nationality: authorData.nationality || null
         };
 
         const response = await authorsAPI.create(payload);

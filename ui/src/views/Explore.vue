@@ -234,15 +234,14 @@ export default {
     });
 
     const filteredPublications = computed(() => {
-      // Only show APPROVED publications
+      // Backend already filters by APPROVED state, so we only need to filter by search term
       let pubs = store.publications.filter(pub => {
-        const isApproved = pub.state === 'APPROVED' || pub.state === 'approved';
         const matchesSearch =
           pub.title?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
           pub.description?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
           pub.userProfile?.displayName?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
           pub.userProfile?.user?.username?.toLowerCase().includes(searchTerm.value.toLowerCase());
-        return isApproved && matchesSearch;
+        return matchesSearch;
       });
 
       // Add favorites count and book ratings
@@ -339,7 +338,7 @@ export default {
 
     const goToPreviousPage = async () => {
       if (store.currentPage > 0) {
-        await store.fetchPublications(store.currentPage - 1, pageSize.value);
+        await store.fetchPublicationsByState('APPROVED', store.currentPage - 1, pageSize.value);
         await store.fetchCurrentPublicationsFavorites();
         await loadBooksRatings();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -348,7 +347,7 @@ export default {
 
     const goToNextPage = async () => {
       if (store.hasMore) {
-        await store.fetchPublications(store.currentPage + 1, pageSize.value);
+        await store.fetchPublicationsByState('APPROVED', store.currentPage + 1, pageSize.value);
         await store.fetchCurrentPublicationsFavorites();
         await loadBooksRatings();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -368,7 +367,7 @@ export default {
 
       const targetPage = manualPage.value - 1; // Convert to 0-indexed
       if (targetPage !== store.currentPage) {
-        await store.fetchPublications(targetPage, pageSize.value);
+        await store.fetchPublicationsByState('APPROVED', targetPage, pageSize.value);
         await store.fetchCurrentPublicationsFavorites();
         await loadBooksRatings();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -377,14 +376,14 @@ export default {
 
     const changePageSize = async () => {
       // Reset to first page when changing page size
-      await store.fetchPublications(0, pageSize.value);
+      await store.fetchPublicationsByState('APPROVED', 0, pageSize.value);
       await store.fetchCurrentPublicationsFavorites();
       await loadBooksRatings();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     onMounted(async () => {
-      await store.fetchPublications(0, pageSize.value);
+      await store.fetchPublicationsByState('APPROVED', 0, pageSize.value);
       await store.fetchCategories();
       await favoritesStore.fetchFavorites();
       await store.fetchCurrentPublicationsFavorites();
