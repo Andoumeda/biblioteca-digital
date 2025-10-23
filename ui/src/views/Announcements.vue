@@ -6,7 +6,7 @@
     </div>
 
     <div v-if="store.loading" class="loading-state">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="spinner">
         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
       </svg>
       <p>Cargando anuncios...</p>
@@ -24,7 +24,7 @@
         @click="goToDetail(announcement.id)"
       >
         <div class="announcement-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
             <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
           </svg>
@@ -41,7 +41,7 @@
     </div>
 
     <div v-else class="no-results">
-      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
         <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
       </svg>
@@ -51,7 +51,7 @@
     <!-- Paginación -->
     <div class="pagination" v-if="!store.loading && store.totalPages > 1">
       <button @click="store.previousPage()" :disabled="store.currentPage === 0" class="pagination-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
         Anterior
@@ -59,7 +59,7 @@
       <span class="pagination-info">Página {{ store.currentPage + 1 }} de {{ store.totalPages }}</span>
       <button @click="store.nextPage()" :disabled="!store.hasMore" class="pagination-btn">
         Siguiente
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </button>
@@ -96,6 +96,7 @@ export default {
 
     onMounted(async () => {
       await store.fetchAnnouncements();
+      store.announcements = store.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     });
 
     return {
@@ -110,8 +111,9 @@ export default {
 <style scoped>
 .announcements-container {
   padding: 24px;
+  width: 100%;
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 5% auto;
 }
 
 .announcements-header {
@@ -281,4 +283,3 @@ export default {
   color: #4a5568;
 }
 </style>
-

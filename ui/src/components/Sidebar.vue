@@ -2,34 +2,27 @@
   <aside class="sidebar">
     <nav>
       <router-link to="/" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
         Inicio
       </router-link>
       <router-link to="/explore" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/>
           <path d="m21 21-4.35-4.35"/>
         </svg>
         Explorar
       </router-link>
       <router-link to="/my-library" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
         </svg>
         Mi Biblioteca
       </router-link>
-      <router-link to="/announcements" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
-          <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
-        </svg>
-        Anuncios
-      </router-link>
       <router-link to="/moderation" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
         </svg>
         Moderación
@@ -95,14 +88,6 @@ const selectCategory = async (categoryId) => {
   flex-direction: column;
 }
 
-.logo {
-  padding: 1.5rem 1rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-bottom: 1px solid #e2e8f0;
-  margin: 0;
-}
-
 nav {
   display: flex;
   flex-direction: column;
@@ -124,13 +109,6 @@ nav {
 .nav-link:hover {
   background-color: #f7fafc;
   color: #667eea;
-}
-
-.nav-link.router-link-active {
-  background-color: #edf2f7;
-  color: #667eea;
-  font-weight: 500;
-  border-left-color: #667eea;
 }
 
 .nav-link svg {

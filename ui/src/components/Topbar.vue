@@ -8,7 +8,6 @@
             width="28"
             height="28"
             viewBox="0 0 24 24"
-            fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
@@ -24,7 +23,7 @@
       <div class="topbar-right">
         <div class="notifications-menu">
           <button @click="toggleNotifications" class="icon-button" title="Notificaciones">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
               <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
             </svg>
@@ -39,7 +38,7 @@
             </div>
             <div class="notifications-list">
               <div v-if="announcements.length === 0" class="no-notifications">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
                   <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
                 </svg>
@@ -49,9 +48,10 @@
                 v-for="announcement in announcements"
                 :key="announcement.id"
                 class="notification-item"
+                @click="goToAnnouncement(announcement.id)"
               >
                 <div class="notification-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="16" x2="12" y2="12"/>
                     <line x1="12" y1="8" x2="12.01" y2="8"/>
@@ -65,9 +65,13 @@
               </div>
             </div>
             <div class="notifications-footer">
-              <button @click="handleViewAllNotifications" class="view-all-notifications-btn">
-                Ver todas las notificaciones
-              </button>
+              <router-link to="/announcements" class="nav-link" @click="showNotifications = false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
+                  <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
+                </svg>
+                Ver todos los anuncios
+              </router-link>
             </div>
           </div>
         </div>
@@ -78,7 +82,7 @@
               {{ userInitial }}
             </div>
             <span class="user-name">{{ currentUserProfile?.displayName || 'Usuario' }}</span>
-            <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </button>
@@ -93,14 +97,14 @@
             </div>
             <div class="dropdown-divider"></div>
             <button @click="handleSettings" class="dropdown-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
                 <circle cx="12" cy="12" r="3"/>
               </svg>
               Configuración
             </button>
             <button @click="handleLogout" class="dropdown-item logout">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" x2="9" y1="12" y2="12"/>
@@ -157,6 +161,7 @@ export default {
       try {
         const response = await announcementsAPI.getAll();
         announcements.value = response.data?.content || [];
+        announcements.value = announcements.value.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } catch (error) {
         console.error('Error loading announcements:', error);
         announcements.value = [];
@@ -198,6 +203,11 @@ export default {
       }
     };
 
+    const goToAnnouncement = (id) => {
+      showNotifications.value = false;
+      router.push(`/announcements/${id}`);
+    };
+
     onMounted(() => {
       document.addEventListener('click', closeMenuOnClickOutside);
       loadAnnouncements();
@@ -220,7 +230,8 @@ export default {
       handleViewAllNotifications,
       handleSettings,
       handleLogout,
-      formatDate
+      formatDate,
+      goToAnnouncement
     };
   }
 };
@@ -424,22 +435,6 @@ export default {
   padding: 12px 16px;
   border-top: 1px solid #e5e7eb;
   text-align: center;
-}
-
-.view-all-notifications-btn {
-  background: none;
-  border: none;
-  color: #667eea;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: all 0.2s;
-  width: 100%;
-}
-
-.view-all-notifications-btn:hover {
-  background: #eff6ff;
 }
 
 .user-menu {

@@ -1,14 +1,14 @@
 <template>
   <div class="announcement-detail-container">
     <button @click="goBack" class="back-btn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
       Volver
     </button>
 
     <div v-if="loading" class="loading-state">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="spinner">
         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
       </svg>
       <p>Cargando anuncio...</p>
@@ -21,7 +21,7 @@
     <div v-else-if="announcement" class="announcement-detail">
       <div class="announcement-header">
         <div class="announcement-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
             <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
           </svg>
@@ -30,7 +30,7 @@
           <h1 class="announcement-title">{{ announcement.title }}</h1>
           <div class="announcement-meta">
             <span class="announcement-date">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path d="M8 2v4"/>
                 <path d="M16 2v4"/>
                 <rect width="18" height="18" x="3" y="4" rx="2"/>
@@ -39,7 +39,7 @@
               {{ formatDate(announcement.createdAt) }}
             </span>
             <span class="announcement-author">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
@@ -87,7 +87,7 @@ export default {
     };
 
     const goBack = () => {
-      router.back();
+      router.push('/announcements');
     };
 
     const loadAnnouncement = async () => {
@@ -123,7 +123,8 @@ export default {
 <style scoped>
 .announcement-detail-container {
   padding: 24px;
-  max-width: 900px;
+  width: 100%;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -232,10 +233,10 @@ export default {
 }
 
 .announcement-message {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #2d3748;
-  white-space: pre-wrap;
+  width: 100%;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #4a5568;
 }
 
 @media (max-width: 640px) {
@@ -254,4 +255,3 @@ export default {
   }
 }
 </style>
-
