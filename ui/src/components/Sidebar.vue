@@ -111,6 +111,13 @@ nav {
   color: #667eea;
 }
 
+.nav-link.router-link-active {
+  background-color: #edf2f7;
+  color: #667eea;
+  font-weight: 500;
+  border-left-color: #667eea;
+}
+
 .nav-link svg {
   flex-shrink: 0;
 }
@@ -149,6 +156,7 @@ nav {
   font-size: 0.9rem;
   transition: all 0.2s;
   border-left: 3px solid transparent;
+  border-radius: 6px;
 }
 
 .category-item:hover {
