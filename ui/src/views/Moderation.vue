@@ -422,6 +422,11 @@
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
               </div>
+              <button @click="handleEditRating(rating)" class="btn-icon" title="Editar rating">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                </svg>
+              </button>
               <button @click="handleDeleteRating(rating.id)" class="btn-icon danger" title="Eliminar rating">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 6h18"/>
@@ -685,12 +690,52 @@
       </div>
     </div>
 
+    <!-- Edit Rating Modal -->
+    <div v-if="showEditRatingModal" class="modal-overlay" @click="showEditRatingModal = false">
+      <div class="modal-content modal-content-large" @click.stop>
+        <h3>Editar Rating</h3>
+        <form @submit.prevent="handleUpdateRating" class="rating-form">
+          <div class="form-group">
+            <label>Calificación *</label>
+            <div class="rating-input-container">
+              <RatingSystem
+                :current-rating="editingRating.valoration"
+                :readonly="false"
+                size="lg"
+                :show-value="true"
+                @rating-change="handleRatingChange"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editRatingComment">Comentario</label>
+            <textarea
+              id="editRatingComment"
+              v-model="editingRating.comment"
+              placeholder="Escribe tu comentario sobre el libro..."
+              rows="4"
+              class="form-input form-textarea"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showEditRatingModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Book Detail Modal -->
     <BookDetailModal
       v-if="selectedBook"
       :book="selectedBook"
       :is-open="showBookDetailModal"
       @close="showBookDetailModal = false"
+      @rating-added="handleRatingAdded"
     />
   </div>
 </template>
@@ -702,11 +747,13 @@ import { categoriesAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI, authorsAPI } from '../api/booksService';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 import BookDetailModal from '../components/BookDetailModal.vue';
+import RatingSystem from '../components/RatingSystem.vue';
 
 export default {
   name: 'Moderation',
   components: {
-    BookDetailModal
+    BookDetailModal,
+    RatingSystem
   },
   setup() {
     const activeTab = ref('publications');
@@ -724,6 +771,7 @@ export default {
     const showEditAuthorModal = ref(false);
     const showEditBookModal = ref(false);
     const showBookDetailModal = ref(false);
+    const showEditRatingModal = ref(false);
     const selectedBook = ref(null);
 
     // Form states
@@ -732,6 +780,7 @@ export default {
     const newAuthor = ref({ fullName: '', bio: '', birthDate: '', nationality: '' });
     const editingAuthor = ref({ id: null, fullName: '', bio: '', birthDate: '', nationality: '' });
     const editingBook = ref({ id: null, title: '', description: '', bookUrl: '', coverImg: '' });
+    const editingRating = ref({ id: null, valoration: 0, comment: '', bookId: null, userProfileId: null });
 
     // Pagination states
     const favoritesPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
@@ -1101,6 +1150,46 @@ export default {
       }
     };
 
+    const handleEditRating = (rating) => {
+      editingRating.value = {
+        id: rating.id,
+        valoration: rating.valoration,
+        comment: rating.comment || '',
+        bookId: rating.bookId,
+        userProfileId: rating.userProfileId
+      };
+      showEditRatingModal.value = true;
+    };
+
+    const handleRatingChange = (newRating) => {
+      editingRating.value.valoration = newRating;
+    };
+
+    const handleUpdateRating = async () => {
+      try {
+        const ratingData = {
+          valoration: editingRating.value.valoration,
+          comment: editingRating.value.comment,
+          bookId: editingRating.value.bookId,
+          userProfileId: editingRating.value.userProfileId
+        };
+
+        await ratingsAPI.updateRating(editingRating.value.id, ratingData);
+        showEditRatingModal.value = false;
+        editingRating.value = { id: null, valoration: 0, comment: '', bookId: null, userProfileId: null };
+        await loadRatingsPage(ratingsPagination.value.currentPage);
+        alert('Rating actualizado exitosamente');
+      } catch (error) {
+        console.error('Error updating rating:', error);
+        alert('Error al actualizar el rating');
+      }
+    };
+
+    const handleRatingAdded = async () => {
+      // Recargar ratings cuando se agrega uno nuevo desde el BookDetailModal
+      await loadRatingsPage(ratingsPagination.value.currentPage);
+    };
+
     const handleImageError = (event) => {
       event.target.src = DEFAULT_BOOK_COVER;
     };
@@ -1133,12 +1222,14 @@ export default {
       showEditAuthorModal,
       showEditBookModal,
       showBookDetailModal,
+      showEditRatingModal,
       selectedBook,
       newCategoryName,
       editingCategory,
       newAuthor,
       editingAuthor,
       editingBook,
+      editingRating,
       manualBooksPage,
       formatDate,
       getStatusLabel,
@@ -1162,6 +1253,10 @@ export default {
       goToNextBooksPage,
       goToManualBooksPage,
       handleDeleteRating,
+      handleEditRating,
+      handleRatingChange,
+      handleUpdateRating,
+      handleRatingAdded,
       handleImageError,
       loadFavoritesPage,
       loadAuthors,
@@ -1901,5 +1996,22 @@ export default {
 
 .author-form .form-group {
   margin-bottom: 20px;
+}
+
+/* Rating Form Styles */
+.rating-form {
+  margin-top: 20px;
+}
+
+.rating-form .form-group {
+  margin-bottom: 20px;
+}
+
+.rating-input-container {
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
 }
 </style>
