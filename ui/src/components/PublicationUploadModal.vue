@@ -46,27 +46,55 @@
             <p class="section-description">Detalles generales que aplican a toda la publicación</p>
           </div>
           <div class="section-content">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="publication-title">Título de la Publicación *</label>
-                <input
-                  id="publication-title"
-                  v-model="publicationData.title"
-                  type="text"
-                  placeholder="Ej: Guías de Programación Completas"
-                  required
-                />
-              </div>
+            <div class="form-group">
+              <label for="publication-title">Título de la Publicación *</label>
+              <input
+                id="publication-title"
+                v-model="publicationData.title"
+                type="text"
+                placeholder="Ej: Guías de Programación Completas"
+                required
+              />
+            </div>
 
-              <div class="form-group">
-                <label for="publication-category">Categoría *</label>
-                <select id="publication-category" v-model="publicationData.categoryId" required :disabled="loadingCategories">
-                  <option value="">{{ loadingCategories ? 'Cargando categorías...' : 'Selecciona una categoría' }}</option>
-                  <option v-for="category in categories" :key="category.id" :value="category.id">
-                    {{ category.name }}
-                  </option>
-                </select>
+            <!-- Categorías Seleccionadas -->
+            <div class="form-group">
+              <label>Categorías * (mínimo 1)</label>
+              <div class="selected-categories">
+                <div v-if="publicationData.selectedCategories.length === 0" class="no-categories">
+                  No hay categorías seleccionadas. Selecciona al menos una categoría de la lista.
+                </div>
+                <div v-else class="category-chips">
+                  <div v-for="category in publicationData.selectedCategories" :key="category.id" class="category-chip">
+                    <span>{{ category.name }}</span>
+                    <button type="button" @click="removeCategoryFromPublication(category.id)" class="chip-remove">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <!-- Selector de Categorías -->
+            <div class="form-group">
+              <label for="publication-category">Agregar Categoría</label>
+              <select
+                id="publication-category"
+                v-model="selectedCategoryToAdd"
+                @change="addCategoryToPublication"
+                :disabled="loadingCategories"
+              >
+                <option value="">{{ loadingCategories ? 'Cargando categorías...' : 'Selecciona una categoría para agregar' }}</option>
+                <option
+                  v-for="category in availableCategories"
+                  :key="category.id"
+                  :value="category.id"
+                >
+                  {{ category.name }}
+                </option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -308,7 +336,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { categoriesAPI, publicationsAPI } from '../api/publicationsService';
 import { booksAPI, authorsAPI } from '../api/booksService';
 
@@ -330,9 +358,11 @@ export default {
       id: null,
       title: '',
       description: '',
-      categoryId: '',
+      selectedCategories: [],
       userProfileId: 1 // TODO: Obtener del usuario autenticado
     });
+
+    const selectedCategoryToAdd = ref('');
 
     const books = ref([
       {
@@ -359,6 +389,31 @@ export default {
     const isUploading = ref(false);
     const uploadComplete = ref(false);
 
+    // Computed property para categorías disponibles (excluye las ya seleccionadas)
+    const availableCategories = computed(() => {
+      return categories.value.filter(category =>
+        !publicationData.value.selectedCategories.some(selected => selected.id === category.id)
+      );
+    });
+
+    // Agregar categoría a la publicación
+    const addCategoryToPublication = () => {
+      if (selectedCategoryToAdd.value) {
+        const category = categories.value.find(cat => cat.id === selectedCategoryToAdd.value);
+        if (category && !publicationData.value.selectedCategories.some(c => c.id === category.id)) {
+          publicationData.value.selectedCategories.push(category);
+        }
+        selectedCategoryToAdd.value = '';
+      }
+    };
+
+    // Eliminar categoría de la publicación
+    const removeCategoryFromPublication = (categoryId) => {
+      publicationData.value.selectedCategories = publicationData.value.selectedCategories.filter(
+        cat => cat.id !== categoryId
+      );
+    };
+
     // Cargar categorías desde la API
     const loadCategories = async () => {
       try {
@@ -381,7 +436,7 @@ export default {
           id: props.publicationData.id,
           title: props.publicationData.title || '',
           description: props.publicationData.description || '',
-          categoryId: props.publicationData.categories?.[0]?.id || '',
+          selectedCategories: props.publicationData.categories || [],
           userProfileId: props.publicationData.userProfileId || 1
         };
 
@@ -522,7 +577,7 @@ export default {
 
     const isFormValid = () => {
       const publicationValid = publicationData.value.title.trim() !== '' &&
-                               publicationData.value.categoryId !== '';
+                               publicationData.value.selectedCategories.length > 0;
       const booksValid = books.value.every(
         book => book.title.trim() !== '' &&
                 book.selectedAuthors.length > 0 &&
@@ -547,7 +602,7 @@ export default {
             title: publicationData.value.title,
             description: publicationData.value.description,
             userProfileId: publicationData.value.userProfileId,
-            categoryIds: [publicationData.value.categoryId]
+            categoryIds: publicationData.value.selectedCategories.map(cat => cat.id)
           };
 
           console.log('Actualizando publicación:', publicationData.value.id, publicationPayload);
@@ -605,7 +660,7 @@ export default {
             title: publicationData.value.title,
             description: publicationData.value.description,
             userProfileId: publicationData.value.userProfileId,
-            categoryIds: [publicationData.value.categoryId]
+            categoryIds: publicationData.value.selectedCategories.map(cat => cat.id)
           };
 
           console.log('Creando publicación:', publicationPayload);
@@ -666,7 +721,7 @@ export default {
       publicationData.value = {
         title: '',
         description: '',
-        categoryId: '',
+        selectedCategories: [],
         userProfileId: 1
       };
       books.value = [
@@ -679,6 +734,7 @@ export default {
           coverImg: ''
         }
       ];
+      selectedCategoryToAdd.value = '';
       uploadProgress.value = 0;
       isUploading.value = false;
       uploadComplete.value = false;
@@ -689,6 +745,8 @@ export default {
       books,
       categories,
       loadingCategories,
+      availableCategories,
+      selectedCategoryToAdd,
       availableAuthors,
       loadingAuthors,
       authorSearchQuery,
@@ -706,7 +764,9 @@ export default {
       addAuthorToBook,
       removeAuthorFromBook,
       toggleAuthorForm,
-      createNewAuthor
+      createNewAuthor,
+      addCategoryToPublication,
+      removeCategoryFromPublication
     };
   }
 };
@@ -1056,6 +1116,40 @@ export default {
   display: flex;
   justify-content: center;
   gap: 12px;
+}
+
+/* Estilos para categorías */
+.selected-categories {
+  padding: 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  min-height: 60px;
+}
+
+.no-categories {
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px;
+}
+
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* Estilos para autores */
