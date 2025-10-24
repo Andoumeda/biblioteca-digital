@@ -301,16 +301,13 @@
     <div v-if="activeTab === 'books'" class="tab-content">
       <div class="section-header">
         <h3>Gestión de Libros</h3>
-        <button @click="showCreateBookModal = true" class="btn btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nuevo Libro
-        </button>
       </div>
 
-      <div class="books-grid">
+      <div v-if="books.length === 0" class="no-results">
+        No hay libros disponibles
+      </div>
+
+      <div v-else class="books-grid">
         <div v-for="book in books" :key="book.id" class="book-card">
           <div class="book-cover">
             <img
@@ -326,20 +323,16 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
-              {{ book.author?.name || 'Autor desconocido' }}
-            </p>
-            <p class="book-isbn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/>
-                <line x1="8" x2="16" y1="6" y2="6"/>
-                <line x1="8" x2="16" y1="10" y2="10"/>
-                <line x1="8" x2="16" y1="14" y2="14"/>
-                <line x1="8" x2="16" y1="18" y2="18"/>
-              </svg>
-              ISBN: {{ book.isbn || 'N/A' }}
+              {{ book.author?.fullName || 'Autor desconocido' }}
             </p>
           </div>
           <div class="book-actions">
+            <button @click="handleViewBookDetails(book)" class="btn-icon" title="Ver detalles">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
             <button @click="handleEditBook(book)" class="btn-icon" title="Editar">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -358,20 +351,46 @@
       </div>
 
       <!-- Pagination for Books -->
-      <div class="pagination-controls" v-if="booksPagination.totalPages > 1">
-        <button @click="loadBooksPage(booksPagination.currentPage - 1)" :disabled="booksPagination.currentPage === 0" class="pagination-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Anterior
-        </button>
-        <span class="pagination-info">Página {{ booksPagination.currentPage + 1 }} de {{ booksPagination.totalPages }}</span>
-        <button @click="loadBooksPage(booksPagination.currentPage + 1)" :disabled="booksPagination.currentPage >= booksPagination.totalPages - 1" class="pagination-btn">
-          Siguiente
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </button>
+      <div class="pagination-section" v-if="booksPagination.totalPages > 0">
+        <div class="pagination-controls">
+          <button
+            @click="goToPreviousBooksPage()"
+            :disabled="booksPagination.currentPage === 0"
+            class="pagination-btn"
+            v-if="booksPagination.currentPage > 0"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Anterior
+          </button>
+
+          <div class="pagination-info-container">
+            <span class="pagination-text">Página</span>
+            <input
+              type="number"
+              v-model.number="manualBooksPage"
+              @keyup.enter="goToManualBooksPage"
+              @blur="goToManualBooksPage"
+              :min="1"
+              :max="booksPagination.totalPages"
+              class="page-input"
+            />
+            <span class="pagination-text">de {{ booksPagination.totalPages }}</span>
+          </div>
+
+          <button
+            @click="goToNextBooksPage()"
+            :disabled="booksPagination.currentPage >= booksPagination.totalPages - 1"
+            class="pagination-btn"
+            v-if="booksPagination.currentPage < booksPagination.totalPages - 1"
+          >
+            Siguiente
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -607,25 +626,88 @@
       </div>
     </div>
 
-    <div v-if="showCreateBookModal" class="modal-overlay" @click="showCreateBookModal = false">
-      <div class="modal-content" @click.stop>
-        <h3>Crear Nuevo Libro</h3>
-        <p>Funcionalidad de creación de libro (por implementar con formulario completo)</p>
-        <button @click="showCreateBookModal = false" class="btn">Cerrar</button>
+    <!-- Edit Book Modal -->
+    <div v-if="showEditBookModal" class="modal-overlay" @click="showEditBookModal = false">
+      <div class="modal-content modal-content-large" @click.stop>
+        <h3>Editar Libro</h3>
+        <form @submit.prevent="handleUpdateBook" class="book-form">
+          <div class="form-group">
+            <label for="editBookTitle">Título del Libro *</label>
+            <input
+              id="editBookTitle"
+              v-model="editingBook.title"
+              type="text"
+              placeholder="Ej: Clean Code"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editBookDescription">Descripción</label>
+            <textarea
+              id="editBookDescription"
+              v-model="editingBook.description"
+              placeholder="Descripción del libro..."
+              rows="3"
+              class="form-input form-textarea"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editBookUrl">URL del Libro *</label>
+            <input
+              id="editBookUrl"
+              v-model="editingBook.bookUrl"
+              type="url"
+              placeholder="https://ejemplo.com/libro.pdf"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editBookCoverImg">URL de la Portada</label>
+            <input
+              id="editBookCoverImg"
+              v-model="editingBook.coverImg"
+              type="url"
+              placeholder="https://ejemplo.com/portada.jpg"
+              class="form-input"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showEditBookModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+
+    <!-- Book Detail Modal -->
+    <BookDetailModal
+      v-if="selectedBook"
+      :book="selectedBook"
+      :is-open="showBookDetailModal"
+      @close="showBookDetailModal = false"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { publicationsAPI } from '../api/publicationsService';
 import { categoriesAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI, authorsAPI } from '../api/booksService';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
+import BookDetailModal from '../components/BookDetailModal.vue';
 
 export default {
   name: 'Moderation',
+  components: {
+    BookDetailModal
+  },
   setup() {
     const activeTab = ref('publications');
     const filterStatus = ref('all');
@@ -640,19 +722,28 @@ export default {
     const showEditCategoryModal = ref(false);
     const showCreateAuthorModal = ref(false);
     const showEditAuthorModal = ref(false);
-    const showCreateBookModal = ref(false);
+    const showEditBookModal = ref(false);
+    const showBookDetailModal = ref(false);
+    const selectedBook = ref(null);
 
     // Form states
     const newCategoryName = ref('');
     const editingCategory = ref({ id: null, name: '' });
     const newAuthor = ref({ fullName: '', bio: '', birthDate: '', nationality: '' });
     const editingAuthor = ref({ id: null, fullName: '', bio: '', birthDate: '', nationality: '' });
+    const editingBook = ref({ id: null, title: '', description: '', bookUrl: '', coverImg: '' });
 
     // Pagination states
     const favoritesPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
     const authorsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
     const booksPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
     const ratingsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
+    const manualBooksPage = ref(1);
+
+    // Watch for books page changes to update manual page input
+    watch(() => booksPagination.value.currentPage, (newPage) => {
+      manualBooksPage.value = newPage + 1;
+    });
 
     const filteredPublications = computed(() => {
       let pubs = publications.value;
@@ -919,10 +1010,36 @@ export default {
       }
     };
 
+    const handleViewBookDetails = (book) => {
+      selectedBook.value = book;
+      showBookDetailModal.value = true;
+    };
+
     const handleEditBook = (book) => {
-      // TODO: Implement edit functionality
-      console.log('Edit book:', book);
-      alert('Funcionalidad de edición en desarrollo');
+      editingBook.value = { ...book };
+      showEditBookModal.value = true;
+    };
+
+    const handleUpdateBook = async () => {
+      try {
+        const bookData = {
+          title: editingBook.value.title,
+          description: editingBook.value.description,
+          bookUrl: editingBook.value.bookUrl,
+          coverImg: editingBook.value.coverImg,
+          publicationId: editingBook.value.publicationId,
+          authorIds: editingBook.value.author ? [editingBook.value.author.id] : []
+        };
+
+        await booksAPI.updateBook(editingBook.value.id, bookData);
+        showEditBookModal.value = false;
+        editingBook.value = { id: null, title: '', description: '', bookUrl: '', coverImg: '' };
+        await loadBooksPage(booksPagination.value.currentPage);
+        alert('Libro actualizado exitosamente');
+      } catch (error) {
+        console.error('Error updating book:', error);
+        alert('Error al actualizar el libro');
+      }
     };
 
     const handleDeleteBook = async (bookId) => {
@@ -935,6 +1052,39 @@ export default {
           console.error('Error deleting book:', error);
           alert('Error al eliminar el libro');
         }
+      }
+    };
+
+    // Pagination functions for books
+    const goToPreviousBooksPage = async () => {
+      if (booksPagination.value.currentPage > 0) {
+        await loadBooksPage(booksPagination.value.currentPage - 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const goToNextBooksPage = async () => {
+      if (booksPagination.value.currentPage < booksPagination.value.totalPages - 1) {
+        await loadBooksPage(booksPagination.value.currentPage + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    const goToManualBooksPage = async () => {
+      // Validate page number
+      if (manualBooksPage.value < 1) {
+        manualBooksPage.value = 1;
+        return;
+      }
+      if (manualBooksPage.value > booksPagination.value.totalPages) {
+        manualBooksPage.value = booksPagination.value.totalPages;
+        return;
+      }
+
+      const targetPage = manualBooksPage.value - 1; // Convert to 0-indexed
+      if (targetPage !== booksPagination.value.currentPage) {
+        await loadBooksPage(targetPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     };
 
@@ -981,11 +1131,15 @@ export default {
       showEditCategoryModal,
       showCreateAuthorModal,
       showEditAuthorModal,
-      showCreateBookModal,
+      showEditBookModal,
+      showBookDetailModal,
+      selectedBook,
       newCategoryName,
       editingCategory,
       newAuthor,
       editingAuthor,
+      editingBook,
+      manualBooksPage,
       formatDate,
       getStatusLabel,
       handleApprove,
@@ -1000,8 +1154,13 @@ export default {
       handleUpdateAuthor,
       handleEditAuthor,
       handleDeleteAuthor,
+      handleViewBookDetails,
       handleEditBook,
+      handleUpdateBook,
       handleDeleteBook,
+      goToPreviousBooksPage,
+      goToNextBooksPage,
+      goToManualBooksPage,
       handleDeleteRating,
       handleImageError,
       loadFavoritesPage,
@@ -1536,8 +1695,7 @@ export default {
   line-height: 1.4;
 }
 
-.book-author,
-.book-isbn {
+.book-author {
   font-size: 13px;
   color: #718096;
   margin: 4px 0;
@@ -1652,24 +1810,30 @@ export default {
 }
 
 /* Pagination */
+.pagination-section {
+  margin-top: 40px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
 .pagination-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  margin-top: 24px;
-  padding: 20px 0;
+  gap: 20px;
 }
 
 .pagination-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #4a5568;
+  padding: 10px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -1677,13 +1841,51 @@ export default {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: #f7fafc;
-  border-color: #cbd5e0;
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .pagination-btn:disabled {
-  opacity: 0.5;
+  background: #cbd5e0;
   cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+.pagination-info-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.pagination-text {
+  font-size: 14px;
+}
+
+.page-input {
+  width: 60px;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  transition: all 0.2s;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+  opacity: 1;
 }
 
 .pagination-info {

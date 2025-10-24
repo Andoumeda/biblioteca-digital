@@ -1042,7 +1042,7 @@ export default {
 .book-count-badge {
   position: absolute;
   top: 0.5rem;
-  right: 0.5rem;
+  left: 0.5rem;
   padding: 0.25rem 0.5rem;
   background: rgba(0, 0, 0, 0.7);
   color: white;
@@ -1339,6 +1339,70 @@ export default {
 
 .stat-item:first-child svg {
   color: #f39c12;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  color: #dc3545;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+}
+
+.publication-card-compact:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.comment-item {
+  display: flex;
+  gap: 1rem;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.comment-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e0;
+}
+
+.comment-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-actions {
+  margin-top: 0.5rem;
 }
 
 /* Pagination Styles */
