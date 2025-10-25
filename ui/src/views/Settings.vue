@@ -26,7 +26,7 @@
             <label>Foto de Perfil</label>
             <div class="profile-picture-upload">
               <div class="avatar-preview">
-                {{ userProfile.displayName[0]?.toUpperCase() || 'U' }}
+                {{ userInitial }}
               </div>
               <button class="btn-secondary">Cambiar Foto</button>
             </div>
@@ -64,7 +64,9 @@
               type="email"
               class="form-input"
               placeholder="tu@email.com"
+              disabled
             />
+            <small class="form-help">El correo electrónico no se puede cambiar</small>
           </div>
 
           <div class="form-group">
@@ -78,7 +80,9 @@
             ></textarea>
           </div>
 
-          <button @click="saveProfile" class="btn-primary">Guardar Cambios</button>
+          <button @click="saveProfile" class="btn-primary" :disabled="loading">
+            {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
         </div>
 
         <!-- Seguridad -->
@@ -119,127 +123,12 @@
           </div>
 
           <button @click="changePassword" class="btn-primary">Cambiar Contraseña</button>
-
-          <div class="section-divider"></div>
-
-          <h4 class="subsection-title">Sesiones Activas</h4>
-          <div class="sessions-list">
-            <div v-for="session in activeSessions" :key="session.id" class="session-item">
-              <div class="session-info">
-                <div class="session-device">{{ session.device }}</div>
-                <div class="session-location">{{ session.location }} • {{ session.lastActive }}</div>
-              </div>
-              <button @click="closeSession(session.id)" class="btn-text">Cerrar sesión</button>
-            </div>
-          </div>
         </div>
 
-        <!-- Notificaciones -->
-        <div v-show="activeSection === 'notifications'" class="settings-section">
-          <h3 class="section-title">Notificaciones</h3>
-
-          <div class="notification-group">
-            <div class="notification-item">
-              <div>
-                <h4>Nuevos Libros en Publicaciones Seguidas</h4>
-                <p>Recibe una notificación cuando se agreguen nuevos libros</p>
-              </div>
-              <label class="switch">
-                <input v-model="notifications.newBooks" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="notification-item">
-              <div>
-                <h4>Comentarios en tus Publicaciones</h4>
-                <p>Cuando alguien comenta en tus publicaciones</p>
-              </div>
-              <label class="switch">
-                <input v-model="notifications.comments" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="notification-item">
-              <div>
-                <h4>Favoritos en tus Publicaciones</h4>
-                <p>Cuando alguien guarda tus publicaciones como favorita</p>
-              </div>
-              <label class="switch">
-                <input v-model="notifications.favorites" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="notification-item">
-              <div>
-                <h4>Recomendaciones Personalizadas</h4>
-                <p>Recibe sugerencias de libros basadas en tus intereses</p>
-              </div>
-              <label class="switch">
-                <input v-model="notifications.recommendations" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="notification-item">
-              <div>
-                <h4>Boletín Semanal</h4>
-                <p>Resumen de las mejores publicaciones de la semana</p>
-              </div>
-              <label class="switch">
-                <input v-model="notifications.newsletter" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <button @click="saveNotifications" class="btn-primary">Guardar Preferencias</button>
-        </div>
 
         <!-- Privacidad -->
         <div v-show="activeSection === 'privacy'" class="settings-section">
           <h3 class="section-title">Privacidad</h3>
-
-          <div class="privacy-group">
-            <div class="privacy-item">
-              <div>
-                <h4>Perfil Público</h4>
-                <p>Permite que otros usuarios vean tu perfil y publicaciones</p>
-              </div>
-              <label class="switch">
-                <input v-model="privacy.publicProfile" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="privacy-item">
-              <div>
-                <h4>Mostrar Lista de Favoritos</h4>
-                <p>Otros usuarios pueden ver tus publicaciones guardadas</p>
-              </div>
-              <label class="switch">
-                <input v-model="privacy.showFavorites" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="privacy-item">
-              <div>
-                <h4>Mostrar Actividad Reciente</h4>
-                <p>Muestra tus comentarios y calificaciones recientes</p>
-              </div>
-              <label class="switch">
-                <input v-model="privacy.showActivity" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <button @click="savePrivacy" class="btn-primary">Guardar Configuración</button>
-
-          <div class="section-divider"></div>
 
           <div class="danger-zone">
             <h4 class="danger-title">Zona de Peligro</h4>
@@ -253,7 +142,11 @@
 </template>
 
 <script>
-import { ref, h } from 'vue';
+import { ref, h, onMounted, computed } from 'vue';
+import { userProfilesAPI } from '../api/usersService';
+
+// Hardcoded UserProfile ID (por ahora, hasta implementar login)
+const HARDCODED_USER_PROFILE_ID = 1;
 
 // Iconos simples como componentes funcionales
 const UserIcon = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
@@ -266,11 +159,6 @@ const LockIcon = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 20
   h('path', { d: 'M7 11V7a5 5 0 0 1 10 0v4' })
 ]);
 
-const BellIcon = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-  h('path', { d: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9' }),
-  h('path', { d: 'M10.3 21a1.94 1.94 0 0 0 3.4 0' })
-]);
-
 const ShieldIcon = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
   h('path', { d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10' })
 ]);
@@ -279,19 +167,25 @@ export default {
   name: 'Settings',
   setup() {
     const activeSection = ref('profile');
+    const loading = ref(false);
+    const currentUserProfile = ref(null);
 
     const sections = [
       { id: 'profile', name: 'Perfil', icon: UserIcon },
       { id: 'security', name: 'Seguridad', icon: LockIcon },
-      { id: 'notifications', name: 'Notificaciones', icon: BellIcon },
       { id: 'privacy', name: 'Privacidad', icon: ShieldIcon }
     ];
 
     const userProfile = ref({
-      displayName: 'Usuario Demo',
-      username: 'usuario_demo',
-      email: 'usuario@ejemplo.com',
-      bio: 'Amante de los libros y el conocimiento.'
+      displayName: '',
+      username: '',
+      email: '',
+      bio: ''
+    });
+
+    // Computed property para obtener la inicial del displayName
+    const userInitial = computed(() => {
+      return userProfile.value.displayName?.[0]?.toUpperCase() || 'U';
     });
 
     const security = ref({
@@ -300,28 +194,61 @@ export default {
       confirmPassword: ''
     });
 
-    const activeSessions = ref([
-      { id: 1, device: 'Chrome en Windows', location: 'Encarnación, Paraguay', lastActive: 'Activo ahora' },
-      { id: 2, device: 'Firefox en Linux', location: 'General Delgado, Paraguay', lastActive: 'Hace 2 horas' }
-    ]);
+    // Cargar datos del UserProfile con ID 1
+    const loadUserProfile = async () => {
+      loading.value = true;
+      try {
+        const response = await userProfilesAPI.getProfileById(HARDCODED_USER_PROFILE_ID);
+        currentUserProfile.value = response.data;
 
-    const notifications = ref({
-      newBooks: true,
-      comments: true,
-      favorites: true,
-      recommendations: false,
-      newsletter: true
-    });
+        // Actualizar los campos del formulario con los datos reales
+        userProfile.value = {
+          displayName: response.data.displayName || '',
+          username: response.data.user?.username || '',
+          email: response.data.user?.email || '',
+          bio: response.data.bio || ''
+        };
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+        alert('Error al cargar el perfil de usuario');
+      } finally {
+        loading.value = false;
+      }
+    };
 
-    const privacy = ref({
-      publicProfile: true,
-      showFavorites: true,
-      showActivity: false
-    });
+    const saveProfile = async () => {
+      if (!currentUserProfile.value) {
+        alert('No se ha cargado el perfil de usuario');
+        return;
+      }
 
-    const saveProfile = () => {
-      console.log('Guardar perfil:', userProfile.value);
-      alert('Perfil actualizado correctamente');
+      if (!userProfile.value.displayName.trim()) {
+        alert('El nombre para mostrar no puede estar vacío');
+        return;
+      }
+
+      loading.value = true;
+      try {
+        // Preparar los datos para la petición PUT según el formato requerido
+        const updateData = {
+          userId: currentUserProfile.value.userId, // Mantener el mismo userId
+          displayName: userProfile.value.displayName,
+          bio: userProfile.value.bio || '',
+          profilePicture: currentUserProfile.value.profilePicture || '' // Mantener la misma foto
+        };
+
+        await userProfilesAPI.updateProfile(HARDCODED_USER_PROFILE_ID, updateData);
+
+        // Recargar el perfil para obtener los datos actualizados
+        await loadUserProfile();
+
+        alert('Perfil actualizado correctamente');
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        alert('Error al actualizar el perfil: ' + (error.response?.data?.message || error.message));
+      } finally {
+        loading.value = false;
+      }
     };
 
     const changePassword = () => {
@@ -336,21 +263,6 @@ export default {
       security.value.confirmPassword = '';
     };
 
-    const closeSession = (sessionId) => {
-      console.log('Cerrar sesión:', sessionId);
-      activeSessions.value = activeSessions.value.filter(s => s.id !== sessionId);
-    };
-
-    const saveNotifications = () => {
-      console.log('Guardar notificaciones:', notifications.value);
-      alert('Preferencias de notificaciones guardadas');
-    };
-
-    const savePrivacy = () => {
-      console.log('Guardar privacidad:', privacy.value);
-      alert('Configuración de privacidad guardada');
-    };
-
     const deleteAccount = () => {
       if (confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.')) {
         console.log('Eliminar cuenta');
@@ -358,19 +270,20 @@ export default {
       }
     };
 
+    // Cargar datos al montar el componente
+    onMounted(() => {
+      loadUserProfile();
+    });
+
     return {
       activeSection,
       sections,
       userProfile,
+      userInitial,
+      loading,
       security,
-      activeSessions,
-      notifications,
-      privacy,
       saveProfile,
       changePassword,
-      closeSession,
-      saveNotifications,
-      savePrivacy,
       deleteAccount
     };
   }
@@ -467,13 +380,6 @@ export default {
   margin: 0 0 24px 0;
 }
 
-.subsection-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a202c;
-  margin: 0 0 16px 0;
-}
-
 .form-group {
   margin-bottom: 24px;
 }
@@ -537,8 +443,7 @@ export default {
 
 .btn-primary,
 .btn-secondary,
-.btn-danger,
-.btn-text {
+.btn-danger {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -555,6 +460,12 @@ export default {
 
 .btn-primary:hover {
   background: #5568d3;
+}
+
+.btn-primary:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-secondary {
@@ -574,128 +485,6 @@ export default {
 
 .btn-danger:hover {
   background: #e53e3e;
-}
-
-.btn-text {
-  background: transparent;
-  color: #667eea;
-  padding: 6px 12px;
-}
-
-.btn-text:hover {
-  background: #edf2f7;
-}
-
-.section-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 32px 0;
-}
-
-.sessions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.session-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: #f7fafc;
-  border-radius: 8px;
-}
-
-.session-device {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1a202c;
-}
-
-.session-location {
-  font-size: 12px;
-  color: #718096;
-  margin-top: 4px;
-}
-
-.notification-group,
-.privacy-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.notification-item,
-.privacy-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 16px;
-  background: #f7fafc;
-  border-radius: 8px;
-}
-
-.notification-item h4,
-.privacy-item h4 {
-  font-size: 15px;
-  font-weight: 500;
-  color: #1a202c;
-  margin: 0 0 4px 0;
-}
-
-.notification-item p,
-.privacy-item p {
-  font-size: 13px;
-  color: #718096;
-  margin: 0;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
-  flex-shrink: 0;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #cbd5e0;
-  transition: 0.3s;
-  border-radius: 26px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #667eea;
-}
-
-input:checked + .slider:before {
-  transform: translateX(22px);
 }
 
 .danger-zone {

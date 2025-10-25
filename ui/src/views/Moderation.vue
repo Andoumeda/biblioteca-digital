@@ -21,7 +21,7 @@
         :class="['tab-button', { active: activeTab === 'favorites' }]"
         @click="activeTab = 'favorites'"
       >
-        Favoritos (Todos)
+        Favoritos
       </button>
       <button
         :class="['tab-button', { active: activeTab === 'authors' }]"
@@ -46,7 +46,7 @@
     <!-- Publications Tab -->
     <div v-if="activeTab === 'publications'" class="tab-content">
       <div class="section-header">
-        <h3>Gestión de Publicaciones</h3>
+        <h3>Gestión de Publicaciones de todos los usuarios</h3>
         <select v-model="filterStatus" class="filter-select">
           <option value="all">Todos los estados</option>
           <option value="PENDING">Pendientes</option>
@@ -166,7 +166,7 @@
     <!-- Favorites Tab -->
     <div v-if="activeTab === 'favorites'" class="tab-content">
       <div class="section-header">
-        <h3>Gestión de Favoritos (Todos los usuarios)</h3>
+        <h3>Gestión de Favoritos de todos los usuarios</h3>
       </div>
 
       <div class="favorites-grid">
@@ -300,7 +300,7 @@
     <!-- Books Tab -->
     <div v-if="activeTab === 'books'" class="tab-content">
       <div class="section-header">
-        <h3>Gestión de Libros</h3>
+        <h3>Gestión de Libros de todos los usuarios</h3>
       </div>
 
       <div v-if="books.length === 0" class="no-results">
@@ -397,7 +397,7 @@
     <!-- Ratings Tab -->
     <div v-if="activeTab === 'ratings'" class="tab-content">
       <div class="section-header">
-        <h3>Gestión de Ratings</h3>
+        <h3>Gestión de Ratings de todos los usuarios</h3>
       </div>
 
       <div class="ratings-list">
