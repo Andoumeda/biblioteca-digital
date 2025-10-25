@@ -1,8 +1,17 @@
 <template>
   <div class="announcements-container">
     <div class="announcements-header">
-      <h2 class="announcements-title">Anuncios</h2>
-      <p class="announcements-subtitle">Mantente al día con las últimas novedades</p>
+      <div>
+        <h2 class="announcements-title">Anuncios</h2>
+        <p class="announcements-subtitle">Mantente al día con las últimas novedades</p>
+      </div>
+      <button @click="showCreateModal = true" class="btn-create">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Crear Anuncio
+      </button>
     </div>
 
     <div v-if="store.loading" class="loading-state">
@@ -23,14 +32,42 @@
         class="announcement-card"
         @click="goToDetail(announcement.id)"
       >
-        <div class="announcement-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div :class="['announcement-icon', `icon-${getTypeClass(announcement.type)}`]">
+          <svg v-if="announcement.type === 'ALERT'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <svg v-else-if="announcement.type === 'INFO'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <svg v-else-if="announcement.type === 'WARNING'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <svg v-else-if="announcement.type === 'PROMO'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
             <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
           </svg>
         </div>
         <div class="announcement-content">
-          <h3 class="announcement-title">{{ announcement.title }}</h3>
+          <div class="announcement-header-row">
+            <h3 class="announcement-title">{{ announcement.title }}</h3>
+            <div class="announcement-badges">
+              <span :class="['badge', `badge-${getTypeClass(announcement.type)}`]">
+                {{ getTypeLabel(announcement.type) }}
+              </span>
+              <span :class="['badge', `badge-audience-${getAudienceClass(announcement.targetAudience)}`]">
+                {{ getAudienceLabel(announcement.targetAudience) }}
+              </span>
+            </div>
+          </div>
           <p class="announcement-message">{{ announcement.message }}</p>
           <div class="announcement-meta">
             <span class="announcement-date">{{ formatDate(announcement.createdAt) }}</span>
@@ -64,19 +101,101 @@
         </svg>
       </button>
     </div>
+
+    <!-- Modal Crear Anuncio -->
+    <div v-if="showCreateModal" class="modal-overlay" @click="showCreateModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>Crear Nuevo Anuncio</h3>
+        <form @submit.prevent="handleCreateAnnouncement" class="announcement-form">
+          <div class="form-group">
+            <label for="newTitle">Título *</label>
+            <input
+              id="newTitle"
+              v-model="newAnnouncement.title"
+              type="text"
+              placeholder="Título del anuncio"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="newMessage">Mensaje *</label>
+            <textarea
+              id="newMessage"
+              v-model="newAnnouncement.message"
+              placeholder="Escribe el mensaje del anuncio..."
+              rows="6"
+              required
+              class="form-input form-textarea"
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newType">Tipo *</label>
+              <select
+                id="newType"
+                v-model="newAnnouncement.type"
+                required
+                class="form-input form-select"
+              >
+                <option value="">Selecciona un tipo</option>
+                <option value="ALERT">Alerta</option>
+                <option value="INFO">Información</option>
+                <option value="WARNING">Advertencia</option>
+                <option value="PROMO">Promoción</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="newTargetAudience">Audiencia *</label>
+              <select
+                id="newTargetAudience"
+                v-model="newAnnouncement.targetAudience"
+                required
+                class="form-input form-select"
+              >
+                <option value="">Selecciona una audiencia</option>
+                <option value="ALL">Todos</option>
+                <option value="NEW_USERS">Nuevos usuarios</option>
+                <option value="ADMINS">Administradores</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showCreateModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+              {{ isSubmitting ? 'Creando...' : 'Crear Anuncio' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { useAnnouncementsStore } from '../stores/announcements';
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+
+// Hardcoded UserProfile ID (por ahora, hasta implementar login)
+const HARDCODED_USER_PROFILE_ID = 1;
 
 export default {
   name: 'Announcements',
   setup() {
     const store = useAnnouncementsStore();
     const router = useRouter();
+
+    const showCreateModal = ref(false);
+    const isSubmitting = ref(false);
+    const newAnnouncement = ref({
+      title: '',
+      message: '',
+      type: '',
+      targetAudience: ''
+    });
 
     const formatDate = (dateString) => {
       if (!dateString) return '';
@@ -94,6 +213,80 @@ export default {
       router.push({ name: 'AnnouncementDetail', params: { id } });
     };
 
+    const getTypeClass = (type) => {
+      const typeMap = {
+        'ALERT': 'alert',
+        'INFO': 'info',
+        'WARNING': 'warning',
+        'PROMO': 'promo'
+      };
+      return typeMap[type] || 'info';
+    };
+
+    const getTypeLabel = (type) => {
+      const labelMap = {
+        'ALERT': 'Alerta',
+        'INFO': 'Información',
+        'WARNING': 'Advertencia',
+        'PROMO': 'Promoción'
+      };
+      return labelMap[type] || type;
+    };
+
+    const getAudienceClass = (audience) => {
+      const audienceMap = {
+        'ALL': 'all',
+        'NEW_USERS': 'new',
+        'ADMINS': 'admin'
+      };
+      return audienceMap[audience] || 'all';
+    };
+
+    const getAudienceLabel = (audience) => {
+      const labelMap = {
+        'ALL': 'Todos',
+        'NEW_USERS': 'Nuevos usuarios',
+        'ADMINS': 'Administradores'
+      };
+      return labelMap[audience] || audience;
+    };
+
+    const handleCreateAnnouncement = async () => {
+      if (!newAnnouncement.value.title || !newAnnouncement.value.message || !newAnnouncement.value.type || !newAnnouncement.value.targetAudience) {
+        alert('Por favor completa todos los campos');
+        return;
+      }
+
+      isSubmitting.value = true;
+
+      try {
+        const announcementData = {
+          title: newAnnouncement.value.title,
+          message: newAnnouncement.value.message,
+          type: newAnnouncement.value.type,
+          targetAudience: newAnnouncement.value.targetAudience,
+          userProfileId: HARDCODED_USER_PROFILE_ID
+        };
+
+        await store.createAnnouncement(announcementData);
+        alert('¡Anuncio creado exitosamente!');
+
+        // Reset form
+        newAnnouncement.value = {
+          title: '',
+          message: '',
+          type: '',
+          targetAudience: ''
+        };
+        showCreateModal.value = false;
+      } catch (error) {
+        console.error('Error creating announcement:', error);
+        alert('Error al crear el anuncio. Por favor intenta de nuevo.');
+      } finally {
+        isSubmitting.value = false;
+      }
+    };
+
     onMounted(async () => {
       await store.fetchAnnouncements();
       store.announcements = store.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -101,8 +294,16 @@ export default {
 
     return {
       store,
+      showCreateModal,
+      isSubmitting,
+      newAnnouncement,
       formatDate,
-      goToDetail
+      goToDetail,
+      getTypeClass,
+      getTypeLabel,
+      getAudienceClass,
+      getAudienceLabel,
+      handleCreateAnnouncement
     };
   }
 };
@@ -118,7 +319,9 @@ export default {
 
 .announcements-header {
   margin-bottom: 32px;
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .announcements-title {
@@ -131,6 +334,26 @@ export default {
 .announcements-subtitle {
   color: #718096;
   font-size: 18px;
+}
+
+.btn-create {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-create:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .loading-state {
@@ -183,18 +406,96 @@ export default {
 
 .announcement-icon {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.icon-alert {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.icon-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.icon-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.icon-promo {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
 }
 
 .announcement-content {
   flex: 1;
+  min-width: 0;
+}
+
+.announcement-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.announcement-badges {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-alert {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-promo {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-audience-all {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-audience-new {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.badge-audience-admin {
+  background: #f3e8ff;
+  color: #6b21a8;
 }
 
 .announcement-title {
@@ -281,5 +582,136 @@ export default {
 .pagination-info {
   font-weight: 500;
   color: #4a5568;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 24px 0;
+}
+
+.announcement-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+  appearance: none;
+}
+
+.form-select option {
+  padding: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>

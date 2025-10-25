@@ -50,17 +50,42 @@
                 class="notification-item"
                 @click="goToAnnouncement(announcement.id)"
               >
-                <div class="notification-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <div :class="['notification-icon', `icon-${getTypeClass(announcement.type)}`]">
+                  <svg v-if="announcement.type === 'ALERT'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <svg v-else-if="announcement.type === 'INFO'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  <svg v-else-if="announcement.type === 'WARNING'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <svg v-else-if="announcement.type === 'PROMO'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="16" x2="12" y2="12"/>
                     <line x1="12" y1="8" x2="12.01" y2="8"/>
                   </svg>
                 </div>
                 <div class="notification-content">
-                  <h4>{{ announcement.title }}</h4>
+                  <div class="notification-header-row">
+                    <h4>{{ announcement.title }}</h4>
+                  </div>
                   <p>{{ announcement.message }}</p>
-                  <span class="notification-time">{{ formatDate(announcement.createdAt) }}</span>
+                  <div class="notification-footer-row">
+                    <span class="notification-time">{{ formatDate(announcement.createdAt) }}</span>
+                    <span :class="['badge-small', `badge-audience-${getAudienceClass(announcement.targetAudience)}`]">
+                      {{ getAudienceLabel(announcement.targetAudience) }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -210,6 +235,44 @@ export default {
       router.push(`/announcements/${id}`);
     };
 
+    const getTypeClass = (type) => {
+      const typeMap = {
+        'ALERT': 'alert',
+        'INFO': 'info',
+        'WARNING': 'warning',
+        'PROMO': 'promo'
+      };
+      return typeMap[type] || 'info';
+    };
+
+    const getTypeLabel = (type) => {
+      const labelMap = {
+        'ALERT': 'Alerta',
+        'INFO': 'Información',
+        'WARNING': 'Advertencia',
+        'PROMO': 'Promoción'
+      };
+      return labelMap[type] || type;
+    };
+
+    const getAudienceClass = (audience) => {
+      const audienceMap = {
+        'ALL': 'all',
+        'NEW_USERS': 'new',
+        'ADMINS': 'admin'
+      };
+      return audienceMap[audience] || 'all';
+    };
+
+    const getAudienceLabel = (audience) => {
+      const labelMap = {
+        'ALL': 'Todos',
+        'NEW_USERS': 'Nuevos usuarios',
+        'ADMINS': 'Administradores'
+      };
+      return labelMap[audience] || audience;
+    };
+
     onMounted(() => {
       document.addEventListener('click', closeMenuOnClickOutside);
       loadAnnouncements();
@@ -233,7 +296,11 @@ export default {
       handleSettings,
       handleLogout,
       formatDate,
-      goToAnnouncement
+      goToAnnouncement,
+      getTypeClass,
+      getTypeLabel,
+      getAudienceClass,
+      getAudienceLabel
     };
   }
 };
@@ -391,12 +458,94 @@ export default {
   flex-shrink: 0;
   width: 40px;
   height: 40px;
-  background: #eff6ff;
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3b82f6;
+  color: white;
+}
+
+.icon-alert {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.icon-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.icon-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.icon-promo {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-header-row {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.notification-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.notification-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.badge-small {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-alert {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-promo {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-audience-all {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-audience-new {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.badge-audience-admin {
+  background: #f3e8ff;
+  color: #6b21a8;
 }
 
 .notification-content h4 {
