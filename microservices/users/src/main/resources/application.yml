@@ -51,6 +51,7 @@ spring:
         enable_lazy_load_no_trans: false
     hibernate:
       ddl-auto: update
+    open-in-view: false
 
   liquibase:
     enabled: false

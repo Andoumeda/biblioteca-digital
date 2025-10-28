@@ -11,4 +11,4 @@ eureka:
         fetch-registry: false
     server:
         renewalPercentThreshold: 0.49
-        enableSelfPreservation: false
+        enableSelfPreservation: true

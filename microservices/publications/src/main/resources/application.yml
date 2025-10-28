@@ -65,3 +65,11 @@ springdoc:
   swagger-ui:
     path: /swagger
     url: /openapi.yaml
+
+# Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    registerWithEureka: true
+    fetchRegistry: true
