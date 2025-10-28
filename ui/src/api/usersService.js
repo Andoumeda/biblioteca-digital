@@ -3,27 +3,27 @@ import { usersApiClient } from './apiClient';
 export const userProfilesAPI = {
   // Obtener todos los perfiles de usuario
   getAllProfiles() {
-    return usersApiClient.get('/api/user-profiles');
+    return usersApiClient.get('/user-profiles');
   },
 
   // Obtener perfil por ID
   getProfileById(id) {
-    return usersApiClient.get(`/api/user-profiles/${id}`);
+    return usersApiClient.get(`/user-profiles/${id}`);
   },
 
   // Crear perfil de usuario
   createProfile(profileData) {
-    return usersApiClient.post('/api/user-profiles', profileData);
+    return usersApiClient.post('/user-profiles', profileData);
   },
 
   // Actualizar perfil de usuario
   updateProfile(id, profileData) {
-    return usersApiClient.put(`/api/user-profiles/${id}`, profileData);
+    return usersApiClient.put(`/user-profiles/${id}`, profileData);
   },
 
   // Eliminar perfil de usuario
   deleteProfile(id) {
-    return usersApiClient.delete(`/api/user-profiles/${id}`);
+    return usersApiClient.delete(`/user-profiles/${id}`);
   },
 
   // Obtener perfil por userId
@@ -42,53 +42,53 @@ export const userProfilesAPI = {
 export const usersAPI = {
   // Obtener todos los usuarios
   getAll() {
-    return usersApiClient.get('/api/user-profiles');
+    return usersApiClient.get('/user-profiles');
   },
 
   // Obtener usuario por ID
   getById(id) {
-    return usersApiClient.get(`/api/user-profiles/${id}`);
+    return usersApiClient.get(`/user-profiles/${id}`);
   },
 
   // Crear usuario
   create(userData) {
-    return usersApiClient.post('/api/user-profiles', userData);
+    return usersApiClient.post('/user-profiles', userData);
   },
 
   // Actualizar usuario
   update(id, userData) {
-    return usersApiClient.put(`/api/user-profiles/${id}`, userData);
+    return usersApiClient.put(`/user-profiles/${id}`, userData);
   },
 
   // Eliminar usuario
   delete(id) {
-    return usersApiClient.delete(`/api/user-profiles/${id}`);
+    return usersApiClient.delete(`/user-profiles/${id}`);
   }
 };
 
 export const announcementsAPI = {
   // Obtener todos los anuncios
   getAll(page = 0, size = 20) {
-    return usersApiClient.get(`/api/announcements/page/${page}/size/${size}`);
+    return usersApiClient.get(`/announcements/page/${page}/size/${size}`);
   },
 
   // Obtener anuncio por ID
   getById(id) {
-    return usersApiClient.get(`/api/announcements/${id}`);
+    return usersApiClient.get(`/announcements/${id}`);
   },
 
   // Crear anuncio
   create(announcementData) {
-    return usersApiClient.post('/api/announcements', announcementData);
+    return usersApiClient.post('/announcements', announcementData);
   },
 
   // Actualizar anuncio
   update(id, announcementData) {
-    return usersApiClient.put(`/api/announcements/${id}`, announcementData);
+    return usersApiClient.put(`/announcements/${id}`, announcementData);
   },
 
   // Eliminar anuncio
   delete(id) {
-    return usersApiClient.delete(`/api/announcements/${id}`);
+    return usersApiClient.delete(`/announcements/${id}`);
   }
 };

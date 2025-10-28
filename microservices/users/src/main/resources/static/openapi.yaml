@@ -1,11 +1,11 @@
 openapi: 3.0.1
 info:
-  title: Biblioteca Digital API - Users Microservice
+  title: Biblioteca Digital API
   version: v1.0
-  description: API Documentation for Users Microservice
+  description: API Documentation for Biblioteca Digital - Módulo de Usuarios
 
 servers:
-  - url: http://localhost:8081/api
+  - url: http://localhost:8081
     description: Módulo de Perfiles de usuarios
 
 tags:

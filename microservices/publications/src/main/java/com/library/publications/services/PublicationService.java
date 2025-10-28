@@ -12,10 +12,11 @@ import com.library.entities.UserProfile;
 import com.library.publications.repositories.CategoryRepository;
 import com.library.publications.repositories.PublicationRepository;
 
+import com.library.publications.mappers.PublicationMapper;
+
 import com.library.publications.utils.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -35,7 +36,7 @@ import java.util.List;
 public class PublicationService {
     private final PublicationRepository publicationRepository;
     private final CategoryRepository categoryRepository;
-    private final ModelMapper modelMapper;
+    private final PublicationMapper publicationMapper;
     private final Logger logger = LoggerFactory.getLogger(PublicationService.class);
 
     @Transactional
@@ -64,7 +65,7 @@ public class PublicationService {
             }
 
             Publication saved = publicationRepository.save(publication);
-            return modelMapper.map(saved, PublicationResponseDTO.class);
+            return publicationMapper.toResponseDTO(saved);
         } catch (Exception e) {
             logger.error("Error al crear la publicación: {}", e.getMessage(), e);
             throw new RuntimeException("Error al crear la publicación: " + e.getMessage(), e);
@@ -83,7 +84,7 @@ public class PublicationService {
         } else
             logger.info("Se encontraron {} publicaciones", publicationsPage.getTotalElements());
 
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -98,7 +99,7 @@ public class PublicationService {
         } else
             logger.info("Se encontraron {} publicaciones con el título {}", publicationsPage.getTotalElements(), title);
 
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -113,16 +114,23 @@ public class PublicationService {
         } else
             logger.info("Se encontraron {} publicaciones con la descripción {}", publicationsPage.getTotalElements(), desc);
 
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
     public PaginatedResponseDTO getPaginatedByState(String state, Integer page, Integer size) {
-        // Convertir a enum
-        PublicationState publicationState = PublicationState.valueOf(state.toUpperCase());
-
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.state = :state AND p.isDeleted = false");
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        // Convertir a enum
+        PublicationState publicationState;
+        try {
+            publicationState = PublicationState.valueOf(state.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            logger.error("Estado de publicación inválido: {}", state);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado de publicación inválido: " + state);
+        }
+
         Page<Publication> publicationsPage = publicationRepository.findByStateAndIsDeletedFalse(publicationState, pageable);
 
         if (publicationsPage.isEmpty()) {
@@ -131,7 +139,7 @@ public class PublicationService {
         } else
             logger.info("Se encontraron {} publicaciones con el estado {}", publicationsPage.getTotalElements(), state);
 
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -146,7 +154,7 @@ public class PublicationService {
         } else
             logger.info("Se encontraron {} publicaciones con el ID de usuario {}", publicationsPage.getTotalElements(), user);
 
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -161,7 +169,7 @@ public class PublicationService {
         } else
             logger.info("Se encontraron {} publicaciones con el ID de categoría {}", publicationsPage.getTotalElements(), cat);
 
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, PublicationResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -173,7 +181,7 @@ public class PublicationService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Publicación no encontrada con ID: " + id);
                 });
 
-        return modelMapper.map(publication, PublicationResponseDTO.class);
+        return publicationMapper.toResponseDTO(publication);
     }
 
     @Transactional
@@ -207,7 +215,7 @@ public class PublicationService {
         publication.setUpdatedAt(LocalDateTime.now());
 
         Publication updated = publicationRepository.save(publication);
-        return modelMapper.map(updated, PublicationResponseDTO.class);
+        return publicationMapper.toResponseDTO(updated);
     }
 
     @Transactional
@@ -238,7 +246,7 @@ public class PublicationService {
         publication.setUpdatedAt(LocalDateTime.now());
 
         Publication updated = publicationRepository.save(publication);
-        return modelMapper.map(updated, PublicationResponseDTO.class);
+        return publicationMapper.toResponseDTO(updated);
     }
 
     @Transactional
@@ -254,6 +262,6 @@ public class PublicationService {
         publication.setUpdatedAt(LocalDateTime.now());
 
         Publication updated = publicationRepository.save(publication);
-        return modelMapper.map(updated, PublicationResponseDTO.class);
+        return publicationMapper.toResponseDTO(updated);
     }
 }

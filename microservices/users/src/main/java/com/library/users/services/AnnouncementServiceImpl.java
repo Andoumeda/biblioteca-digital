@@ -83,5 +83,4 @@ public class AnnouncementServiceImpl implements AnnouncementService {
             throw new BadRequestException("Invalid target audience: " + targetAudience);
         }
     }
-
 }

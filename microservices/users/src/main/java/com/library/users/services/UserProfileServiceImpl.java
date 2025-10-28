@@ -6,8 +6,8 @@ import com.library.entities.User;
 import com.library.entities.UserProfile;
 import com.library.users.exception.DuplicateResourceException;
 import com.library.users.exception.ResourceNotFoundException;
+import com.library.users.mappers.UserProfileMapper;
 import com.library.users.repository.UserProfileRepository;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,14 +25,14 @@ public class UserProfileServiceImpl implements UserProfileService {
     private static final Logger logger = LoggerFactory.getLogger(UserProfileServiceImpl.class);
 
     private final UserProfileRepository repository;
-    private final ModelMapper modelMapper;
+    private final UserProfileMapper userProfileMapper;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public UserProfileServiceImpl(UserProfileRepository repository, ModelMapper modelMapper) {
+    public UserProfileServiceImpl(UserProfileRepository repository, UserProfileMapper userProfileMapper) {
         this.repository = repository;
-        this.modelMapper = modelMapper;
+        this.userProfileMapper = userProfileMapper;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         repository.save(profile);
 
         logger.info("Perfil creado exitosamente con ID {}", profile.getId());
-        return modelMapper.map(profile, UserProfileResponseDTO.class);
+        return userProfileMapper.toResponseDTO(profile);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class UserProfileServiceImpl implements UserProfileService {
                     logger.error("No se encontró el perfil con ID {}", id);
                     return new ResourceNotFoundException("UserProfile no encontrado con id " + id);
                 });
-        return modelMapper.map(profile, UserProfileResponseDTO.class);
+        return userProfileMapper.toResponseDTO(profile);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         logger.info("Obteniendo todos los perfiles activos");
         return repository.findAll().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
-                .map(p -> modelMapper.map(p, UserProfileResponseDTO.class))
+                .map(userProfileMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
@@ -102,7 +102,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         repository.save(profile);
 
         logger.info("Perfil con ID {} actualizado correctamente", id);
-        return modelMapper.map(profile, UserProfileResponseDTO.class);
+        return userProfileMapper.toResponseDTO(profile);
     }
 
     @Override

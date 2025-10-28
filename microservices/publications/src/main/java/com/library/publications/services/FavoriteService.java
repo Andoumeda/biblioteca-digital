@@ -11,10 +11,11 @@ import com.library.entities.UserProfile;
 import com.library.publications.repositories.FavoriteRepository;
 import com.library.publications.repositories.PublicationRepository;
 
+import com.library.publications.mappers.FavoriteMapper;
+
 import com.library.publications.utils.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -33,7 +34,7 @@ import java.time.LocalDateTime;
 public class FavoriteService {
     private final FavoriteRepository favoriteRepository;
     private final PublicationRepository publicationRepository;
-    private final ModelMapper modelMapper;
+    private final FavoriteMapper favoriteMapper;
     private final Logger logger = LoggerFactory.getLogger(FavoriteService.class);
 
     @Transactional
@@ -68,7 +69,7 @@ public class FavoriteService {
             favorite.setPublication(publication);
 
             Favorite saved = favoriteRepository.save(favorite);
-            return modelMapper.map(saved, FavoriteResponseDTO.class);
+            return favoriteMapper.toResponseDTO(saved);
         } catch (Exception e) {
             logger.error("Error al agregar el favorito: {}", e.getMessage(), e);
             throw new RuntimeException("Error al agregar el favorito: " + e.getMessage(), e);
@@ -87,7 +88,7 @@ public class FavoriteService {
         } else
             logger.info("Se encontraron {} favoritos", favoritesPage.getTotalElements());
 
-        return PaginationUtil.buildPaginatedResponse(favoritesPage, FavoriteResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(favoritesPage, favoriteMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -102,7 +103,7 @@ public class FavoriteService {
         } else
             logger.info("Se encontraron {} favoritos con el ID de usuario {}", favoritesPage.getTotalElements(), user);
 
-        return PaginationUtil.buildPaginatedResponse(favoritesPage, FavoriteResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(favoritesPage, favoriteMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -117,7 +118,7 @@ public class FavoriteService {
         } else
             logger.info("Se encontraron {} favoritos con el ID de publicación {}", favoritePage.getTotalElements(), pub);
 
-        return PaginationUtil.buildPaginatedResponse(favoritePage, FavoriteResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(favoritePage, favoriteMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -129,7 +130,7 @@ public class FavoriteService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Favorito no encontrado con ID: " + id);
                 });
 
-        return modelMapper.map(favorite, FavoriteResponseDTO.class);
+        return favoriteMapper.toResponseDTO(favorite);
     }
 
     @Transactional

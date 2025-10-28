@@ -7,9 +7,9 @@ const API_URLS = {
   books: import.meta.env.VITE_API_BOOKS_URL || 'http://localhost:8083',
 };
 
-// Cliente por defecto (Publications)
+// Cliente para Publications
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || API_URLS.publications,
+  baseURL: API_URLS.publications,
   headers: {
     'Content-Type': 'application/json',
   },

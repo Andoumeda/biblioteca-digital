@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user-profiles")
+@RequestMapping("/user-profiles")
 public class UserProfileController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileController.class);
@@ -26,7 +26,7 @@ public class UserProfileController {
 
     @PostMapping
     public ResponseEntity<UserProfileResponseDTO> createProfile(@Valid @RequestBody UserProfileRequestDTO dto) {
-        logger.info("Recibido request POST /api/user-profiles con payload: {}", dto);
+        logger.info("Recibido request POST /user-profiles con payload: {}", dto);
         try {
             UserProfileResponseDTO createdProfile = userProfileService.createProfile(dto);
             logger.info("Perfil creado exitosamente con ID {}", createdProfile.getId());
@@ -39,7 +39,7 @@ public class UserProfileController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileResponseDTO> getProfileById(@PathVariable Integer id) {
-        logger.info("Recibido request GET /api/user-profiles/{}", id);
+        logger.info("Recibido request GET /user-profiles/{}", id);
         try {
             UserProfileResponseDTO profile = userProfileService.getProfileById(id);
             logger.info("Perfil obtenido exitosamente para ID {}", id);
@@ -52,7 +52,7 @@ public class UserProfileController {
 
     @GetMapping
     public ResponseEntity<List<UserProfileResponseDTO>> getAllProfiles() {
-        logger.info("Recibido request GET /api/user-profiles");
+        logger.info("Recibido request GET /user-profiles");
         try {
             List<UserProfileResponseDTO> profiles = userProfileService.getAllProfiles();
             logger.info("Se obtuvieron {} perfiles", profiles.size());
@@ -66,7 +66,7 @@ public class UserProfileController {
     @PutMapping("/{id}")
     public ResponseEntity<UserProfileResponseDTO> updateProfile(@PathVariable Integer id,
                                                                 @Valid @RequestBody UserProfileRequestDTO dto) {
-        logger.info("Recibido request PUT /api/user-profiles/{} con payload: {}", id, dto);
+        logger.info("Recibido request PUT /user-profiles/{} con payload: {}", id, dto);
         try {
             UserProfileResponseDTO updatedProfile = userProfileService.updateProfile(id, dto);
             logger.info("Perfil con ID {} actualizado exitosamente", id);
@@ -79,7 +79,7 @@ public class UserProfileController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProfile(@PathVariable Integer id) {
-        logger.info("Recibido request DELETE /api/user-profiles/{}", id);
+        logger.info("Recibido request DELETE /user-profiles/{}", id);
         try {
             userProfileService.deleteProfile(id);
             logger.info("Perfil con ID {} eliminado exitosamente", id);

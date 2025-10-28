@@ -8,10 +8,11 @@ import com.library.entities.Category;
 
 import com.library.publications.repositories.CategoryRepository;
 
+import com.library.publications.mappers.CategoryMapper;
+
 import com.library.publications.utils.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
-    private final ModelMapper modelMapper;
+    private final CategoryMapper categoryMapper;
     private final Logger logger = LoggerFactory.getLogger(CategoryService.class);
 
     @Transactional
@@ -46,7 +47,7 @@ public class CategoryService {
             category.setName(dto.getName());
 
             Category saved = categoryRepository.save(category);
-            return modelMapper.map(saved, CategoryResponseDTO.class);
+            return categoryMapper.toResponseDTO(saved);
         } catch (Exception e) {
             logger.error("Error al crear la categoría: {}", e.getMessage(), e);
             throw new RuntimeException("Error al crear la categoría: " + e.getMessage(), e);
@@ -65,7 +66,7 @@ public class CategoryService {
         } else
             logger.info("Se encontraron {} categorías", categoriesPage.getTotalElements());
 
-        return PaginationUtil.buildPaginatedResponse(categoriesPage, CategoryResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(categoriesPage, categoryMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -80,7 +81,7 @@ public class CategoryService {
         } else
             logger.info("Se encontraron {} categorías con el nombre {}", categoriesPage.getTotalElements(), name);
 
-        return PaginationUtil.buildPaginatedResponse(categoriesPage, CategoryResponseDTO.class);
+        return PaginationUtil.buildPaginatedResponse(categoriesPage, categoryMapper::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -92,7 +93,7 @@ public class CategoryService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada con ID: " + id);
                 });
 
-        return modelMapper.map(category, CategoryResponseDTO.class);
+        return categoryMapper.toResponseDTO(category);
     }
 
     @Transactional
@@ -117,7 +118,7 @@ public class CategoryService {
         category.setUpdatedAt(LocalDateTime.now());
 
         Category updated = categoryRepository.save(category);
-        return modelMapper.map(updated, CategoryResponseDTO.class);
+        return categoryMapper.toResponseDTO(updated);
     }
 
     @Transactional

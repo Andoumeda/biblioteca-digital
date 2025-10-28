@@ -1,5 +1,6 @@
 package com.library.books.services;
 
+import com.library.books.mappers.RatingMapper;
 import com.library.books.utils.NormalizeParameter;
 import com.library.dtos.*;
 import com.library.entities.Book;
@@ -13,7 +14,6 @@ import com.library.books.config.PaginationConfig;
 import com.library.entities.UserProfile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +32,7 @@ public class RatingService {
 
     private final RatingRepository ratingRepository;
     private final BookRepository bookRepository;
-    private final ModelMapper modelMapper;
+    private final RatingMapper ratingMapper;
     private final PaginationConfig paginationConfig;
 
     /**
@@ -305,8 +305,8 @@ public class RatingService {
      * Convertir entidad Rating a RatingResponseDTO
      */
     private RatingResponseDTO convertToResponseDTO(Rating rating) {
-        RatingResponseDTO dto = modelMapper.map(rating, RatingResponseDTO.class);
-        log.debug("Conversión de Rating de entidad a ResponseDTO con ModelMapper: {}", dto);
+        RatingResponseDTO dto = ratingMapper.toResponseDTO(rating);
+        log.debug("Conversión de Rating de entidad a ResponseDTO con MapStruct: {}", dto);
 
         dto.setUserProfileId(rating.getUserProfile().getId());
         dto.setBookId(rating.getBook().getId());

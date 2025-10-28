@@ -35,7 +35,7 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
      * Buscar libros por múltiples filtros (título, publicación, autor)
      */
     @Query("SELECT DISTINCT b FROM Book b LEFT JOIN b.authors a WHERE " +
-            "(:title IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))) AND " +
+            "(:title IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', CAST(:title AS string), '%'))) AND " +
             "(:publicationId IS NULL OR b.publication.id = :publicationId) AND " +
             "(:authorId IS NULL OR a.id = :authorId) AND " +
             "b.isDeleted = false")

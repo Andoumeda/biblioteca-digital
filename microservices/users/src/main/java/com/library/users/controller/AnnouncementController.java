@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/announcements")
+@RequestMapping("/announcements")
 public class AnnouncementController {
 
     private static final Logger log = LoggerFactory.getLogger(AnnouncementController.class);
@@ -24,7 +24,7 @@ public class AnnouncementController {
     public ResponseEntity<Page<Announcement>> getAllAnnouncements(
             @PathVariable int page,
             @PathVariable int size) {
-        log.info("Recibido request GET /api/announcements/page/{}/size/{}", page, size);
+        log.info("Recibido request GET /announcements/page/{}/size/{}", page, size);
         Page<Announcement> result = announcementService.getAllAnnouncements(page, size);
         log.info("Se obtuvieron {} anuncios", result.getTotalElements());
         return ResponseEntity.ok(result);
@@ -32,7 +32,7 @@ public class AnnouncementController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Announcement> getAnnouncementById(@PathVariable Integer id) {
-        log.info("Recibido request GET /api/announcements/{}", id);
+        log.info("Recibido request GET /announcements/{}", id);
         Announcement result = announcementService.getAnnouncementById(id);
         log.info("Anuncio obtenido exitosamente para ID {}", id);
         return ResponseEntity.ok(result);
@@ -40,7 +40,7 @@ public class AnnouncementController {
 
     @PostMapping
     public ResponseEntity<Announcement> createAnnouncement(@RequestBody Announcement announcement) {
-        log.info("Recibido request POST /api/announcements: {}", announcement);
+        log.info("Recibido request POST /announcements: {}", announcement);
         Announcement result = announcementService.createAnnouncement(announcement);
         log.info("Anuncio creado con ID {}", result.getId());
         return ResponseEntity.ok(result);
@@ -50,7 +50,7 @@ public class AnnouncementController {
     public ResponseEntity<Announcement> updateAnnouncement(
             @PathVariable Integer id,
             @RequestBody Announcement announcement) {
-        log.info("Recibido request PUT /api/announcements/{}: {}", id, announcement);
+        log.info("Recibido request PUT /announcements/{}: {}", id, announcement);
         Announcement result = announcementService.updateAnnouncement(id, announcement);
         log.info("Anuncio actualizado con ID {}", id);
         return ResponseEntity.ok(result);
@@ -58,7 +58,7 @@ public class AnnouncementController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAnnouncement(@PathVariable Integer id) {
-        log.info("Recibido request DELETE /api/announcements/{}", id);
+        log.info("Recibido request DELETE /announcements/{}", id);
         announcementService.deleteAnnouncement(id);
         log.info("Anuncio eliminado con ID {}", id);
         return ResponseEntity.noContent().build();
@@ -69,7 +69,7 @@ public class AnnouncementController {
             @PathVariable String type,
             @PathVariable int page,
             @PathVariable int size) {
-        log.info("Recibido request GET /api/announcements/type/{}/page/{}/size/{}", type, page, size);
+        log.info("Recibido request GET /announcements/type/{}/page/{}/size/{}", type, page, size);
         Page<Announcement> result = announcementService.getAnnouncementsByType(type, page, size);
         log.info("Se obtuvieron {} anuncios del tipo {}", result.getTotalElements(), type);
         return ResponseEntity.ok(result);
@@ -80,7 +80,7 @@ public class AnnouncementController {
             @PathVariable String targetAudience,
             @PathVariable int page,
             @PathVariable int size) {
-        log.info("Recibido request GET /api/announcements/audience/{}/page/{}/size/{}", targetAudience, page, size);
+        log.info("Recibido request GET /announcements/audience/{}/page/{}/size/{}", targetAudience, page, size);
         Page<Announcement> result = announcementService.getAnnouncementsByAudience(targetAudience, page, size);
         log.info("Se obtuvieron {} anuncios para audiencia {}", result.getTotalElements(), targetAudience);
         return ResponseEntity.ok(result);

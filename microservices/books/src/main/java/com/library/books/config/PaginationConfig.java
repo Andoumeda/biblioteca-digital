@@ -12,4 +12,3 @@ import org.springframework.context.annotation.Configuration;
 public class PaginationConfig {
     private int pageSize;
 }
-
