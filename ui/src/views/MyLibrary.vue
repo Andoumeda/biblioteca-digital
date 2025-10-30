@@ -348,6 +348,45 @@
       @close="closeEditModal"
       @success="handleEditSuccess"
     />
+
+    <!-- Modal de Editar Comentario -->
+    <div v-if="showEditCommentModal" class="modal-overlay" @click="showEditCommentModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>Editar Comentario</h3>
+        <form @submit.prevent="handleUpdateComment" class="rating-form">
+          <div class="form-group">
+            <label>Calificación *</label>
+            <div class="rating-input-container">
+              <RatingSystem
+                :current-rating="editingComment.valoration"
+                :readonly="false"
+                size="lg"
+                :show-value="true"
+                @rating-change="handleRatingChange"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editCommentText">Comentario</label>
+            <textarea
+              id="editCommentText"
+              v-model="editingComment.comment"
+              placeholder="Escribe tu comentario sobre el libro..."
+              rows="4"
+              class="form-input form-textarea"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showEditCommentModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -355,6 +394,7 @@
 import { ref, onMounted, watch } from 'vue';
 import PublicationUploadModal from '../components/PublicationUploadModal.vue';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
+import RatingSystem from '../components/RatingSystem.vue';
 import { publicationsAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI } from '../api/booksService';
 import { CURRENT_USER_PROFILE_ID, DEFAULT_BOOK_COVER } from '../utils/constants';
@@ -363,15 +403,18 @@ export default {
   name: 'MyLibrary',
   components: {
     PublicationUploadModal,
-    PublicationDetailModal
+    PublicationDetailModal,
+    RatingSystem
   },
   setup() {
     const activeTab = ref('publications');
     const showUploadModal = ref(false);
     const showDetailModal = ref(false);
     const showEditModal = ref(false);
+    const showEditCommentModal = ref(false);
     const selectedPublication = ref(null);
     const publicationToEdit = ref(null);
+    const editingComment = ref({ id: null, valoration: 0, comment: '', bookId: null, userProfileId: null });
     const isLoading = ref(false);
     const isLoadingFavorites = ref(false);
     const isLoadingComments = ref(false);
@@ -661,9 +704,33 @@ export default {
       }
     };
 
-    const handleEditComment = async (comment, newText) => {
+    const handleEditComment = (comment) => {
+      editingComment.value = {
+        id: comment.id,
+        valoration: comment.valoration,
+        comment: comment.comment || '',
+        bookId: comment.bookId,
+        userProfileId: comment.userProfileId
+      };
+      showEditCommentModal.value = true;
+    };
+
+    const handleRatingChange = (newRating) => {
+      editingComment.value.valoration = newRating;
+    };
+
+    const handleUpdateComment = async () => {
       try {
-        await ratingsAPI.updateRating(comment.id, { comment: newText });
+        const ratingData = {
+          valoration: editingComment.value.valoration,
+          comment: editingComment.value.comment,
+          bookId: editingComment.value.bookId,
+          userProfileId: editingComment.value.userProfileId
+        };
+
+        await ratingsAPI.updateRating(editingComment.value.id, ratingData);
+        showEditCommentModal.value = false;
+        editingComment.value = { id: null, valoration: 0, comment: '', bookId: null, userProfileId: null };
         await loadUserComments();
         alert('Comentario actualizado exitosamente');
       } catch (error) {
@@ -712,6 +779,10 @@ export default {
       handleDeleteFavorite,
       handleEditComment,
       handleDeleteComment,
+      handleRatingChange,
+      handleUpdateComment,
+      showEditCommentModal,
+      editingComment,
       handleImageError,
       goToPreviousPublicationsPage,
       goToNextPublicationsPage,
@@ -1076,7 +1147,7 @@ export default {
 .bookmark-author {
   font-size: 0.875rem;
   color: #666;
-  margin: 0 0 auto 0;
+  margin: 0 0 0.75rem 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1526,5 +1597,116 @@ export default {
   color: #718096;
   font-weight: 500;
   margin-left: 8px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.rating-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.875rem;
+}
+
+.rating-input-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.form-input {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #d0d0d0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 </style>
