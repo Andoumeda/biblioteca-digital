@@ -51,6 +51,12 @@ const routes = [
     component: AnnouncementDetail
   },
   {
+    path: '/moderation/announcements/:id',
+    name: 'ModerationAnnouncementDetail',
+    component: AnnouncementDetail,
+    meta: { fromModeration: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound

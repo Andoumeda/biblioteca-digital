@@ -41,6 +41,12 @@
       >
         Ratings
       </button>
+      <button
+        :class="['tab-button', { active: activeTab === 'announcements' }]"
+        @click="activeTab = 'announcements'"
+      >
+        Anuncios
+      </button>
     </div>
 
     <!-- Publications Tab -->
@@ -463,6 +469,104 @@
       </div>
     </div>
 
+    <!-- Announcements Tab -->
+    <div v-if="activeTab === 'announcements'" class="tab-content">
+      <div class="section-header">
+        <h3>Gestión de Anuncios</h3>
+        <button @click="showCreateAnnouncementModal = true" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Crear Anuncio
+        </button>
+      </div>
+
+      <div v-if="announcementsLoading" class="loading-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="spinner">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <p>Cargando anuncios...</p>
+      </div>
+
+      <div v-else-if="announcements.length > 0" class="announcements-list">
+        <div
+          v-for="announcement in announcements"
+          :key="announcement.id"
+          class="announcement-card"
+          @click="goToAnnouncementDetail(announcement.id)"
+        >
+          <div :class="['announcement-icon', `icon-${getAnnouncementTypeClass(announcement.type)}`]">
+            <svg v-if="announcement.type === 'ALERT'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <svg v-else-if="announcement.type === 'INFO'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <svg v-else-if="announcement.type === 'WARNING'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <svg v-else-if="announcement.type === 'PROMO'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
+              <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
+            </svg>
+          </div>
+          <div class="announcement-content">
+            <div class="announcement-header-row">
+              <h3 class="announcement-title">{{ announcement.title }}</h3>
+              <div class="announcement-badges">
+                <span :class="['badge', `badge-${getAnnouncementTypeClass(announcement.type)}`]">
+                  {{ getAnnouncementTypeLabel(announcement.type) }}
+                </span>
+                <span :class="['badge', `badge-audience-${getAnnouncementAudienceClass(announcement.targetAudience)}`]">
+                  {{ getAnnouncementAudienceLabel(announcement.targetAudience) }}
+                </span>
+              </div>
+            </div>
+            <p class="announcement-message">{{ announcement.message }}</p>
+            <div class="announcement-meta">
+              <span class="announcement-date">{{ formatDate(announcement.createdAt) }}</span>
+              <span class="announcement-author">Por: {{ announcement.userProfile?.displayName || 'Administrador' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="no-results">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M10.5 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/>
+          <path d="M17 3l4 4L10 18l-5 1 1-5Z"/>
+        </svg>
+        <p>No hay anuncios disponibles</p>
+      </div>
+
+      <!-- Pagination for Announcements -->
+      <div class="pagination-controls" v-if="announcementsPagination.totalPages > 1">
+        <button @click="loadAnnouncementsPage(announcementsPagination.currentPage - 1)" :disabled="announcementsPagination.currentPage === 0" class="pagination-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Anterior
+        </button>
+        <span class="pagination-info">Página {{ announcementsPagination.currentPage + 1 }} de {{ announcementsPagination.totalPages }}</span>
+        <button @click="loadAnnouncementsPage(announcementsPagination.currentPage + 1)" :disabled="announcementsPagination.currentPage >= announcementsPagination.totalPages - 1" class="pagination-btn">
+          Siguiente
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Category Modals -->
     <div v-if="showCreateCategoryModal" class="modal-overlay" @click="showCreateCategoryModal = false">
       <div class="modal-content" @click.stop>
@@ -729,6 +833,76 @@
       </div>
     </div>
 
+    <!-- Create Announcement Modal -->
+    <div v-if="showCreateAnnouncementModal" class="modal-overlay" @click="showCreateAnnouncementModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>Crear Nuevo Anuncio</h3>
+        <form @submit.prevent="handleCreateAnnouncement" class="announcement-form">
+          <div class="form-group">
+            <label for="newAnnouncementTitle">Título *</label>
+            <input
+              id="newAnnouncementTitle"
+              v-model="newAnnouncement.title"
+              type="text"
+              placeholder="Título del anuncio"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="newAnnouncementMessage">Mensaje *</label>
+            <textarea
+              id="newAnnouncementMessage"
+              v-model="newAnnouncement.message"
+              placeholder="Escribe el mensaje del anuncio..."
+              rows="6"
+              required
+              class="form-input form-textarea"
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newAnnouncementType">Tipo *</label>
+              <select
+                id="newAnnouncementType"
+                v-model="newAnnouncement.type"
+                required
+                class="form-input form-select"
+              >
+                <option value="">Selecciona un tipo</option>
+                <option value="ALERT">Alerta</option>
+                <option value="INFO">Información</option>
+                <option value="WARNING">Advertencia</option>
+                <option value="PROMO">Promoción</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="newAnnouncementTargetAudience">Audiencia *</label>
+              <select
+                id="newAnnouncementTargetAudience"
+                v-model="newAnnouncement.targetAudience"
+                required
+                class="form-input form-select"
+              >
+                <option value="">Selecciona una audiencia</option>
+                <option value="ALL">Todos</option>
+                <option value="NEW_USERS">Nuevos usuarios</option>
+                <option value="ADMINS">Administradores</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showCreateAnnouncementModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" :disabled="isSubmittingAnnouncement">
+              {{ isSubmittingAnnouncement ? 'Creando...' : 'Crear Anuncio' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Book Detail Modal -->
     <BookDetailModal
       v-if="selectedBook"
@@ -742,12 +916,17 @@
 
 <script>
 import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { publicationsAPI } from '../api/publicationsService';
 import { categoriesAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI, authorsAPI } from '../api/booksService';
+import { useAnnouncementsStore } from '../stores/announcements';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 import BookDetailModal from '../components/BookDetailModal.vue';
 import RatingSystem from '../components/RatingSystem.vue';
+
+// Hardcoded UserProfile ID (por ahora, hasta implementar login)
+const HARDCODED_USER_PROFILE_ID = 1;
 
 export default {
   name: 'Moderation',
@@ -756,6 +935,9 @@ export default {
     RatingSystem
   },
   setup() {
+    const router = useRouter();
+    const announcementsStore = useAnnouncementsStore();
+
     const activeTab = ref('publications');
     const filterStatus = ref('all');
     const publications = ref([]);
@@ -764,6 +946,8 @@ export default {
     const authors = ref([]);
     const books = ref([]);
     const ratings = ref([]);
+    const announcements = ref([]);
+    const announcementsLoading = ref(false);
 
     const showCreateCategoryModal = ref(false);
     const showEditCategoryModal = ref(false);
@@ -772,6 +956,7 @@ export default {
     const showEditBookModal = ref(false);
     const showBookDetailModal = ref(false);
     const showEditRatingModal = ref(false);
+    const showCreateAnnouncementModal = ref(false);
     const selectedBook = ref(null);
 
     // Form states
@@ -781,10 +966,13 @@ export default {
     const editingAuthor = ref({ id: null, fullName: '', bio: '', birthDate: '', nationality: '' });
     const editingBook = ref({ id: null, title: '', description: '', bookUrl: '', coverImg: '' });
     const editingRating = ref({ id: null, valoration: 0, comment: '', bookId: null, userProfileId: null });
+    const newAnnouncement = ref({ title: '', message: '', type: '', targetAudience: '' });
+    const isSubmittingAnnouncement = ref(false);
 
     // Pagination states
     const favoritesPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
     const authorsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
+    const announcementsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
     const booksPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 12 });
     const ratingsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
     const manualBooksPage = ref(1);
@@ -1194,6 +1382,100 @@ export default {
       event.target.src = DEFAULT_BOOK_COVER;
     };
 
+    // Announcements functions
+    const loadAnnouncementsPage = async (page = 0) => {
+      announcementsLoading.value = true;
+      try {
+        await announcementsStore.fetchAnnouncements(page);
+        announcements.value = announcementsStore.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        announcementsPagination.value.currentPage = announcementsStore.currentPage;
+        announcementsPagination.value.totalPages = announcementsStore.totalPages;
+      } catch (error) {
+        console.error('Error loading announcements:', error);
+      } finally {
+        announcementsLoading.value = false;
+      }
+    };
+
+    const handleCreateAnnouncement = async () => {
+      if (!newAnnouncement.value.title || !newAnnouncement.value.message || !newAnnouncement.value.type || !newAnnouncement.value.targetAudience) {
+        alert('Por favor completa todos los campos');
+        return;
+      }
+
+      isSubmittingAnnouncement.value = true;
+
+      try {
+        const announcementData = {
+          title: newAnnouncement.value.title,
+          message: newAnnouncement.value.message,
+          type: newAnnouncement.value.type,
+          targetAudience: newAnnouncement.value.targetAudience,
+          userProfileId: HARDCODED_USER_PROFILE_ID
+        };
+
+        await announcementsStore.createAnnouncement(announcementData);
+        alert('¡Anuncio creado exitosamente!');
+
+        // Reset form
+        newAnnouncement.value = {
+          title: '',
+          message: '',
+          type: '',
+          targetAudience: ''
+        };
+        showCreateAnnouncementModal.value = false;
+        await loadAnnouncementsPage(announcementsPagination.value.currentPage);
+      } catch (error) {
+        console.error('Error creating announcement:', error);
+        alert('Error al crear el anuncio. Por favor intenta de nuevo.');
+      } finally {
+        isSubmittingAnnouncement.value = false;
+      }
+    };
+
+    const goToAnnouncementDetail = (id) => {
+      router.push({ name: 'ModerationAnnouncementDetail', params: { id } });
+    };
+
+    const getAnnouncementTypeClass = (type) => {
+      const typeMap = {
+        'ALERT': 'alert',
+        'INFO': 'info',
+        'WARNING': 'warning',
+        'PROMO': 'promo'
+      };
+      return typeMap[type] || 'info';
+    };
+
+    const getAnnouncementTypeLabel = (type) => {
+      const labelMap = {
+        'ALERT': 'Alerta',
+        'INFO': 'Información',
+        'WARNING': 'Advertencia',
+        'PROMO': 'Promoción'
+      };
+      return labelMap[type] || type;
+    };
+
+    const getAnnouncementAudienceClass = (audience) => {
+      const audienceMap = {
+        'ALL': 'all',
+        'NEW_USERS': 'new',
+        'ADMINS': 'admin'
+      };
+      return audienceMap[audience] || 'all';
+    };
+
+    const getAnnouncementAudienceLabel = (audience) => {
+      const labelMap = {
+        'ALL': 'Todos',
+        'NEW_USERS': 'Nuevos usuarios',
+        'ADMINS': 'Administradores'
+      };
+      return labelMap[audience] || audience;
+    };
+
     onMounted(async () => {
       await loadPublications();
       await loadCategories();
@@ -1201,6 +1483,7 @@ export default {
       await loadAuthors();
       await loadBooksPage(0);
       await loadRatingsPage(0);
+      await loadAnnouncementsPage(0);
     });
 
     return {
@@ -1212,10 +1495,13 @@ export default {
       authors,
       books,
       ratings,
+      announcements,
+      announcementsLoading,
       favoritesPagination,
       authorsPagination,
       booksPagination,
       ratingsPagination,
+      announcementsPagination,
       showCreateCategoryModal,
       showEditCategoryModal,
       showCreateAuthorModal,
@@ -1223,6 +1509,7 @@ export default {
       showEditBookModal,
       showBookDetailModal,
       showEditRatingModal,
+      showCreateAnnouncementModal,
       selectedBook,
       newCategoryName,
       editingCategory,
@@ -1230,6 +1517,8 @@ export default {
       editingAuthor,
       editingBook,
       editingRating,
+      newAnnouncement,
+      isSubmittingAnnouncement,
       manualBooksPage,
       formatDate,
       getStatusLabel,
@@ -1261,7 +1550,14 @@ export default {
       loadFavoritesPage,
       loadAuthors,
       loadBooksPage,
-      loadRatingsPage
+      loadRatingsPage,
+      loadAnnouncementsPage,
+      handleCreateAnnouncement,
+      goToAnnouncementDetail,
+      getAnnouncementTypeClass,
+      getAnnouncementTypeLabel,
+      getAnnouncementAudienceClass,
+      getAnnouncementAudienceLabel
     };
   }
 };
@@ -2013,5 +2309,192 @@ export default {
   border-radius: 8px;
   display: flex;
   justify-content: center;
+}
+
+/* Announcements Styles */
+.announcements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.announcement-card {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.announcement-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.announcement-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.icon-alert {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.icon-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.icon-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.icon-promo {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.announcement-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.announcement-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.announcement-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+  flex: 1;
+}
+
+.announcement-badges {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-alert {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-promo {
+  background: #ede9fe;
+  color: #6b21a8;
+}
+
+.badge-audience-all {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-audience-new {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-audience-admin {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.announcement-message {
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.announcement-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #718096;
+}
+
+.announcement-date,
+.announcement-author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #718096;
+}
+
+.loading-state svg {
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.announcement-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
 }
 </style>

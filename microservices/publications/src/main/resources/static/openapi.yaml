@@ -16,6 +16,17 @@ tags:
   - name: Favorites
     description: Gestión de favoritos
 
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Autenticación mediante JWT token. Incluir el token en el header Authorization como 'Bearer {token}'
+
 paths:
   # ==========================================
   # PUBLICATION ENDPOINTS (Puerto 8082)
@@ -27,8 +38,6 @@ paths:
       summary: Crear publicación
       description: Crea una nueva publicación asociada a un perfil de usuario
       operationId: createPublication
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -459,8 +468,6 @@ paths:
         - Publications
       summary: Actualizar publicación
       operationId: updatePublication
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -509,8 +516,6 @@ paths:
       summary: Eliminar publicación (borrado lógico)
       description: Marca la publicación como eliminada sin borrarla físicamente
       operationId: deletePublication
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -534,8 +539,6 @@ paths:
       summary: Aprobar publicación
       description: Cambia el estado de una publicación a 'approved' (solo administradores)
       operationId: approvePublication
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -576,8 +579,6 @@ paths:
       summary: Rechazar publicación
       description: Cambia el estado de una publicación a 'rejected' (solo administradores)
       operationId: rejectPublication
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -621,8 +622,6 @@ paths:
       summary: Crear categoría
       description: Crea una nueva categoría (requiere permisos de administrador)
       operationId: createCategory
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -803,8 +802,6 @@ paths:
       summary: Actualizar categoría
       description: Actualiza una categoría existente por ID
       operationId: updateCategory
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -850,8 +847,6 @@ paths:
       summary: Eliminar categoría (borrado lógico)
       description: Marca la categoría como eliminada sin borrarla físicamente
       operationId: deleteCategory
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -881,8 +876,6 @@ paths:
       summary: Agregar a favoritos
       description: Marca una publicación como favorita para un usuario
       operationId: addFavorite
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -917,8 +910,6 @@ paths:
       summary: Obtener todos los favoritos (paginado)
       description: Lista paginada de todos los favoritos
       operationId: getAllFavorites
-      security:
-        - bearerAuth: []
       parameters:
         - name: page
           in: path
@@ -974,8 +965,6 @@ paths:
       summary: Obtener favoritos de un usuario (paginado)
       description: Lista paginada de todas las publicaciones favoritas de un usuario específico
       operationId: getFavoritesByUser
-      security:
-        - bearerAuth: []
       parameters:
         - name: user
           in: path
@@ -1041,8 +1030,6 @@ paths:
       summary: Obtener favoritos de una publicación (paginado)
       description: Lista paginada de todos los usuarios que marcaron una publicación como favorita
       operationId: getFavoritesByPublication
-      security:
-        - bearerAuth: []
       parameters:
         - name: pub
           in: path
@@ -1107,8 +1094,6 @@ paths:
         - Favorites
       summary: Obtener favorito por ID
       operationId: getFavoriteById
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1141,8 +1126,6 @@ paths:
       summary: Eliminar de favoritos (borrado lógico)
       description: Marca el favorito como eliminado sin borrarlo físicamente
       operationId: removeFavorite
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1158,6 +1141,3 @@ paths:
           $ref: './models/openapi.yaml#/components/responses/UnauthorizedError'
         '404':
           $ref: './models/openapi.yaml#/components/responses/NotFoundError'
-
-security:
-  - bearerAuth: []

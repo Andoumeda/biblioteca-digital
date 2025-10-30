@@ -5,13 +5,6 @@
         <h2 class="announcements-title">Anuncios</h2>
         <p class="announcements-subtitle">Mantente al día con las últimas novedades</p>
       </div>
-      <button @click="showCreateModal = true" class="btn-create">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Crear Anuncio
-      </button>
     </div>
 
     <div v-if="store.loading" class="loading-state">
@@ -101,76 +94,6 @@
         </svg>
       </button>
     </div>
-
-    <!-- Modal Crear Anuncio -->
-    <div v-if="showCreateModal" class="modal-overlay" @click="showCreateModal = false">
-      <div class="modal-content" @click.stop>
-        <h3>Crear Nuevo Anuncio</h3>
-        <form @submit.prevent="handleCreateAnnouncement" class="announcement-form">
-          <div class="form-group">
-            <label for="newTitle">Título *</label>
-            <input
-              id="newTitle"
-              v-model="newAnnouncement.title"
-              type="text"
-              placeholder="Título del anuncio"
-              required
-              class="form-input"
-            />
-          </div>
-          <div class="form-group">
-            <label for="newMessage">Mensaje *</label>
-            <textarea
-              id="newMessage"
-              v-model="newAnnouncement.message"
-              placeholder="Escribe el mensaje del anuncio..."
-              rows="6"
-              required
-              class="form-input form-textarea"
-            />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="newType">Tipo *</label>
-              <select
-                id="newType"
-                v-model="newAnnouncement.type"
-                required
-                class="form-input form-select"
-              >
-                <option value="">Selecciona un tipo</option>
-                <option value="ALERT">Alerta</option>
-                <option value="INFO">Información</option>
-                <option value="WARNING">Advertencia</option>
-                <option value="PROMO">Promoción</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="newTargetAudience">Audiencia *</label>
-              <select
-                id="newTargetAudience"
-                v-model="newAnnouncement.targetAudience"
-                required
-                class="form-input form-select"
-              >
-                <option value="">Selecciona una audiencia</option>
-                <option value="ALL">Todos</option>
-                <option value="NEW_USERS">Nuevos usuarios</option>
-                <option value="ADMINS">Administradores</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="showCreateModal = false" class="btn btn-secondary">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Creando...' : 'Crear Anuncio' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -179,23 +102,12 @@ import { useAnnouncementsStore } from '../stores/announcements';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-// Hardcoded UserProfile ID (por ahora, hasta implementar login)
-const HARDCODED_USER_PROFILE_ID = 1;
-
 export default {
   name: 'Announcements',
   setup() {
     const store = useAnnouncementsStore();
     const router = useRouter();
 
-    const showCreateModal = ref(false);
-    const isSubmitting = ref(false);
-    const newAnnouncement = ref({
-      title: '',
-      message: '',
-      type: '',
-      targetAudience: ''
-    });
 
     const formatDate = (dateString) => {
       if (!dateString) return '';
@@ -251,42 +163,6 @@ export default {
       return labelMap[audience] || audience;
     };
 
-    const handleCreateAnnouncement = async () => {
-      if (!newAnnouncement.value.title || !newAnnouncement.value.message || !newAnnouncement.value.type || !newAnnouncement.value.targetAudience) {
-        alert('Por favor completa todos los campos');
-        return;
-      }
-
-      isSubmitting.value = true;
-
-      try {
-        const announcementData = {
-          title: newAnnouncement.value.title,
-          message: newAnnouncement.value.message,
-          type: newAnnouncement.value.type,
-          targetAudience: newAnnouncement.value.targetAudience,
-          userProfileId: HARDCODED_USER_PROFILE_ID
-        };
-
-        await store.createAnnouncement(announcementData);
-        alert('¡Anuncio creado exitosamente!');
-
-        // Reset form
-        newAnnouncement.value = {
-          title: '',
-          message: '',
-          type: '',
-          targetAudience: ''
-        };
-        showCreateModal.value = false;
-      } catch (error) {
-        console.error('Error creating announcement:', error);
-        alert('Error al crear el anuncio. Por favor intenta de nuevo.');
-      } finally {
-        isSubmitting.value = false;
-      }
-    };
-
     onMounted(async () => {
       await store.fetchAnnouncements();
       store.announcements = store.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -294,16 +170,12 @@ export default {
 
     return {
       store,
-      showCreateModal,
-      isSubmitting,
-      newAnnouncement,
       formatDate,
       goToDetail,
       getTypeClass,
       getTypeLabel,
       getAudienceClass,
-      getAudienceLabel,
-      handleCreateAnnouncement
+      getAudienceLabel
     };
   }
 };

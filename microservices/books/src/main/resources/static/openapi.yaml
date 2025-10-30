@@ -16,8 +16,16 @@ tags:
   - name: Ratings
     description: Gestión de valoraciones
 
-# security:
-  # - bearerAuth: []
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Autenticación mediante JWT token. Incluir el token en el header Authorization como 'Bearer {token}'
 
 paths:
   # ===========================
@@ -118,8 +126,6 @@ paths:
       tags: [Books]
       summary: Actualizar libro
       operationId: updateBook
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -273,8 +279,6 @@ paths:
       tags: [Authors]
       summary: Actualizar autor
       operationId: updateAuthor
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -304,8 +308,6 @@ paths:
       tags: [Authors]
       summary: Eliminar autor (soft delete)
       operationId: deleteAuthor
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path

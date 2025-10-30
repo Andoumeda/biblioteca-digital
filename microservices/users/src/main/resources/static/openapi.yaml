@@ -14,12 +14,16 @@ tags:
   - name: Announcements
     description: Gestión de anuncios
 
+security:
+  - bearerAuth: []
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Autenticación mediante JWT token. Incluir el token en el header Authorization como 'Bearer {token}'
 
   schemas:
     BaseDTO:
@@ -651,8 +655,6 @@ paths:
       summary: Crear anuncio
       description: Crea un nuevo anuncio (solo administradores)
       operationId: createAnnouncement
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -785,8 +787,6 @@ paths:
         - Announcements
       summary: Actualizar anuncio
       operationId: updateAnnouncement
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -822,8 +822,6 @@ paths:
       summary: Eliminar anuncio
       description: Elimina permanentemente un anuncio del sistema
       operationId: deleteAnnouncement
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -840,6 +838,3 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
-
-security:
-  - bearerAuth: []

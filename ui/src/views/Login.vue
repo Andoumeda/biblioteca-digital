@@ -115,8 +115,56 @@
               </div>
             </div>
 
+            <div v-if="!isLogin" class="form-group">
+              <label class="form-label">Confirmar contraseña</label>
+              <div class="input-wrapper">
+                <svg
+                  class="input-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <input
+                  v-model="confirmPassword"
+                  type="password"
+                  placeholder="Confirma tu contraseña"
+                  class="form-input with-icon"
+                  required
+                />
+              </div>
+            </div>
+
             <div v-if="isLogin" class="forgot-password">
               <button type="button" class="link-button">¿Olvidaste tu contraseña?</button>
+            </div>
+
+            <div v-if="errorMessage" class="error-message">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="error-icon"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" x2="12" y1="8" y2="12" />
+                <line x1="12" x2="12.01" y1="16" y2="16" />
+              </svg>
+              {{ errorMessage }}
             </div>
 
             <button type="submit" class="submit-button">
@@ -136,13 +184,6 @@
               </button>
             </p>
           </div>
-
-          <div class="demo-section">
-            <p class="demo-text">Demo rápido:</p>
-            <button type="button" @click="handleQuickLogin" class="demo-button">
-              Acceder sin credenciales
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -157,23 +198,42 @@ export default {
       isLogin: true,
       email: '',
       password: '',
-      name: ''
+      confirmPassword: '',
+      name: '',
+      errorMessage: ''
     }
   },
   methods: {
     handleSubmit() {
+      this.errorMessage = '';
+
+      // Validar que las contraseñas coincidan en modo registro
+      if (!this.isLogin) {
+        if (this.password !== this.confirmPassword) {
+          this.errorMessage = 'Las contraseñas no coinciden';
+          return;
+        }
+        if (this.password.length < 8) {
+          this.errorMessage = 'La contraseña debe tener al menos 8 caracteres';
+          return;
+        }
+        if (!this.name.trim()) {
+          this.errorMessage = 'El nombre completo es requerido';
+          return;
+        }
+      }
+
       // TODO: Implement real authentication
       console.log('Login attempt:', { email: this.email, password: this.password, name: this.name });
-      this.$router.push('/');
-    },
-    handleQuickLogin() {
       this.$router.push('/');
     },
     toggleMode() {
       this.isLogin = !this.isLogin;
       this.email = '';
       this.password = '';
+      this.confirmPassword = '';
       this.name = '';
+      this.errorMessage = '';
     }
   }
 }
@@ -315,6 +375,22 @@ export default {
   color: #5568d3;
 }
 
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  color: #c33;
+  font-size: 14px;
+}
+
+.error-icon {
+  flex-shrink: 0;
+}
+
 .submit-button {
   width: 100%;
   padding: 12px;
@@ -374,35 +450,5 @@ export default {
 
 .link-button-primary:hover {
   color: #5568d3;
-}
-
-.demo-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
-  text-align: center;
-}
-
-.demo-text {
-  font-size: 12px;
-  color: #718096;
-  margin-bottom: 8px;
-}
-
-.demo-button {
-  width: 100%;
-  padding: 10px;
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.demo-button:hover {
-  background: #edf2f7;
-  border-color: #cbd5e0;
 }
 </style>

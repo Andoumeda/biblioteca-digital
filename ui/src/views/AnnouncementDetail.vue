@@ -73,7 +73,7 @@
             </span>
           </div>
         </div>
-        <div class="header-actions">
+        <div class="header-actions" v-if="isFromModeration">
           <button @click="showEditModal = true" class="btn-action btn-edit" title="Editar anuncio">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -171,7 +171,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAnnouncementsStore } from '../stores/announcements';
 
@@ -197,6 +197,8 @@ export default {
       targetAudience: ''
     });
 
+    const isFromModeration = computed(() => route.meta.fromModeration === true);
+
     const formatDate = (dateString) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -210,7 +212,11 @@ export default {
     };
 
     const goBack = () => {
-      router.push('/announcements');
+      if (isFromModeration.value) {
+        router.push('/moderation');
+      } else {
+        router.push('/announcements');
+      }
     };
 
     const getTypeClass = (type) => {
@@ -332,6 +338,7 @@ export default {
       showEditModal,
       isSubmitting,
       editAnnouncement,
+      isFromModeration,
       formatDate,
       goBack,
       getTypeClass,
