@@ -32,3 +32,15 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+
+# OpenAPI / Swagger Configuration
+springdoc:
+  swagger-ui:
+    urls:
+      - name: user-profile-service
+        url: http://localhost:8081/openapi.yaml
+      - name: publication-service
+        url: http://localhost:8082/openapi.yaml
+      - name: book-service
+        url: http://localhost:8083/openapi.yaml
+    path: /swagger
