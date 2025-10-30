@@ -27,7 +27,7 @@
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
               <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
             </svg>
-            <span v-if="announcements.length > 0" class="notification-badge">{{ announcements.length }}</span>
+            <span v-if="announcements.length > 0" class="notification-badge"></span>
           </button>
 
           <!-- Dropdown de notificaciones -->
@@ -372,11 +372,9 @@ export default {
   top: -4px;
   right: -4px;
   background: #ef4444;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 11px;
-  font-weight: bold;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
 }
 
 .notifications-menu {

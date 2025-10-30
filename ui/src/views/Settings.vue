@@ -231,7 +231,7 @@ export default {
       try {
         // Preparar los datos para la petición PUT según el formato requerido
         const updateData = {
-          userId: currentUserProfile.value.userId, // Mantener el mismo userId
+          userId: currentUserProfile.value.user.id, // Mantener el mismo userId
           displayName: userProfile.value.displayName,
           bio: userProfile.value.bio || '',
           profilePicture: currentUserProfile.value.profilePicture || '' // Mantener la misma foto
