@@ -1,15 +1,10 @@
 import axios from 'axios';
 
-// Base URLs para cada microservicio
-const API_URLS = {
-  users: import.meta.env.VITE_API_USERS_URL || 'http://localhost:8081',
-  publications: import.meta.env.VITE_API_PUBLICATIONS_URL || 'http://localhost:8082',
-  books: import.meta.env.VITE_API_BOOKS_URL || 'http://localhost:8083',
-};
+const API_URL = import.meta.env.VITE_API_GATEWAY_URL;
 
 // Cliente para Publications
-const apiClient = axios.create({
-  baseURL: API_URLS.publications,
+const publicationsApiClient = axios.create({
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -18,7 +13,7 @@ const apiClient = axios.create({
 
 // Cliente para Books
 const booksApiClient = axios.create({
-  baseURL: API_URLS.books,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,7 +22,7 @@ const booksApiClient = axios.create({
 
 // Cliente para Users
 const usersApiClient = axios.create({
-  baseURL: API_URLS.users,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,9 +35,8 @@ const errorInterceptor = (error) => {
   return Promise.reject(error);
 };
 
-apiClient.interceptors.response.use((response) => response, errorInterceptor);
+publicationsApiClient.interceptors.response.use((response) => response, errorInterceptor);
 booksApiClient.interceptors.response.use((response) => response, errorInterceptor);
 usersApiClient.interceptors.response.use((response) => response, errorInterceptor);
 
-export default apiClient;
-export { booksApiClient, usersApiClient };
+export { publicationsApiClient, booksApiClient, usersApiClient };

@@ -25,7 +25,12 @@ public class AnnouncementController {
             @PathVariable int page,
             @PathVariable int size) {
         log.info("Recibido request GET /announcements/page/{}/size/{}", page, size);
-        Page<Announcement> result = announcementService.getAllAnnouncements(page, size);
+        Page<Announcement> result = announcementService.getAllAnnouncements(page, size)
+                .map(a -> {
+                    // Evitar inicializar colecciones LAZY al serializar
+                    a.setUsers(null);
+                    return a;
+                });
         log.info("Se obtuvieron {} anuncios", result.getTotalElements());
         return ResponseEntity.ok(result);
     }
@@ -34,6 +39,8 @@ public class AnnouncementController {
     public ResponseEntity<Announcement> getAnnouncementById(@PathVariable Integer id) {
         log.info("Recibido request GET /announcements/{}", id);
         Announcement result = announcementService.getAnnouncementById(id);
+        // Evitar inicializar colecciones LAZY al serializar
+        result.setUsers(null);
         log.info("Anuncio obtenido exitosamente para ID {}", id);
         return ResponseEntity.ok(result);
     }
@@ -42,6 +49,8 @@ public class AnnouncementController {
     public ResponseEntity<Announcement> createAnnouncement(@RequestBody Announcement announcement) {
         log.info("Recibido request POST /announcements: {}", announcement);
         Announcement result = announcementService.createAnnouncement(announcement);
+        // Evitar inicializar colecciones LAZY al serializar
+        result.setUsers(null);
         log.info("Anuncio creado con ID {}", result.getId());
         return ResponseEntity.ok(result);
     }
@@ -52,6 +61,8 @@ public class AnnouncementController {
             @RequestBody Announcement announcement) {
         log.info("Recibido request PUT /announcements/{}: {}", id, announcement);
         Announcement result = announcementService.updateAnnouncement(id, announcement);
+        // Evitar inicializar colecciones LAZY al serializar
+        result.setUsers(null);
         log.info("Anuncio actualizado con ID {}", id);
         return ResponseEntity.ok(result);
     }
@@ -70,7 +81,8 @@ public class AnnouncementController {
             @PathVariable int page,
             @PathVariable int size) {
         log.info("Recibido request GET /announcements/type/{}/page/{}/size/{}", type, page, size);
-        Page<Announcement> result = announcementService.getAnnouncementsByType(type, page, size);
+        Page<Announcement> result = announcementService.getAnnouncementsByType(type, page, size)
+                .map(a -> { a.setUsers(null); return a; });
         log.info("Se obtuvieron {} anuncios del tipo {}", result.getTotalElements(), type);
         return ResponseEntity.ok(result);
     }
@@ -81,7 +93,8 @@ public class AnnouncementController {
             @PathVariable int page,
             @PathVariable int size) {
         log.info("Recibido request GET /announcements/audience/{}/page/{}/size/{}", targetAudience, page, size);
-        Page<Announcement> result = announcementService.getAnnouncementsByAudience(targetAudience, page, size);
+        Page<Announcement> result = announcementService.getAnnouncementsByAudience(targetAudience, page, size)
+                .map(a -> { a.setUsers(null); return a; });
         log.info("Se obtuvieron {} anuncios para audiencia {}", result.getTotalElements(), targetAudience);
         return ResponseEntity.ok(result);
     }

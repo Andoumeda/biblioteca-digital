@@ -7,26 +7,23 @@ spring:
   # Descubrimiento automático de microservicios
   cloud:
     gateway:
-      mvc:
-        routes:
-          - id: publication-service
-            uri: lb://publication-service
-            predicates:
-              - Path=/publication-service/**
-            filters:
-              - StripPrefix=1
-          - id: user-profile-service
-            uri: lb://user-profile-service
-            predicates:
-              - Path=/user-profile-service/**
-            filters:
-              - StripPrefix=1
-          - id: book-service
-            uri: lb://book-service
-            predicates:
-              - Path=/book-service/**
-            filters:
-              - StripPrefix=1
+      server:
+        webflux:
+          routes:
+            - id: book-service
+              uri: lb://book-service
+              predicates:
+                - Path=/books/**, /authors/**, /ratings/**
+
+            - id: publication-service
+              uri: lb://publication-service
+              predicates:
+                - Path=/publications/**, /categories/**, /favorites/**
+
+            - id: user-profile-service
+              uri: lb://user-profile-service
+              predicates:
+                - Path=/user-profiles/**, /announcements/**
 
 # Eureka
 eureka:
