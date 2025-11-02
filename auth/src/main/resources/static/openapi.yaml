@@ -1,0 +1,200 @@
+openapi: 3.0.1
+info:
+  title: Biblioteca Digital API
+  version: v1.0
+  description: API Documentation for Biblioteca Digital - Módulo de Seguridad
+
+servers:
+  - url: http://localhost:8088
+    description: Módulo de seguridad (autenticación y gestión de usuarios)
+
+tags:
+  - name: Auth
+    description: Autenticación y gestión de usuarios
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    loginRequestDTO:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: usuario1
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    registerRequestDTO:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          example: usuario1
+        email:
+          type: string
+          format: email
+          example: usuario1@email.com
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    authResponseDTO:
+      type: object
+      required:
+        - tokenType
+        - accessToken
+      properties:
+        tokenType:
+          type: string
+          example: Bearer
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    UserResponseDTO:
+      type: object
+      required:
+        - id
+        - username
+        - email
+        - roles
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: usuario1
+        email:
+          type: string
+          format: email
+          example: usuario1@email.com
+        role:
+          type: string
+          example: "ADMIN"
+
+paths:
+  /auth/login:
+    post:
+      operationId: login
+      summary: Iniciar sesión
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginRequestDTO'
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/authResponseDTO'
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      summary: Registrar nuevo usuario
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registerRequestDTO'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/authResponseDTO'
+
+  /auth/users/{id}:
+    put:
+      operationId: updateUser
+      summary: Actualizar usuario
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registerRequestDTO'
+      responses:
+        '200':
+          description: Usuario actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+
+  /auth/users/{id}/promote:
+    patch:
+      operationId: promoteUser
+      summary: Promueve el usuario a admin
+      tags: [Auth]
+      description: Cambia el rol del usuario a admin. No requiere cuerpo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Usuario promovido a admin
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponseDTO' }
+
+  /auth/users/{id}/demote:
+    patch:
+      operationId: demoteUser
+      summary: Quita el rol admin al usuario
+      tags: [Auth]
+      description: Cambia el rol del usuario a estándar. No requiere cuerpo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Usuario degradado a rol estándar
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponseDTO' }
