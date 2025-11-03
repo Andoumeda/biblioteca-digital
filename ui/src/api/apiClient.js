@@ -29,11 +29,38 @@ const usersApiClient = axios.create({
   timeout: 10000,
 });
 
-// Interceptor para manejar errores globalmente en todos los clientes
+// Interceptor para agregar el token JWT a todas las peticiones
+const requestInterceptor = (config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+};
+
+// Interceptor para manejar errores globalmente
 const errorInterceptor = (error) => {
   console.error('API Error:', error);
+
+  // Si el token ha expirado o no es válido (401), redirigir al login
+  if (error.response?.status === 401) {
+    console.warn('Token expirado o inválido. Redirigiendo al login...');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+
+    // Redirigir al login solo si no estamos ya en esa ruta
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  }
+
   return Promise.reject(error);
 };
+
+// Aplicar interceptores a todos los clientes
+publicationsApiClient.interceptors.request.use(requestInterceptor);
+booksApiClient.interceptors.request.use(requestInterceptor);
+usersApiClient.interceptors.request.use(requestInterceptor);
 
 publicationsApiClient.interceptors.response.use((response) => response, errorInterceptor);
 booksApiClient.interceptors.response.use((response) => response, errorInterceptor);

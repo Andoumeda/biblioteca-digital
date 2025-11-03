@@ -106,7 +106,7 @@
             <div class="user-avatar">
               {{ userInitial }}
             </div>
-            <span class="user-name">{{ currentUserProfile?.displayName || 'Usuario' }}</span>
+            <span class="user-name">{{ displayName }}</span>
             <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
@@ -118,8 +118,8 @@
                 <div class="user-avatar">
                   {{ userInitial }}
                 </div>
-                <p class="user-display-name">{{ currentUserProfile?.displayName || 'Usuario' }}</p>
-                <p class="user-email">{{ currentUserProfile?.user?.username || 'usuario' }}@biblioteca.com</p>
+                <p class="user-display-name">{{ displayName }}</p>
+                <p class="user-email">{{ userEmail }}</p>
               </div>
             </div>
             <div class="dropdown-divider"></div>
@@ -149,19 +149,37 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { announcementsAPI, userProfilesAPI } from '../api/usersService';
-import { CURRENT_USER_PROFILE_ID } from '../utils/constants';
+import { useAuthStore } from '../stores/authStore';
 
 export default {
   name: "Topbar",
   setup() {
     const router = useRouter();
+    const authStore = useAuthStore();
     const showUserMenu = ref(false);
     const showNotifications = ref(false);
     const announcements = ref([]);
     const currentUserProfile = ref(null);
 
     const userInitial = computed(() => {
-      return currentUserProfile.value?.displayName?.[0]?.toUpperCase() || 'U';
+      if (currentUserProfile.value?.displayName) {
+        return currentUserProfile.value.displayName[0].toUpperCase();
+      }
+      if (authStore.displayName) {
+        return authStore.displayName[0].toUpperCase();
+      }
+      if (authStore.currentUsername) {
+        return authStore.currentUsername[0].toUpperCase();
+      }
+      return 'U';
+    });
+
+    const displayName = computed(() => {
+      return currentUserProfile.value?.displayName || authStore.displayName || authStore.currentUsername || 'Usuario';
+    });
+
+    const userEmail = computed(() => {
+      return currentUserProfile.value?.user?.username || authStore.userEmail || 'usuario@biblioteca.com';
     });
 
     const toggleUserMenu = () => {
@@ -176,8 +194,12 @@ export default {
 
     const loadCurrentUser = async () => {
       try {
-        const response = await userProfilesAPI.getProfileById(CURRENT_USER_PROFILE_ID);
-        currentUserProfile.value = response.data;
+        // Usar el userProfileId del token JWT
+        const userProfileId = authStore.currentUserProfileId;
+        if (userProfileId) {
+          const response = await userProfilesAPI.getProfileById(userProfileId);
+          currentUserProfile.value = response.data;
+        }
       } catch (error) {
         console.error('Error loading current user:', error);
         currentUserProfile.value = null;
@@ -197,8 +219,7 @@ export default {
 
     const handleViewAllNotifications = () => {
       showNotifications.value = false;
-      // Navigate to notifications page or show all
-      console.log('Ver todas las notificaciones');
+      router.push('/announcements');
     };
 
     const handleSettings = () => {
@@ -206,8 +227,9 @@ export default {
       router.push('/settings');
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
       showUserMenu.value = false;
+      await authStore.logout();
       router.push('/login');
     };
 
@@ -287,9 +309,10 @@ export default {
       showUserMenu,
       showNotifications,
       userInitial,
+      displayName,
+      userEmail,
       announcements,
       currentUserProfile,
-      CURRENT_USER_PROFILE_ID,
       toggleUserMenu,
       toggleNotifications,
       handleViewAllNotifications,

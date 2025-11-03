@@ -144,9 +144,7 @@
 <script>
 import { ref, h, onMounted, computed } from 'vue';
 import { userProfilesAPI } from '../api/usersService';
-
-// Hardcoded UserProfile ID (por ahora, hasta implementar login)
-const HARDCODED_USER_PROFILE_ID = 1;
+import { useAuthStore } from '../stores/authStore';
 
 // Iconos simples como componentes funcionales
 const UserIcon = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
@@ -166,6 +164,7 @@ const ShieldIcon = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 
 export default {
   name: 'Settings',
   setup() {
+    const authStore = useAuthStore();
     const activeSection = ref('profile');
     const loading = ref(false);
     const currentUserProfile = ref(null);
@@ -194,18 +193,24 @@ export default {
       confirmPassword: ''
     });
 
-    // Cargar datos del UserProfile con ID 1
+    // Cargar datos del UserProfile del usuario autenticado
     const loadUserProfile = async () => {
       loading.value = true;
       try {
-        const response = await userProfilesAPI.getProfileById(HARDCODED_USER_PROFILE_ID);
+        const userProfileId = authStore.currentUserProfileId;
+        if (!userProfileId) {
+          console.error('No hay usuario autenticado');
+          return;
+        }
+
+        const response = await userProfilesAPI.getProfileById(userProfileId);
         currentUserProfile.value = response.data;
 
         // Actualizar los campos del formulario con los datos reales
         userProfile.value = {
           displayName: response.data.displayName || '',
-          username: response.data.user?.username || '',
-          email: response.data.user?.email || '',
+          username: response.data.user?.username || authStore.currentUsername || '',
+          email: response.data.user?.email || authStore.userEmail || '',
           bio: response.data.bio || ''
         };
       } catch (error) {
@@ -229,6 +234,8 @@ export default {
 
       loading.value = true;
       try {
+        const userProfileId = authStore.currentUserProfileId;
+
         // Preparar los datos para la petición PUT según el formato requerido
         const updateData = {
           userId: currentUserProfile.value.user.id, // Mantener el mismo userId
@@ -237,7 +244,7 @@ export default {
           profilePicture: currentUserProfile.value.profilePicture || '' // Mantener la misma foto
         };
 
-        await userProfilesAPI.updateProfile(HARDCODED_USER_PROFILE_ID, updateData);
+        await userProfilesAPI.updateProfile(userProfileId, updateData);
 
         // Recargar el perfil para obtener los datos actualizados
         await loadUserProfile();

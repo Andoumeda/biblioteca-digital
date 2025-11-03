@@ -59,7 +59,63 @@
               </div>
             </div>
 
-            <div class="form-group">
+            <div v-if="!isLogin" class="form-group">
+              <label class="form-label">Nombre de usuario</label>
+              <div class="input-wrapper">
+                <svg
+                  class="input-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <input
+                  v-model="username"
+                  type="text"
+                  placeholder="tu_usuario"
+                  class="form-input with-icon"
+                  required
+                />
+              </div>
+            </div>
+
+            <div v-if="isLogin" class="form-group">
+              <label class="form-label">Nombre de usuario</label>
+              <div class="input-wrapper">
+                <svg
+                  class="input-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <input
+                  v-model="username"
+                  type="text"
+                  placeholder="tu_usuario"
+                  class="form-input with-icon"
+                  required
+                />
+              </div>
+            </div>
+
+            <div v-if="!isLogin" class="form-group">
               <label class="form-label">Correo electrónico</label>
               <div class="input-wrapper">
                 <svg
@@ -107,11 +163,52 @@
                 </svg>
                 <input
                   v-model="password"
-                  type="password"
+                  :type="showPassword ? 'text' : 'password'"
                   placeholder="Tu contraseña"
-                  class="form-input with-icon"
+                  class="form-input with-icon with-toggle"
                   required
                 />
+                <button
+                  type="button"
+                  @click="togglePasswordVisibility"
+                  class="toggle-password-btn"
+                  :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <!-- Icono de ojo abierto -->
+                  <svg
+                    v-if="!showPassword"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <!-- Icono de ojo cerrado/tachado -->
+                  <svg
+                    v-else
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -135,11 +232,52 @@
                 </svg>
                 <input
                   v-model="confirmPassword"
-                  type="password"
+                  :type="showConfirmPassword ? 'text' : 'password'"
                   placeholder="Confirma tu contraseña"
-                  class="form-input with-icon"
+                  class="form-input with-icon with-toggle"
                   required
                 />
+                <button
+                  type="button"
+                  @click="toggleConfirmPasswordVisibility"
+                  class="toggle-password-btn"
+                  :title="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <!-- Icono de ojo abierto -->
+                  <svg
+                    v-if="!showConfirmPassword"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <!-- Icono de ojo cerrado/tachado -->
+                  <svg
+                    v-else
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -167,8 +305,8 @@
               {{ errorMessage }}
             </div>
 
-            <button type="submit" class="submit-button">
-              {{ isLogin ? 'Iniciar Sesión' : 'Crear Cuenta' }}
+            <button type="submit" class="submit-button" :disabled="loading">
+              {{ loading ? 'Procesando...' : (isLogin ? 'Iniciar Sesión' : 'Crear Cuenta') }}
             </button>
           </form>
 
@@ -191,49 +329,107 @@
 </template>
 
 <script>
+import { useAuthStore } from '../stores/authStore';
+
 export default {
   name: 'Login',
   data() {
     return {
       isLogin: true,
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
-      name: '',
-      errorMessage: ''
+      errorMessage: '',
+      loading: false,
+      showPassword: false,
+      showConfirmPassword: false
     }
   },
   methods: {
-    handleSubmit() {
+    async handleSubmit() {
       this.errorMessage = '';
+      this.loading = true;
 
-      // Validar que las contraseñas coincidan en modo registro
-      if (!this.isLogin) {
-        if (this.password !== this.confirmPassword) {
-          this.errorMessage = 'Las contraseñas no coinciden';
-          return;
+      try {
+        // Validar que las contraseñas coincidan en modo registro
+        if (!this.isLogin) {
+          if (this.password !== this.confirmPassword) {
+            this.errorMessage = 'Las contraseñas no coinciden';
+            return;
+          }
+          if (this.password.length < 8) {
+            this.errorMessage = 'La contraseña debe tener al menos 8 caracteres';
+            return;
+          }
+          if (!this.username.trim()) {
+            this.errorMessage = 'El nombre de usuario es requerido';
+            return;
+          }
+          if (!this.email.trim()) {
+            this.errorMessage = 'El email es requerido';
+            return;
+          }
+        } else {
+          // Validaciones para login
+          if (!this.username.trim()) {
+            this.errorMessage = 'El nombre de usuario es requerido';
+            return;
+          }
         }
-        if (this.password.length < 8) {
-          this.errorMessage = 'La contraseña debe tener al menos 8 caracteres';
-          return;
+
+        const authStore = useAuthStore();
+
+        if (this.isLogin) {
+          // Login
+          const result = await authStore.login(this.username, this.password);
+
+          if (result.success) {
+            console.log('Login exitoso:', result.user);
+            this.$router.push('/');
+          } else {
+            this.errorMessage = result.error || 'Error al iniciar sesión';
+          }
+        } else {
+          // Registro
+          const result = await authStore.register({
+            username: this.username,
+            email: this.email,
+            password: this.password
+          });
+
+          if (result.success) {
+            console.log('Registro exitoso:', result.user);
+            this.$router.push('/');
+          } else {
+            this.errorMessage = result.error || 'Error al registrar usuario';
+          }
         }
-        if (!this.name.trim()) {
-          this.errorMessage = 'El nombre completo es requerido';
-          return;
-        }
+      } catch (error) {
+        console.error('Error en submit:', error);
+        this.errorMessage = 'Error de conexión. Inténtalo de nuevo.';
+      } finally {
+        this.loading = false;
       }
-
-      // TODO: Implement real authentication
-      console.log('Login attempt:', { email: this.email, password: this.password, name: this.name });
-      this.$router.push('/');
     },
+
     toggleMode() {
       this.isLogin = !this.isLogin;
+      this.username = '';
       this.email = '';
       this.password = '';
       this.confirmPassword = '';
-      this.name = '';
       this.errorMessage = '';
+      this.showPassword = false;
+      this.showConfirmPassword = false;
+    },
+
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
+
+    toggleConfirmPasswordVisibility() {
+      this.showConfirmPassword = !this.showConfirmPassword;
     }
   }
 }
@@ -351,10 +547,44 @@ export default {
   padding-left: 40px;
 }
 
+.form-input.with-toggle {
+  padding-right: 44px;
+}
+
 .form-input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.toggle-password-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #a0aec0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.toggle-password-btn:hover {
+  color: #667eea;
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.toggle-password-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.toggle-password-btn svg {
+  pointer-events: none;
 }
 
 .forgot-password {
@@ -406,6 +636,12 @@ export default {
 
 .submit-button:hover {
   background: #5568d3;
+}
+
+.submit-button:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .divider {

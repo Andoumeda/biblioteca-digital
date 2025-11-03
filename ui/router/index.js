@@ -13,48 +13,56 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: Login
+    component: Login,
+    meta: { requiresAuth: false }
   },
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: { requiresAuth: true }
   },
   {
     path: '/explore',
     name: 'Explore',
-    component: Explore
+    component: Explore,
+    meta: { requiresAuth: true }
   },
   {
     path: '/moderation',
     name: 'Moderation',
-    component: Moderation
+    component: Moderation,
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/my-library',
     name: 'MyLibrary',
-    component: MyLibrary
+    component: MyLibrary,
+    meta: { requiresAuth: true }
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: Settings
+    component: Settings,
+    meta: { requiresAuth: true }
   },
   {
     path: '/announcements',
     name: 'Announcements',
-    component: Announcements
+    component: Announcements,
+    meta: { requiresAuth: true }
   },
   {
     path: '/announcements/:id',
     name: 'AnnouncementDetail',
-    component: AnnouncementDetail
+    component: AnnouncementDetail,
+    meta: { requiresAuth: true }
   },
   {
     path: '/moderation/announcements/:id',
     name: 'ModerationAnnouncementDetail',
     component: AnnouncementDetail,
-    meta: { fromModeration: true }
+    meta: { fromModeration: true, requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -66,6 +74,45 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+// Navigation guards
+router.beforeEach((to, from, next) => {
+  // Importar dinámicamente para evitar dependencias circulares
+  const token = localStorage.getItem('authToken');
+  const userStr = localStorage.getItem('currentUser');
+
+  let user = null;
+  try {
+    user = userStr ? JSON.parse(userStr) : null;
+  } catch (e) {
+    console.error('Error parsing user from localStorage', e);
+  }
+
+  const isAuthenticated = !!token;
+  const isAdmin = user?.role === 'ADMIN' || false;
+
+  // Si la ruta requiere autenticación
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    console.log('Ruta protegida, redirigiendo al login');
+    next('/login');
+    return;
+  }
+
+  // Si la ruta requiere ser admin
+  if (to.meta.requiresAdmin && !isAdmin) {
+    console.log('Ruta solo para admin, redirigiendo a home');
+    next('/');
+    return;
+  }
+
+  // Si está autenticado y va al login, redirigir a home
+  if (to.path === '/login' && isAuthenticated) {
+    next('/');
+    return;
+  }
+
+  next();
 });
 
 export default router;

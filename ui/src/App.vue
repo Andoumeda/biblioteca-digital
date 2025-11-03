@@ -19,18 +19,25 @@
 <script>
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAuthStore } from './stores/authStore';
 
 export default {
   name: "App",
   components: { Sidebar, Topbar },
   setup() {
     const route = useRoute();
+    const authStore = useAuthStore();
 
     // Ocultar layout en páginas de autenticación
     const showLayout = computed(() => {
       return route.name !== 'Login' && route.name !== 'NotFound';
+    });
+
+    // Inicializar autenticación desde localStorage al cargar la app
+    onMounted(() => {
+      authStore.initializeAuth();
     });
 
     return {

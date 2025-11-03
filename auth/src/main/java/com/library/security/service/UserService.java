@@ -2,6 +2,7 @@ package com.library.security.service;
 
 import com.library.dtos.*;
 import com.library.entities.Role;
+import com.library.entities.UserProfile;
 import com.library.security.exceptions.ForbiddenException;
 import com.library.security.exceptions.NoResourceFoundException;
 import com.library.security.exceptions.ResourceAlreadyExistsException;
@@ -9,6 +10,7 @@ import com.library.security.exceptions.UnauthorizedException;
 import com.library.security.jwt.JwtTokenProvider;
 import com.library.security.repository.RoleRepository;
 import com.library.security.repository.UserRepository;
+import com.library.security.repository.UserProfileRepository;
 import com.library.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +32,9 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private UserProfileRepository userProfileRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -80,16 +86,32 @@ public class UserService {
         user.setIsDeleted(false);
 
         userRepository.save(user);
+
+        // Crear automáticamente el UserProfile asociado
+        UserProfile userProfile = new UserProfile();
+        userProfile.setUser(user);
+        userProfile.setDisplayName(registerRequestDTO.getUsername()); // Usar username como displayName por defecto
+        userProfile.setBio(null); // Sin biografía inicialmente
+        userProfile.setProfilePicture(null); // Sin foto de perfil inicialmente
+        userProfile.setCreatedAt(LocalDateTime.now());
+        userProfile.setUpdatedAt(LocalDateTime.now());
+        userProfile.setIsDeleted(false);
+
+        userProfileRepository.save(userProfile);
+
+        // Establecer la relación bidireccional
+        user.setUserProfile(userProfile);
+
         org.springframework.security.core.userdetails.User springUser =
             new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(),
-                java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
             );
 
         // Generar el token JWT
         UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(springUser, null, springUser.getAuthorities());
-        String jwt = jwtTokenProvider.generateToken(authToken);
+        String jwt = jwtTokenProvider.generateToken(authToken, user.getId(), userProfile.getId());
 
         AuthResponseDTO responseDTO = new AuthResponseDTO();
         responseDTO.setTokenType("Bearer");
@@ -117,15 +139,21 @@ public class UserService {
             throw new UnauthorizedException("Contraseña incorrecta");
         }
 
+        // Obtener el UserProfile asociado al usuario
+        UserProfile userProfile = user.getUserProfile();
+        if (userProfile == null) {
+            throw new NoResourceFoundException("No se encontró el perfil de usuario asociado");
+        }
+
         // Generar el token JWT
         org.springframework.security.core.userdetails.User springUser =
             new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(),
-                java.util.List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
             );
         UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(springUser, null, springUser.getAuthorities());
-        String jwt = jwtTokenProvider.generateToken(authToken);
+        String jwt = jwtTokenProvider.generateToken(authToken, user.getId(), userProfile.getId());
 
         AuthResponseDTO responseDTO = new AuthResponseDTO();
         responseDTO.setTokenType("Bearer");
@@ -135,11 +163,8 @@ public class UserService {
 
     public UserResponseDTO updateUser(Integer id, RegisterRequestDTO registerRequestDTO) {
 
-        if (
-            id == null || id <= 0
-        ) {
+        if (id == null || id <= 0)
             throw new IllegalArgumentException("Id de usuario inválida");
-        }
 
         if (
             registerRequestDTO.getUsername() == null ||
@@ -155,11 +180,12 @@ public class UserService {
         // Obtener el usuario quien realiza la solicitud desde el contexto de seguridad
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String currentUsername;
-        if (principal instanceof UserDetails) {
+
+        if (principal instanceof UserDetails)
             currentUsername = ((UserDetails) principal).getUsername();
-        } else {
+        else
             currentUsername = principal.toString();
-        }
+
         User currentUser = userRepository.findByUsernameAndIsDeletedFalse(currentUsername).orElseThrow(() -> new NoResourceFoundException("El usuario del contexto de seguridad actual no fue encontrado"));
 
         // Verificar permisos del usuario del contexto de seguridad
@@ -203,9 +229,9 @@ public class UserService {
     }
 
     public UserResponseDTO promoteUser(Integer id) {
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Id de debe ser positivo");
-        }
+        if (id == null || id <= 0)
+            throw new IllegalArgumentException("Id del usuario debe ser positivo");
+
         Role role;
         User user = userRepository.findByIdAndIsDeletedFalse(id).orElseThrow(() -> new NoResourceFoundException("Usuario con la id:" + id + " no existe"));
         role = roleRepository.findByNameAndIsDeletedFalse("ADMIN").orElseThrow(() -> new NoResourceFoundException("Rol ADMIN no encontrado"));
@@ -221,9 +247,9 @@ public class UserService {
     }
 
     public UserResponseDTO demoteUser(Integer id) {
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Id de debe ser positivo");
-        }
+        if (id == null || id <= 0)
+            throw new IllegalArgumentException("Id del usuario debe ser positivo");
+
         Role role;
         User user = userRepository.findByIdAndIsDeletedFalse(id).orElseThrow(() -> new NoResourceFoundException("Usuario con la id:" + id + " no existe"));
         role = roleRepository.findByNameAndIsDeletedFalse("USER").orElseThrow(() -> new NoResourceFoundException("Rol USER no encontrado"));

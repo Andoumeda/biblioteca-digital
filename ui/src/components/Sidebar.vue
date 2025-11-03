@@ -21,7 +21,7 @@
         </svg>
         Mi Biblioteca
       </router-link>
-      <router-link to="/moderation" class="nav-link">
+      <router-link v-if="authStore.isAdmin" to="/moderation" class="nav-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
         </svg>
@@ -59,10 +59,12 @@
 <script setup>
 import { useCategories } from '../composables/useCategories';
 import { usePublicationsStore } from '../stores/publicationsStore';
+import { useAuthStore } from '../stores/authStore';
 import { ref } from 'vue';
 
 const { categories, loading, error } = useCategories();
 const store = usePublicationsStore();
+const authStore = useAuthStore();
 const selectedCategory = ref(null);
 
 const selectCategory = async (categoryId) => {
