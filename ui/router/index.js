@@ -79,40 +79,34 @@ const router = createRouter({
 // Navigation guards
 router.beforeEach((to, from, next) => {
   // Importar dinámicamente para evitar dependencias circulares
-  const token = localStorage.getItem('authToken');
-  const userStr = localStorage.getItem('currentUser');
+  import('../src/stores/authStore').then(({ useAuthStore }) => {
+    const authStore = useAuthStore();
 
-  let user = null;
-  try {
-    user = userStr ? JSON.parse(userStr) : null;
-  } catch (e) {
-    console.error('Error parsing user from localStorage', e);
-  }
+    const isAuthenticated = authStore.isAuthenticated;
+    const isAdmin = authStore.isAdmin;
 
-  const isAuthenticated = !!token;
-  const isAdmin = user?.role === 'ADMIN' || false;
+    // Si la ruta requiere autenticación
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      console.log('Ruta protegida, redirigiendo al login');
+      next('/login');
+      return;
+    }
 
-  // Si la ruta requiere autenticación
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    console.log('Ruta protegida, redirigiendo al login');
-    next('/login');
-    return;
-  }
+    // Si la ruta requiere ser admin
+    if (to.meta.requiresAdmin && !isAdmin) {
+      console.log('Ruta sólo para admin, redirigiendo a home');
+      next('/');
+      return;
+    }
 
-  // Si la ruta requiere ser admin
-  if (to.meta.requiresAdmin && !isAdmin) {
-    console.log('Ruta solo para admin, redirigiendo a home');
-    next('/');
-    return;
-  }
+    // Si está autenticado y va al login, redirigir a home
+    if (to.path === '/login' && isAuthenticated) {
+      next('/');
+      return;
+    }
 
-  // Si está autenticado y va al login, redirigir a home
-  if (to.path === '/login' && isAuthenticated) {
-    next('/');
-    return;
-  }
-
-  next();
+    next();
+  });
 });
 
 export default router;
