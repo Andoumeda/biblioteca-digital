@@ -26,10 +26,10 @@ public class JwtTokenProvider {
     public String generateToken(Authentication authentication) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
 
-        // Extraer el rol del usuario (debe tener el formato "ROLE_XXX")
+        // Extraer el rol del usuario
         String role = userPrincipal.getAuthorities().stream()
                 .findFirst()
-                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .map(authority -> authority.getAuthority())
                 .orElse("USER");
 
         return Jwts.builder()
@@ -44,10 +44,10 @@ public class JwtTokenProvider {
     public String generateToken(Authentication authentication, Integer userId) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
 
-        // Extraer el rol del usuario (debe tener el formato "ROLE_XXX")
+        // Extraer el rol del usuario
         String role = userPrincipal.getAuthorities().stream()
                 .findFirst()
-                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .map(authority -> authority.getAuthority())
                 .orElse("USER");
 
         return Jwts.builder()
@@ -63,10 +63,10 @@ public class JwtTokenProvider {
     public String generateToken(Authentication authentication, Integer userId, Integer userProfileId) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
 
-        // Extraer el rol del usuario (debe tener el formato "ROLE_XXX")
+        // Extraer el rol del usuario
         String role = userPrincipal.getAuthorities().stream()
                 .findFirst()
-                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .map(authority -> authority.getAuthority())
                 .orElse("USER");
 
         return Jwts.builder()

@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsernameAndIsDeletedFalse(username)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole().getName());
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().getName());
 
         return new org.springframework.security.core.userdetails.User(
             user.getUsername(),

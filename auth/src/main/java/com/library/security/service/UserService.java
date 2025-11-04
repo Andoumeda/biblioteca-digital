@@ -105,7 +105,7 @@ public class UserService {
         org.springframework.security.core.userdetails.User springUser =
             new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                List.of(new SimpleGrantedAuthority("USER"))
             );
 
         // Generar el token JWT
@@ -149,7 +149,7 @@ public class UserService {
         org.springframework.security.core.userdetails.User springUser =
             new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
+                List.of(new SimpleGrantedAuthority(user.getRole().getName()))
             );
         UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(springUser, null, springUser.getAuthorities());

@@ -44,39 +44,16 @@ public class AuthFilter implements WebFilter {
                 if (jwtUtil.validateToken(token)) {
                     String username = jwtUtil.extractUsername(token);
                     String role = jwtUtil.extractRole(token);
-                    Integer userId = jwtUtil.extractUserId(token);
-                    Integer userProfileId = jwtUtil.extractUserProfileId(token);
 
-                    // Crear authority de Spring Security con el rol (agregar prefijo ROLE_)
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+                    // Crear authority de Spring Security con el rol
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
 
                     // Crear objeto de autenticación
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
 
-                    // Agregar headers para los microservicios
-                    ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate()
-                            .header("X-User-Name", username)
-                            .header("X-User-Role", role);
-
-                    // Agregar userId solo si existe en el token
-                    if (userId != null) {
-                        requestBuilder.header("X-User-Id", userId.toString());
-                    }
-
-                    // Agregar userProfileId solo si existe en el token
-                    if (userProfileId != null) {
-                        requestBuilder.header("X-User-Profile-Id", userProfileId.toString());
-                    }
-
-                    ServerHttpRequest modifiedRequest = requestBuilder.build();
-
-                    ServerWebExchange modifiedExchange = exchange.mutate()
-                            .request(modifiedRequest)
-                            .build();
-
                     // Establecer autenticación en el contexto y continuar
-                    return chain.filter(modifiedExchange)
+                    return chain.filter(exchange)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
                 }
             } catch (ExpiredJwtException e) {

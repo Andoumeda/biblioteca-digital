@@ -5,12 +5,20 @@ import { parseJwt, isTokenExpired } from '../utils/jwtUtils';
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('authToken') || null,
-    user: JSON.parse(localStorage.getItem('currentUser') || 'null'),
+    // No se guarda user en state, siempre se decodifica del token
     loading: false,
     error: null,
   }),
 
   getters: {
+    /**
+     * Decodifica el token actual y retorna el usuario
+     */
+    user: (state) => {
+      if (!state.token) return null;
+      return parseJwt(state.token);
+    },
+
     /**
      * Verifica si el usuario está autenticado
      */
@@ -22,46 +30,58 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Retorna el username del usuario actual
      */
-    currentUsername: (state) => state.user?.sub || null,
+    currentUsername() {
+      return this.user?.sub || null;
+    },
 
     /**
      * Retorna el userId del usuario actual
      */
-    currentUserId: (state) => state.user?.userId || null,
+    currentUserId() {
+      return this.user?.userId || null;
+    },
 
     /**
      * Retorna el userProfileId del usuario actual
      */
-    currentUserProfileId: (state) => state.user?.userProfileId || null,
+    currentUserProfileId() {
+      return this.user?.userProfileId || null;
+    },
 
     /**
      * Retorna el rol del usuario actual
      */
-    userRole: (state) => state.user?.role || null,
+    userRole() {
+      return this.user?.role || null;
+    },
 
     /**
      * Verifica si el usuario tiene rol ADMIN
      */
-    isAdmin: (state) => {
-      return state.user?.role === 'ADMIN';
+    isAdmin() {
+      return this.user?.role === 'ADMIN';
     },
 
     /**
      * Verifica si el usuario tiene rol USER
      */
-    isUser: (state) => {
-      return state.user?.role === 'USER';
+    isUser() {
+      return this.user?.role === 'USER';
     },
 
     /**
      * Retorna el email del usuario (si está en el token)
      */
-    userEmail: (state) => state.user?.email || state.user?.sub || null,
+    userEmail() {
+      return this.user?.email || this.user?.sub || null;
+    },
 
     /**
      * Retorna el display name del usuario (si está en el token)
      */
-    displayName: (state) => state.user?.displayName || state.user?.name || null,
+    displayName() {
+      return this.user?.displayName || this.user?.name || null;
+    },
   },
 
   actions: {
@@ -122,11 +142,12 @@ export const useAuthStore = defineStore('auth', {
      */
     setToken(token) {
       this.token = token;
-      this.user = parseJwt(token);
 
-      // Guardar en localStorage
+      // Solo guardamos el token - el user se decodifica automáticamente del getter
       localStorage.setItem('authToken', token);
-      localStorage.setItem('currentUser', JSON.stringify(this.user));
+
+      // Eliminamos currentUser si existe (migración)
+      localStorage.removeItem('currentUser');
     },
 
     /**
@@ -150,11 +171,10 @@ export const useAuthStore = defineStore('auth', {
      */
     clearAuth() {
       this.token = null;
-      this.user = null;
       this.error = null;
 
       localStorage.removeItem('authToken');
-      localStorage.removeItem('currentUser');
+      localStorage.removeItem('currentUser'); // Por si quedó de versiones anteriores
     },
 
     /**
@@ -174,12 +194,13 @@ export const useAuthStore = defineStore('auth', {
      */
     initializeAuth() {
       const token = localStorage.getItem('authToken');
-      const user = localStorage.getItem('currentUser');
 
-      if (token && user) {
+      if (token) {
         try {
           this.token = token;
-          this.user = JSON.parse(user);
+
+          // Limpiar currentUser si existe (migración de versiones anteriores)
+          localStorage.removeItem('currentUser');
 
           // Verificar si el token está expirado
           return !this.checkTokenExpiration();
