@@ -21,6 +21,7 @@ public class GatewayConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
+            .cors(cors -> cors.disable())  // Deshabilita CORS de Spring Security porque se usa CorsWebFilter
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
