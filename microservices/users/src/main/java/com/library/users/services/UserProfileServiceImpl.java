@@ -68,8 +68,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public UserProfileResponseDTO getProfileById(Integer id) {
         logger.info("Buscando perfil con ID {}", id);
-        UserProfile profile = repository.findById(id)
-                .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
+        UserProfile profile = repository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> {
                     logger.error("No se encontró el perfil con ID {}", id);
                     return new ResourceNotFoundException("UserProfile no encontrado con id " + id);
@@ -80,8 +79,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public List<UserProfileResponseDTO> getAllProfiles() {
         logger.info("Obteniendo todos los perfiles activos");
-        return repository.findAll().stream()
-                .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
+        return repository.findAllByIsDeletedFalse().stream()
                 .map(userProfileMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -89,8 +87,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public UserProfileResponseDTO updateProfile(Integer id, UserProfileRequestDTO dto) {
         logger.info("Actualizando perfil con ID {}", id);
-        UserProfile profile = repository.findById(id)
-                .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
+        UserProfile profile = repository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> {
                     logger.error("Intento de actualizar un perfil inexistente con ID {}", id);
                     return new ResourceNotFoundException("UserProfile no encontrado con id " + id);
@@ -108,15 +105,23 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public void deleteProfile(Integer id) {
         logger.info("Eliminando perfil con ID {}", id);
-        UserProfile profile = repository.findById(id)
-                .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
+        UserProfile profile = repository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> {
                     logger.error("Intento de eliminar un perfil inexistente con ID {}", id);
                     return new ResourceNotFoundException("UserProfile no encontrado con id " + id);
                 });
 
+        // Soft delete del perfil
         profile.setIsDeleted(true);
         repository.save(profile);
-        logger.info("Perfil con ID {} marcado como eliminado", id);
+
+        // Soft delete del usuario relacionado
+        User user = repository.findActiveUserByProfileId(id);
+        if (user != null) {
+            user.setIsDeleted(true);
+            entityManager.merge(user);
+        }
+
+        logger.info("Perfil y usuario con ID {} marcados como eliminados", id);
     }
 }
