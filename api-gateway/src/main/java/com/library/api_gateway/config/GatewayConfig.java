@@ -33,6 +33,7 @@ public class GatewayConfig {
                 .pathMatchers("/swagger-ui.html").permitAll()
                 .pathMatchers("/v3/api-docs/**").permitAll()
                 .pathMatchers("/webjars/**").permitAll()
+                .pathMatchers("/").permitAll()
 
                 // ===== AUTH =====
                 .pathMatchers("/auth/login", "/auth/register").permitAll()
