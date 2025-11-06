@@ -40,6 +40,7 @@ components:
         - username
         - email
         - password
+        - displayName
       properties:
         username:
           type: string
@@ -48,6 +49,37 @@ components:
           type: string
           format: email
           example: usuario1@email.com
+        password:
+          type: string
+          format: password
+          example: "password123"
+        displayName:
+          type: string
+          example: "Usuario Uno"
+          description: Nombre público del usuario
+        bio:
+          type: string
+          example: "Amante de los libros y la tecnología."
+          description: Biografía del usuario (opcional)
+        profilePicture:
+          type: string
+          example: "https://example.com/avatar.jpg"
+          description: URL de la foto de perfil (opcional)
+
+    updateRequestDTO:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          example: usuario1
+        email:
+          type: string
+          format: email
+          example: usuario1@gmail.com
         password:
           type: string
           format: password
@@ -146,7 +178,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/registerRequestDTO'
+              $ref: '#/components/schemas/updateRequestDTO'
       responses:
         '200':
           description: Usuario actualizado exitosamente

@@ -49,14 +49,18 @@ public class UserService {
             registerRequestDTO.getUsername() == null ||
             registerRequestDTO.getEmail() == null ||
             registerRequestDTO.getPassword() == null ||
+            registerRequestDTO.getDisplayName() == null ||
+            registerRequestDTO.getBio() == null ||
+            registerRequestDTO.getProfilePicture() == null ||
             registerRequestDTO.getUsername().isEmpty() ||
             registerRequestDTO.getEmail().isEmpty() ||
-            registerRequestDTO.getPassword().isEmpty()
+            registerRequestDTO.getPassword().isEmpty() ||
+            registerRequestDTO.getDisplayName().isEmpty()
         ) {
-            throw new IllegalArgumentException("Usuario, email y contraseña son obligatorios");
+            throw new IllegalArgumentException("Usuario, nombre completo, email y contraseña son obligatorios");
         }
 
-        // Verificar si el nombre de usuario
+        // Verificar si el nombre de usuario ya existe
         if (userRepository.findByUsernameAndIsDeletedFalse(registerRequestDTO.getUsername()).isPresent()) {
             throw new ResourceAlreadyExistsException("El usuario: " + registerRequestDTO.getUsername() + " está en uso");
         }
@@ -90,9 +94,9 @@ public class UserService {
         // Crear automáticamente el UserProfile asociado
         UserProfile userProfile = new UserProfile();
         userProfile.setUser(user);
-        userProfile.setDisplayName(registerRequestDTO.getUsername()); // Usar username como displayName por defecto
-        userProfile.setBio(null); // Sin biografía inicialmente
-        userProfile.setProfilePicture(null); // Sin foto de perfil inicialmente
+        userProfile.setDisplayName(registerRequestDTO.getDisplayName());
+        userProfile.setBio(registerRequestDTO.getBio());
+        userProfile.setProfilePicture(registerRequestDTO.getProfilePicture());
         userProfile.setCreatedAt(LocalDateTime.now());
         userProfile.setUpdatedAt(LocalDateTime.now());
         userProfile.setIsDeleted(false);
@@ -161,18 +165,18 @@ public class UserService {
         return responseDTO;
     }
 
-    public UserResponseDTO updateUser(Integer id, RegisterRequestDTO registerRequestDTO) {
+    public UserResponseDTO updateUser(Integer id, UpdateRequestDTO updateRequestDTO) {
 
         if (id == null || id <= 0)
             throw new IllegalArgumentException("Id de usuario inválida");
 
         if (
-            registerRequestDTO.getUsername() == null ||
-            registerRequestDTO.getEmail() == null ||
-            registerRequestDTO.getPassword() == null ||
-            registerRequestDTO.getUsername().isEmpty() ||
-            registerRequestDTO.getEmail().isEmpty() ||
-            registerRequestDTO.getPassword().isEmpty()
+            updateRequestDTO.getUsername() == null ||
+            updateRequestDTO.getEmail() == null ||
+            updateRequestDTO.getPassword() == null ||
+            updateRequestDTO.getUsername().isEmpty() ||
+            updateRequestDTO.getEmail().isEmpty() ||
+            updateRequestDTO.getPassword().isEmpty()
         ) {
             throw new IllegalArgumentException("Usuario, email y contraseña son obligatorios");
         }
@@ -201,23 +205,23 @@ public class UserService {
 
         // Verificar si el nuevo nombre de usuario ya existe
         if (
-            !user.getUsername().equals(registerRequestDTO.getUsername()) &&
-            userRepository.findByUsernameAndIsDeletedFalse(registerRequestDTO.getUsername()).isPresent()
+            !user.getUsername().equals(updateRequestDTO.getUsername()) &&
+            userRepository.findByUsernameAndIsDeletedFalse(updateRequestDTO.getUsername()).isPresent()
         ){
-            throw new ResourceAlreadyExistsException("El usuario: " + registerRequestDTO.getUsername() + " está en uso");
+            throw new ResourceAlreadyExistsException("El usuario: " + updateRequestDTO.getUsername() + " está en uso");
         }
 
         // Verificar si el nuevo email ya existe
          if (
-            !user.getEmail().equals(registerRequestDTO.getEmail()) &&
-            userRepository.findByEmailAndIsDeletedFalse(registerRequestDTO.getEmail()).isPresent()
+            !user.getEmail().equals(updateRequestDTO.getEmail()) &&
+            userRepository.findByEmailAndIsDeletedFalse(updateRequestDTO.getEmail()).isPresent()
          ){
-             throw new ResourceAlreadyExistsException("Email: " + registerRequestDTO.getEmail() + " ya está en uso");
+             throw new ResourceAlreadyExistsException("Email: " + updateRequestDTO.getEmail() + " ya está en uso");
         }
 
-        user.setUsername(registerRequestDTO.getUsername());
-        user.setEmail(registerRequestDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+        user.setUsername(updateRequestDTO.getUsername());
+        user.setEmail(updateRequestDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(updateRequestDTO.getPassword()));
         userRepository.save(user);
 
         UserResponseDTO responseDTO = new UserResponseDTO();

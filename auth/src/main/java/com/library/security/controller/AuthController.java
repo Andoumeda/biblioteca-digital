@@ -29,8 +29,8 @@ public class AuthController implements AuthApi {
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
-    public ResponseEntity<UserResponseDTO> updateUser(Integer id, RegisterRequestDTO registerRequestDTO) {
-        UserResponseDTO response = userService.updateUser(id, registerRequestDTO);
+    public ResponseEntity<UserResponseDTO> updateUser(Integer id, UpdateRequestDTO updateRequestDTO) {
+        UserResponseDTO response = userService.updateUser(id, updateRequestDTO);
         return ResponseEntity.ok(response);
     }
 
