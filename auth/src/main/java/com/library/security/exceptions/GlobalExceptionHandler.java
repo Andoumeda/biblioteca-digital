@@ -32,15 +32,6 @@ public class GlobalExceptionHandler {
         return error;
     }
 
-    @ExceptionHandler(TokenExpiredException.class)
-    @ResponseBody
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Map<String, String> handleTokenExpiredException(TokenExpiredException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("error", ex.getMessage());
-        return error;
-    }
-
     @ExceptionHandler(ForbiddenException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -83,16 +74,5 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
         return error;
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        for (org.springframework.validation.FieldError error : ex.getBindingResult().getFieldErrors()) {
-            errors.put(error.getField(), error.getDefaultMessage());
-        }
-        return errors;
     }
 }

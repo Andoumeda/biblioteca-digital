@@ -20,11 +20,6 @@ import com.library.security.jwt.JwtAuthenticationEntryPoint;
 public class SecurityConfig {
 
     @Bean
-    public com.library.security.jwt.JwtAccessDeniedHandler jwtAccessDeniedHandler() {
-        return new com.library.security.jwt.JwtAccessDeniedHandler();
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
