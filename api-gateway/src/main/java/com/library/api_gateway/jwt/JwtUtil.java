@@ -1,6 +1,7 @@
-package com.library.api_gateway.util;
+package com.library.api_gateway.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,25 +39,17 @@ public class JwtUtil {
         return claims.get("role", String.class);
     }
 
-    public Integer extractUserId(String token) {
-        Claims claims = extractAllClaims(token);
-        return claims.get("userId", Integer.class);
-    }
-
-    public Integer extractUserProfileId(String token) {
-        Claims claims = extractAllClaims(token);
-        return claims.get("userProfileId", Integer.class);
-    }
-
     public boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
-    }
-
-    public boolean validateToken(String token) {
         try {
-            return !isTokenExpired(token);
-        } catch (Exception e) {
-            return false;
+            Date expiration = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration();
+            return expiration.before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
         }
     }
 }

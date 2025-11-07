@@ -1,15 +1,11 @@
 package com.library.api_gateway.filter;
 
-import com.library.api_gateway.util.JwtUtil;
+import com.library.api_gateway.jwt.JwtUtil;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -33,45 +29,55 @@ public class AuthFilter implements WebFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    private boolean isPublicPath(ServerWebExchange exchange) {
+        String path = exchange.getRequest().getPath().value().toLowerCase();
+        return path.startsWith("/swagger") ||
+               path.startsWith("/swagger-ui") ||
+               path.startsWith("/v3/api-docs") ||
+               path.equals("/openapi.yaml") ||
+               path.equals("/") ||
+               path.equals("/auth/login") ||
+               path.equals("/auth/register");
+    }
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            try {
-                if (jwtUtil.validateToken(token)) {
-                    String username = jwtUtil.extractUsername(token);
-                    String role = jwtUtil.extractRole(token);
-
-                    // Crear authority de Spring Security con el rol
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
-
-                    // Crear objeto de autenticación
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
-
-                    // Establecer autenticación en el contexto y continuar
-                    return chain.filter(exchange)
-                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
-                }
-            } catch (ExpiredJwtException e) {
-                logger.warn("Token JWT expirado: {}", e.getMessage());
-            } catch (SignatureException e) {
-                logger.error("Token JWT con firma inválida: {}", e.getMessage());
-            } catch (MalformedJwtException e) {
-                logger.warn("Token JWT malformado: {}", e.getMessage());
-            } catch (IllegalArgumentException e) {
-                logger.debug("Token JWT inválido (vacío o nulo): {}", e.getMessage());
-            } catch (Exception e) {
-                logger.error("Error inesperado al procesar token JWT: {}", e.getMessage(), e);
-            }
+        if (isPublicPath(exchange)) {
+            return chain.filter(exchange);
         }
 
-        // Si no hay token válido, continuar sin autenticación
-        // Spring Security manejará automáticamente el 401 Unauthorized
-        // para rutas que requieren autenticación
-        return chain.filter(exchange);
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warn("Petición sin token JWT. Respondiendo 401 con JSON.");
+            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+            byte[] bytes = "{\"error\": \"No autorizado\"}".getBytes();
+            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(bytes)));
+        }
+
+        String token = authHeader.substring(7);
+
+        if (!jwtUtil.isTokenExpired(token)) {
+            String username = jwtUtil.extractUsername(token);
+            String role = jwtUtil.extractRole(token);
+
+            // Crear authority de Spring Security con el rol
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+
+            // Crear objeto de autenticación
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
+
+            // Establecer autenticación en el contexto y continuar
+            return chain.filter(exchange)
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
+        } else {
+            logger.warn("Token JWT expirado. Respondiendo 401 con JSON.");
+            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+            byte[] bytes = "{\"error\": \"Token expirado\"}".getBytes();
+            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(bytes)));
+        }
     }
 }

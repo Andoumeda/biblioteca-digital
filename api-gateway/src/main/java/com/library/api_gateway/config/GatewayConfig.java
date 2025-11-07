@@ -2,6 +2,8 @@ package com.library.api_gateway.config;
 
 import com.library.api_gateway.filter.AuthFilter;
 
+import com.library.api_gateway.jwt.JwtAccessDeniedHandler;
+import com.library.api_gateway.jwt.JwtAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,10 +20,16 @@ public class GatewayConfig {
     @Autowired
     private AuthFilter authFilter;
 
+    @Autowired
+    private JwtAuthenticationEntryPoint authenticationEntryPoint;
+
+    @Autowired
+    private JwtAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-            .cors(cors -> cors.disable())  // Deshabilita CORS de Spring Security porque se usa CorsWebFilter
+            .cors(cors -> cors.disable())
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
@@ -93,6 +101,11 @@ public class GatewayConfig {
                 .anyExchange().authenticated()
             )
 
+            // Manejo de errores personalizado
+            .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
+            )
             // Agregar el filtro JWT personalizado
             .addFilterAt(authFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .build();
