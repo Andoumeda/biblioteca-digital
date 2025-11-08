@@ -28,21 +28,21 @@ public class AuthController implements AuthApi {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<UserResponseDTO> updateUser(Integer id, UpdateRequestDTO updateRequestDTO) {
         UserResponseDTO response = userService.updateUser(id, updateRequestDTO);
         return ResponseEntity.ok(response);
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> promoteUser(Integer id) {
         UserResponseDTO response = userService.promoteUser(id);
         return ResponseEntity.ok(response);
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> demoteUser(Integer id) {
         UserResponseDTO response = userService.demoteUser(id);
         return ResponseEntity.ok(response);

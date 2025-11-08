@@ -63,7 +63,7 @@ public class AuthFilter implements WebFilter {
             String role = jwtUtil.extractRole(token);
 
             // Crear authority de Spring Security con el rol
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
             // Crear objeto de autenticación
             UsernamePasswordAuthenticationToken authentication =

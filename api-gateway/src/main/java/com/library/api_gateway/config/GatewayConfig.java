@@ -45,57 +45,57 @@ public class GatewayConfig {
 
                 // ===== AUTH =====
                 .pathMatchers("/auth/login", "/auth/register").permitAll()
-                .pathMatchers(HttpMethod.PUT, "/auth/users/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PATCH, "/auth/users/*/promote").hasAuthority("ADMIN")
-                .pathMatchers(HttpMethod.PATCH, "/auth/users/*/demote").hasAuthority("ADMIN")
+                .pathMatchers(HttpMethod.PUT, "/auth/users/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PATCH, "/auth/users/*/promote").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.PATCH, "/auth/users/*/demote").hasRole("ADMIN")
 
                 // ===== USER PROFILES =====
-                .pathMatchers(HttpMethod.POST, "/user-profiles").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.GET, "/user-profiles", "/user-profiles/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/user-profiles/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.DELETE, "/user-profiles/**").hasAnyAuthority("ADMIN", "USER")
+                .pathMatchers(HttpMethod.POST, "/user-profiles").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.GET, "/user-profiles", "/user-profiles/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/user-profiles/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.DELETE, "/user-profiles/**").hasAnyRole("ADMIN", "USER")
 
                 // ===== ANNOUNCEMENTS =====
-                .pathMatchers(HttpMethod.POST, "/announcements").hasAuthority("ADMIN")
-                .pathMatchers(HttpMethod.GET, "/announcements", "/announcements/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/announcements/**").hasAuthority("ADMIN")
-                .pathMatchers(HttpMethod.DELETE, "/announcements/**").hasAuthority("ADMIN")
+                .pathMatchers(HttpMethod.POST, "/announcements").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.GET, "/announcements", "/announcements/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/announcements/**").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.DELETE, "/announcements/**").hasRole("ADMIN")
 
                 // ===== PUBLICATIONS =====
-                .pathMatchers(HttpMethod.POST, "/publications").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.GET, "/publications", "/publications/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/publications/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.DELETE, "/publications/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PATCH, "/publications/*/state").hasAuthority("ADMIN")
+                .pathMatchers(HttpMethod.POST, "/publications").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.GET, "/publications", "/publications/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/publications/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.DELETE, "/publications/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PATCH, "/publications/*/state").hasRole("ADMIN")
 
                 // ===== CATEGORIES =====
-                .pathMatchers(HttpMethod.POST, "/categories").hasAuthority("ADMIN")
-                .pathMatchers(HttpMethod.GET, "/categories", "/categories/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/categories/**").hasAuthority("ADMIN")
-                .pathMatchers(HttpMethod.DELETE, "/categories/**").hasAuthority("ADMIN")
+                .pathMatchers(HttpMethod.POST, "/categories").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.GET, "/categories", "/categories/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
 
                 // ===== FAVORITES =====
-                .pathMatchers(HttpMethod.POST, "/favorites").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.GET, "/favorites", "/favorites/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.DELETE, "/favorites/**").hasAnyAuthority("ADMIN", "USER")
+                .pathMatchers(HttpMethod.POST, "/favorites").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.GET, "/favorites", "/favorites/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.DELETE, "/favorites/**").hasAnyRole("ADMIN", "USER")
 
                 // ===== BOOKS =====
-                .pathMatchers(HttpMethod.POST, "/books").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.GET, "/books", "/books/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/books/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.DELETE, "/books/**").hasAnyAuthority("ADMIN", "USER")
+                .pathMatchers(HttpMethod.POST, "/books").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.GET, "/books", "/books/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/books/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.DELETE, "/books/**").hasAnyRole("ADMIN", "USER")
 
                 // ===== AUTHORS =====
-                .pathMatchers(HttpMethod.POST, "/authors").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.GET, "/authors", "/authors/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/authors/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.DELETE, "/authors/**").hasAnyAuthority("ADMIN", "USER")
+                .pathMatchers(HttpMethod.POST, "/authors").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.GET, "/authors", "/authors/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/authors/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.DELETE, "/authors/**").hasAnyRole("ADMIN", "USER")
 
                 // ===== RATINGS =====
-                .pathMatchers(HttpMethod.POST, "/ratings").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.GET, "/ratings", "/ratings/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.PUT, "/ratings/**").hasAnyAuthority("ADMIN", "USER")
-                .pathMatchers(HttpMethod.DELETE, "/ratings/**").hasAnyAuthority("ADMIN", "USER")
+                .pathMatchers(HttpMethod.POST, "/ratings").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.GET, "/ratings", "/ratings/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.PUT, "/ratings/**").hasAnyRole("ADMIN", "USER")
+                .pathMatchers(HttpMethod.DELETE, "/ratings/**").hasAnyRole("ADMIN", "USER")
 
                 // ===== POR DEFECTO - Requiere autenticación =====
                 .anyExchange().authenticated()
