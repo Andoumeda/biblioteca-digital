@@ -54,4 +54,3 @@ springdoc:
 # JWT (token secret key)
 jwt:
   secret: ${SECURITY_KEY}
-  expiration: 600000
