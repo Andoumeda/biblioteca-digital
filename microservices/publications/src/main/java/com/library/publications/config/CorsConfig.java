@@ -32,7 +32,8 @@ public class CorsConfig {
         // Exponer headers
         config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
-        source.registerCorsConfiguration("/**", config);
+        // Solo habilitar CORS para el endpoint de documentación
+        source.registerCorsConfiguration("/openapi.yaml", config);
         return new CorsFilter(source);
     }
 }
