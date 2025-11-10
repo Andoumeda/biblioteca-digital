@@ -36,12 +36,4 @@ public class Publication extends BaseEntity {
 
     @OneToMany(mappedBy = "publication")
     private List<Favorite> favorites;
-
-    @ManyToMany
-    @JoinTable(
-            name = "publication_categories",
-            joinColumns = @JoinColumn(name = "publication_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private List<Category> categories;
 }

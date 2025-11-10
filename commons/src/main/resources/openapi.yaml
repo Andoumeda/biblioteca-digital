@@ -367,6 +367,95 @@ components:
         - $ref: '#/components/schemas/RatingRequestDTO'
         - type: object
 
+    ProfileAnnouncementRequestDTO:
+      type: object
+      required:
+        - programatedDate
+        - isRead
+        - idProfile
+        - idAnnouncement
+      properties:
+        programatedDate:
+          type: string
+          format: date-time
+          description: Fecha programada del anuncio para el perfil
+        isRead:
+          type: boolean
+          description: Indica si el anuncio fue leído por el perfil
+        profileId:
+          type: integer
+          format: int32
+          description: ID del perfil de usuario
+        announcementId:
+          type: integer
+          format: int32
+          description: ID del anuncio
+
+    ProfileAnnouncementResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/ProfileAnnouncementRequestDTO'
+        - type: object
+
+    PublicationCategoryRequestDTO:
+      type: object
+      required:
+        - relevanceLevel
+        - idPublication
+        - idCategory
+      properties:
+        relevanceScore:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+          description: Puntaje de la relevancia que tiene la categoría para la publicación
+        publicationId:
+          type: integer
+          format: int32
+          description: ID de la publicación
+        categoryId:
+          type: integer
+          format: int32
+          description: ID de la categoría
+
+    PublicationCategoryResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/PublicationCategoryRequestDTO'
+        - type: object
+
+    BookAuthorRequestDTO:
+      type: object
+      required:
+        - contributionType
+        - idBook
+        - idAuthor
+      properties:
+        contributionType:
+          type: string
+          enum:
+            - principal
+            - coautor
+            - editor
+            - traductor
+            - Illustrator
+          description: Tipo de contribución del autor
+        bookId:
+          type: integer
+          format: int32
+          description: ID del libro
+        authorId:
+          type: integer
+          format: int32
+          description: ID del autor
+
+    BookAuthorResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseDTO'
+        - $ref: '#/components/schemas/BookAuthorRequestDTO'
+        - type: object
+
     PaginatedResponseDTO:
       type: object
       properties:

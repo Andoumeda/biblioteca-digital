@@ -25,7 +25,4 @@ public class Author extends BaseEntity {
 
     @Column(length = 100)
     private String nationality;
-
-    @ManyToMany(mappedBy = "authors", fetch = FetchType.LAZY)
-    private List<Book> books;
 }

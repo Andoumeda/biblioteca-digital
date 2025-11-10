@@ -35,7 +35,4 @@ public class UserProfile extends BaseEntity {
 
     @OneToMany(mappedBy = "userProfile")
     private List<Favorite> favorites;
-
-    @ManyToMany(mappedBy = "users")
-    private List<Announcement> announcements;
 }

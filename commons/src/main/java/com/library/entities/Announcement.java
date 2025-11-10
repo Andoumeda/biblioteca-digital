@@ -34,12 +34,4 @@ public class Announcement extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TargetAudience targetAudience;
-
-    @ManyToMany
-    @JoinTable(
-            name = "announcement_user_profiles",
-            joinColumns = @JoinColumn(name = "announcement_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_profile_id")
-    )
-    private List<UserProfile> users;
 }

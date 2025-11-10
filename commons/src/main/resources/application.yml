@@ -37,5 +37,4 @@ spring:
   # ===============================
   liquibase:
     # Liquibase se usará para manejar migraciones de la BD
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: false
