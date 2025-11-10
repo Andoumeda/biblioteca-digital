@@ -29,6 +29,35 @@ spring:
               predicates:
                 - Path=/user-profiles/**, /announcements/**
 
+            # Rutas genéricas para archivos OpenAPI
+            - id: security-openapi
+              uri: lb://security-service
+              predicates:
+                - Path=/security-openapi/**
+              filters:
+                - SetPath=/openapi.yaml
+
+            - id: user-profile-openapi
+              uri: lb://user-profile-service
+              predicates:
+                - Path=/user-profile-openapi/**
+              filters:
+                - SetPath=/openapi.yaml
+
+            - id: publication-openapi
+              uri: lb://publication-service
+              predicates:
+                - Path=/publication-openapi/**
+              filters:
+                - SetPath=/openapi.yaml
+
+            - id: book-openapi
+              uri: lb://book-service
+              predicates:
+                - Path=/book-openapi/**
+              filters:
+                - SetPath=/openapi.yaml
+
 # Eureka
 eureka:
   client:
@@ -41,14 +70,14 @@ eureka:
 springdoc:
   swagger-ui:
     urls:
-      - name: security-service (8088)
-        url: http://localhost:8088/openapi.yaml
-      - name: user-profile-service (8081)
-        url: http://localhost:8081/openapi.yaml
-      - name: publication-service (8082)
-        url: http://localhost:8082/openapi.yaml
-      - name: book-service (8083)
-        url: http://localhost:8083/openapi.yaml
+      - name: security-service
+        url: /security-openapi/openapi.yaml
+      - name: user-profile-service
+        url: /user-profile-openapi/openapi.yaml
+      - name: publication-service
+        url: /publication-openapi/openapi.yaml
+      - name: book-service
+        url: /book-openapi/openapi.yaml
     path: /swagger
 
 # JWT (token secret key)

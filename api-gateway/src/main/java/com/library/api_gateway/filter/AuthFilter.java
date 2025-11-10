@@ -35,6 +35,12 @@ public class AuthFilter implements WebFilter {
                path.startsWith("/swagger-ui") ||
                path.startsWith("/v3/api-docs") ||
                path.equals("/openapi.yaml") ||
+               // Rutas genéricas para OpenAPI de microservicios a través del Gateway
+               path.startsWith("/security-openapi") ||
+               path.startsWith("/user-profile-openapi") ||
+               path.startsWith("/publication-openapi") ||
+               path.startsWith("/book-openapi") ||
+               // Endpoints públicos de auth
                path.equals("/") ||
                path.equals("/auth/login") ||
                path.equals("/auth/register");
@@ -42,9 +48,8 @@ public class AuthFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (isPublicPath(exchange)) {
+        if (isPublicPath(exchange))
             return chain.filter(exchange);
-        }
 
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
