@@ -1,7 +1,6 @@
 package com.library.api_gateway.config;
 
 import com.library.api_gateway.filter.AuthFilter;
-
 import com.library.api_gateway.jwt.JwtAccessDeniedHandler;
 import com.library.api_gateway.jwt.JwtAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +28,9 @@ public class GatewayConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-            .cors(cors -> cors.disable())
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-
             .authorizeExchange(exchanges -> exchanges
                 // ===== RUTAS PÚBLICAS =====
                 .pathMatchers("/swagger/**").permitAll()
@@ -42,6 +39,11 @@ public class GatewayConfig {
                 .pathMatchers("/v3/api-docs/**").permitAll()
                 .pathMatchers("/webjars/**").permitAll()
                 .pathMatchers("/").permitAll()
+                // Rutas genéricas para OpenAPI de microservicios
+                .pathMatchers("/security-openapi/**").permitAll()
+                .pathMatchers("/user-profile-openapi/**").permitAll()
+                .pathMatchers("/publication-openapi/**").permitAll()
+                .pathMatchers("/book-openapi/**").permitAll()
 
                 // ===== AUTH =====
                 .pathMatchers("/auth/login", "/auth/register").permitAll()
