@@ -269,7 +269,7 @@
                 <executions>
                     <execution>
                         <id>delete-models-directory</id>
-                        <phase>install</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
