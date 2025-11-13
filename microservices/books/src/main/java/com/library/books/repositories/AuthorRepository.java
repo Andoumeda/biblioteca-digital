@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface AuthorRepository extends JpaRepository<Author, Integer> {
 
+    boolean existsByIdAndIsDeletedFalse(Integer authorId);
+
     /**
      * Buscar autor por ID que no esté eliminado
      */
@@ -22,12 +24,11 @@ public interface AuthorRepository extends JpaRepository<Author, Integer> {
     /**
      * Buscar autores por múltiples filtros (nombre, rango de fechas, nacionalidad, y opcionalmente libro)
      */
-    @Query("SELECT DISTINCT a FROM Author a LEFT JOIN a.books b WHERE " +
+    @Query("SELECT DISTINCT a FROM Author a WHERE " +
             "(:fullName IS NULL OR LOWER(a.fullName) LIKE LOWER(CONCAT('%', CAST(:fullName AS string), '%'))) AND " +
             "(:minDate IS NULL OR a.birthDate >= :minDate) AND " +
             "(:maxDate IS NULL OR a.birthDate <= :maxDate) AND " +
             "(:nationality IS NULL OR LOWER(a.nationality) LIKE LOWER(CONCAT('%', CAST(:nationality AS string), '%'))) AND " +
-            "(:bookId IS NULL OR b.id = :bookId) AND " +
             "a.isDeleted = false")
     Page<Author> findByFilters(
             @Param("bookId") Integer bookId,

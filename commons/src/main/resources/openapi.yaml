@@ -261,7 +261,6 @@ components:
         - bookUrl
         - numPages
         - fileSize
-        - authorIds
       properties:
         publicationId:
           type: integer
@@ -282,12 +281,6 @@ components:
           type: string
           maxLength: 255
           description: URL de la imagen de portada
-        authorIds:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: IDs de los autores del libro
 
     BookResponseDTO:
       allOf:
@@ -435,11 +428,11 @@ components:
         contributionType:
           type: string
           enum:
-            - principal
-            - coautor
-            - editor
-            - traductor
-            - Illustrator
+            - PRINCIPAL
+            - COAUTHOR
+            - EDITOR
+            - TRADUCTOR
+            - ILLUSTRATOR
           description: Tipo de contribución del autor
         bookId:
           type: integer
@@ -455,6 +448,11 @@ components:
         - $ref: '#/components/schemas/BaseDTO'
         - $ref: '#/components/schemas/BookAuthorRequestDTO'
         - type: object
+          properties:
+            author:
+              $ref: '#/components/schemas/AuthorResponseDTO'
+            book:
+              $ref: '#/components/schemas/BookResponseDTO'
 
     PaginatedResponseDTO:
       type: object
@@ -559,6 +557,16 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/RatingResponseDTO'
+
+    PaginatedBookAuthorResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/BookAuthorResponseDTO'
 
     PaginatedUserResponseDTO:
       allOf:

@@ -3,7 +3,6 @@ package com.library.books.services;
 import com.library.books.mappers.BookMapper;
 import com.library.books.utils.NormalizeParameter;
 import com.library.dtos.*;
-import com.library.entities.Author;
 import com.library.entities.Book;
 import com.library.books.repositories.BookRepository;
 import com.library.books.repositories.AuthorRepository;
@@ -40,7 +39,6 @@ public class BookService {
      */
     public BookResponseDTO createBook(BookRequestDTO requestDTO) {
         Publication publication;
-        List<Author> authors = new java.util.ArrayList<>();
 
         log.info("Creando nuevo libro: {}", requestDTO.getTitle());
 
@@ -75,44 +73,12 @@ public class BookService {
                 return new ResourceNotFoundException("Publicación", "id", requestDTO.getPublicationId());
             });
 
-        // Las ids de autores son obligatorias y deben existir en la DB
-        if (requestDTO.getAuthorIds() == null || requestDTO.getAuthorIds().isEmpty()) {
-            log.error("Error al crear libro: No se asoció ningún autor");
-            throw new BadRequestException("Debe asociar al menos un autor al libro");
-        }
-        for (Integer authorId : requestDTO.getAuthorIds()) {
-            if (authorId == null || authorId <= 0) {
-                log.error("Error al crear libro: ID de autor inválido: {}", authorId);
-                throw new BadRequestException("El ID de autor debe ser un número positivo");
-            }
-
-            // Usar AuthorRepository para obtener el autor
-            Author author = authorRepository.findByIdAndIsDeletedFalse(authorId)
-                    .orElseThrow(() -> {
-                        log.error("Error al crear libro: Autor no encontrado con ID: {}", authorId);
-                        return new ResourceNotFoundException("Autor", "id", authorId);
-                    });
-
-            authors.add(author);
-        }
-
-        // Verificar que los autores no estén repetidos
-        List<Integer> distinctAuthorIds = authors.stream()
-                .map(Author::getId)
-                .distinct()
-                .toList();
-        if (distinctAuthorIds.size() < authors.size()) {
-            log.error("Error al crear libro: Se intentaron asociar autores repetidos");
-            throw new BadRequestException("No se pueden asociar autores repetidos al libro");
-        }
-
         Book book = new Book();
         book.setPublication(publication);
         book.setTitle(requestDTO.getTitle());
         book.setDescription(requestDTO.getDescription());
         book.setBookUrl(requestDTO.getBookUrl());
         book.setCoverImg(requestDTO.getCoverImg());
-        book.setAuthors(authors);
         book.setRatings(null);
         book.setCreatedAt(LocalDateTime.now());
         book.setUpdatedAt(LocalDateTime.now());
@@ -202,7 +168,6 @@ public class BookService {
      */
     public BookResponseDTO updateBook(Integer id, BookRequestDTO requestDTO) {
         Publication publication;
-        List<Author> authors = new java.util.ArrayList<>();
 
         log.info("Actualizando libro con ID: {}", id);
 
@@ -250,44 +215,11 @@ public class BookService {
             throw new BadRequestException("La url de portada del libro es obligatorio");
         }
 
-        // Id de autores obligatorios
-        if (requestDTO.getAuthorIds() == null || requestDTO.getAuthorIds().isEmpty()) {
-            log.error("Error al actualizar libro: No se asoció ningún autor");
-            throw new BadRequestException("Debe asociar al menos un autor al libro");
-        }
-        for (Integer authorId : requestDTO.getAuthorIds()) {
-            // Validar que la id sea positiva
-            if (authorId == null || authorId <= 0) {
-                log.error("Error al actualizar libro: ID de autor inválido: {}", authorId);
-                throw new BadRequestException("El ID de autor debe ser un número positivo");
-            }
-
-            // Usar AuthorRepository para obtener el autor
-            Author author = authorRepository.findByIdAndIsDeletedFalse(authorId)
-                    .orElseThrow(() -> {
-                        log.error("Error al actualizar libro: Autor no encontrado con ID: {}", authorId);
-                        return new BadRequestException("El autor con ID " + authorId + " no existe");
-                    });
-
-            authors.add(author);
-        }
-
-        // Verificar que los autores no estén repetidos
-        List<Integer> distinctAuthorIds = authors.stream()
-                .map(Author::getId)
-                .distinct()
-                .toList();
-        if (distinctAuthorIds.size() < authors.size()) {
-            log.error("Error al actualizar libro: Se intentaron asociar autores repetidos");
-            throw new BadRequestException("No se pueden asociar autores repetidos al libro");
-        }
-
         book.setPublication(publication);
         book.setTitle(requestDTO.getTitle());
         book.setDescription(requestDTO.getDescription());
         book.setBookUrl(requestDTO.getBookUrl());
         book.setCoverImg(requestDTO.getCoverImg());
-        book.setAuthors(authors);
         book.setUpdatedAt(LocalDateTime.now());
 
         Book updatedBook = bookRepository.save(book);
@@ -327,19 +259,11 @@ public class BookService {
      */
     private BookResponseDTO convertToResponseDTO(Book book) {
         List<Rating> ratings = book.getRatings();
-        List<Author> authors = book.getAuthors();
 
         BookResponseDTO dto = bookMapper.toResponseDTO(book);
         log.debug("Conversión de Book de entidad a ResponseDTO con MapStruct: {}", dto);
 
         dto.setPublicationId(book.getPublication().getId());
-
-        // Añadir las ids a la lista "authorsIds" del dto
-        if (authors != null && !authors.isEmpty()){
-            for (Author author : authors){
-                dto.getAuthorIds().add(author.getId());
-            }
-        }
 
         if (ratings != null && !ratings.isEmpty()) {
             // Definir el rating promedio

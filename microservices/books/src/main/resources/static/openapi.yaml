@@ -13,6 +13,8 @@ servers:
 tags:
   - name: Books
     description: Gestión de libros
+  - name: Book_Authors
+    description: Gestión de asociación de libros y autores
   - name: Authors
     description: Gestión de autores
   - name: Ratings
@@ -322,8 +324,142 @@ paths:
           description: Autor marcado como eliminado
 
   # ===========================
+  # BOOK_AUTHOR
+  # ===========================
+  /book_authors:
+    post:
+      tags: [Book_Authors]
+      summary: Crear relación libro-autor
+      operationId: createBookAuthor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/BookAuthorRequestDTO'
+            example:
+              contributionType: "principal"
+              bookId: 1
+              authorId: 2
+      responses:
+        '201':
+          description: Relación libro-autor creada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/BookAuthorResponseDTO'
+
+  /book_authors/{id}:
+    get:
+      tags: [Book_Authors]
+      summary: Obtener relación libro-autor por ID
+      operationId: getBookAuthorById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Relación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/BookAuthorResponseDTO'
+    put:
+      tags: [Book_Authors]
+      summary: Actualizar relación libro-autor
+      operationId: updateBookAuthor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/BookAuthorRequestDTO'
+            example:
+              contributionType: "editor"
+              bookId: 1
+              authorId: 2
+      responses:
+        '200':
+          description: Relación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/BookAuthorResponseDTO'
+    delete:
+      tags: [Book_Authors]
+      summary: Eliminar relación libro-autor (soft delete)
+      operationId: deleteBookAuthor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Relación marcada como eliminada
+
+  /book_authors/book/{bookId}/author/{authorId}/contribution/{contribution}/page/{page}:
+    get:
+      tags: [Book_Authors]
+      summary: Buscar relaciones libro-autor con filtros y paginación
+      operationId: getBookAuthorsByFilters
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          description: ID del libro. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: authorId
+          in: path
+          required: true
+          description: ID del autor. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: contribution
+          in: path
+          required: true
+          description: Tipo de contribución. Use '-' para omitir este filtro
+          schema:
+            type: string
+          example: '-'
+        - name: page
+          in: path
+          required: true
+          description: Número de página (comienza en 0)
+          schema:
+            type: integer
+            format: int32
+          example: 0
+      responses:
+        '200':
+          description: Lista paginada de relaciones libro-autor
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedBookAuthorResponseDTO'
+
+  # ===========================
   # RATINGS
   # ===========================
+
   /ratings:
     post:
       tags: [Ratings]

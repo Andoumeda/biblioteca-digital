@@ -10,6 +10,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @RestControllerAdvice
 @Slf4j
@@ -103,11 +104,32 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException ex, WebRequest request) {
         log.error("Message not readable: {}", ex.getMessage());
 
+        String customMessage = "JSON malformado o inválido";
+        Throwable cause = ex.getCause();
+        if (cause != null && cause.getMessage() != null && cause.getMessage().contains("Unexpected value")) {
+            // Extraer solo el valor inválido y limpiar saltos de línea
+            String value = cause.getMessage().replaceAll(".*Unexpected value '([^']+)'.*", "$1");
+            value = value.split("\\n")[0].trim();
+
+            // Obtener los valores válidos del enum dinámicamente
+            String validValues = "[desconocido]";
+            try {
+                Class<?> enumClass = Class.forName("com.library.dtos.BookAuthorRequestDTO$ContributionTypeEnum");
+                Object[] constants = enumClass.getEnumConstants();
+                validValues = Arrays.toString(constants);
+            } catch (Exception ignore) {}
+
+            customMessage = String.format(
+                "Valor '%s' inválido para el campo 'contributionType'. Valores válidos: %s",
+                value, validValues
+            );
+        }
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message("JSON malformado o inválido")
+                .message(customMessage)
                 .path(getPath(request))
                 .build();
 
