@@ -64,13 +64,6 @@ public class PublicationController implements PublicationsApi {
     }
 
     @Override
-    public ResponseEntity<PaginatedResponseDTO> getPublicationsByCategory(Integer cat, Integer page, Integer size) {
-        logger.info("Petición (GET /publications/category/{cat}/page/{page}/size/{size}) para obtener publicaciones por ID de categoría: {} - página: {}, tamaño: {}", cat, page, size);
-        PaginatedResponseDTO publications = publicationService.getPaginatedByCategory(cat, page, size);
-        return ResponseEntity.ok(publications);
-    }
-
-    @Override
     public ResponseEntity<PublicationResponseDTO> getPublicationById(Integer id) {
         logger.info("Petición (GET /publications/{id}) para obtener publicación por ID: {}", id);
         PublicationResponseDTO publication = publicationService.getById(id);

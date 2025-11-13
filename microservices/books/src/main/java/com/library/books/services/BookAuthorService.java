@@ -63,8 +63,8 @@ public class BookAuthorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Autor", "id", dto.getAuthorId()));
 
         // Validar que no exista ya una relación igual (no eliminada)
-        Optional<BookAuthor> duplicate = bookAuthorRepository.findByBookIdAndAuthorIdAndContributionTypeAndIsDeletedFalse(
-            dto.getBookId(), dto.getAuthorId(), dto.getContributionType().getValue()
+        Optional<BookAuthor> duplicate = bookAuthorRepository.findByBookIdAndAuthorIdAndIsDeletedFalse(
+            dto.getBookId(), dto.getAuthorId()
         );
         if (duplicate.isPresent()) {
             log.error("Error al crear relación libro-autor: Ya existe una relación igual (bookId={}, authorId={}, contributionType={})", dto.getBookId(), dto.getAuthorId(), dto.getContributionType());
@@ -137,8 +137,8 @@ public class BookAuthorService {
             !dto.getContributionType().getValue().equals(bookAuthor.getContributionType())
         ) {
             // Validar que no exista ya una relación igual en la DB
-            Optional<BookAuthor> duplicate = bookAuthorRepository.findByBookIdAndAuthorIdAndContributionTypeAndIsDeletedFalse(
-                    dto.getBookId(), dto.getAuthorId(), dto.getContributionType().getValue()
+            Optional<BookAuthor> duplicate = bookAuthorRepository.findByBookIdAndAuthorIdAndIsDeletedFalse(
+                    dto.getBookId(), dto.getAuthorId()
             );
             if (duplicate.isPresent()) {
                 log.error("Error al crear relación libro-autor: Ya existe una relación igual (bookId={}, authorId={}, contributionType={})", dto.getBookId(), dto.getAuthorId(), dto.getContributionType());

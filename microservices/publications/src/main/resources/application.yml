@@ -74,6 +74,10 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
 
+# Pagination Configuration
+pagination:
+  pageSize: 10
+
 # JWT Configuration
 jwt:
   secret: ${SECURITY_KEY}

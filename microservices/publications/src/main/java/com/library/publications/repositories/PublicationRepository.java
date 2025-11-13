@@ -30,11 +30,10 @@ public interface PublicationRepository extends JpaRepository<Publication, Intege
     // Buscar por perfil de usuario con paginación
     Page<Publication> findByUserProfileIdAndIsDeletedFalse(Integer userProfileId, Pageable pageable);
 
-    // Buscar por categoría con paginación
-    Page<Publication> findByCategoriesIdAndIsDeletedFalse(Integer categoryId, Pageable pageable);
-
     // Buscar por ID
     Optional<Publication> findByIdAndIsDeletedFalse(Integer id);
+
+    boolean existsByIdAndIsDeletedFalse(Integer id);
 
     // (Consulta personalizada) Buscar perfil de usuario por ID
     @Query("SELECT u FROM UserProfile u WHERE u.id = :id AND u.isDeleted = false")

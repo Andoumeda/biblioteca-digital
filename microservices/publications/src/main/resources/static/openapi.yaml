@@ -13,6 +13,8 @@ servers:
 tags:
   - name: Publications
     description: Gestión de publicaciones
+  - name: Publication_Categories
+    description: Gestión de relaciones entre publicaciones y categorías
   - name: Categories
     description: Gestión de categorías
   - name: Favorites
@@ -868,9 +870,156 @@ paths:
         '404':
           $ref: './models/openapi.yaml#/components/responses/NotFoundError'
 
-  # ==========================================
-  # FAVORITE ENDPOINTS (Puerto 8082)
-  # ==========================================
+# ==========================================
+# PUBLICATION_CATEGORY ENDPOINTS (Puerto 8082)
+# ==========================================
+
+  /publication_categories:
+    post:
+      tags: [Publication_Categories]
+      summary: Crear relación publicación-categoría
+      operationId: createPublicationCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/PublicationCategoryRequestDTO'
+            example:
+              relevanceScore: 8
+              publicationId: 1
+              categoryId: 2
+      responses:
+        '201':
+          description: Relación publicación-categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PublicationCategoryResponseDTO'
+
+  /publication_categories/{id}:
+    get:
+      tags: [Publication_Categories]
+      summary: Obtener relación publicación-categoría por ID
+      operationId: getPublicationCategoryById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+          example: 1
+      responses:
+        '200':
+          description: Relación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PublicationCategoryResponseDTO'
+
+    put:
+      tags: [Publication_Categories]
+      summary: Actualizar relación publicación-categoría
+      operationId: updatePublicationCategory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/PublicationCategoryRequestDTO'
+            example:
+              relevanceScore: 10
+              publicationId: 1
+              categoryId: 2
+      responses:
+        '200':
+          description: Relación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PublicationCategoryResponseDTO'
+    delete:
+      tags: [Publication_Categories]
+      summary: Eliminar relación publicación-categoría (soft delete)
+      operationId: deletePublicationCategory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+          example: 1
+      responses:
+        '204':
+          description: Relación marcada como eliminada
+
+  /publication_categories/publication/{publicationId}/category/{categoryId}/relevance/{min}/{max}/page/{page}:
+    get:
+      tags: [Publication_Categories]
+      summary: Buscar relaciones publicación-categoría con filtros y paginación
+      operationId: getPublicationCategoriesByFilters
+      parameters:
+        - name: publicationId
+          in: path
+          required: true
+          description: ID de la publicación. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: categoryId
+          in: path
+          required: true
+          description: ID de la categoría. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: min
+          in: path
+          required: true
+          description: Rango máximo del puntaje de relevancia. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: max
+          in: path
+          required: true
+          description: Rango mínimo del puntaje de relevancia. Use 0 para omitir este filtro
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: page
+          in: path
+          required: true
+          description: Número de página (comienza en 0)
+          schema:
+            type: integer
+            format: int32
+          example: 0
+      responses:
+        '200':
+          description: Lista paginada de relaciones publicación-categoría
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedPublicationCategoryResponseDTO'
+
+# ==========================================
+# FAVORITE ENDPOINTS (Puerto 8082)
+# ==========================================
   /favorites:
     post:
       tags:

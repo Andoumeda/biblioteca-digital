@@ -16,8 +16,8 @@ public interface BookAuthorRepository extends JpaRepository<BookAuthor, Integer>
     /**
      * Buscar relación por bookId, authorId, contributionType y no eliminada (isDeleted = false)
      */
-    java.util.Optional<BookAuthor> findByBookIdAndAuthorIdAndContributionTypeAndIsDeletedFalse(
-        Integer bookId, Integer authorId, String contributionType
+    java.util.Optional<BookAuthor> findByBookIdAndAuthorIdAndIsDeletedFalse(
+        Integer bookId, Integer authorId
     );
 
     // Metodo custom para filtrar por bookId, authorId y contributionType (con paginación)

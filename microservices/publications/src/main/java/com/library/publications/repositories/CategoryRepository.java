@@ -24,6 +24,5 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     // Buscar por ID
     Optional<Category> findByIdAndIsDeletedFalse(Integer id);
 
-    // Buscar todas las categorías por una lista de IDs
-    List<Category> findAllByIdInAndIsDeletedFalse(List<Integer> ids);
+    boolean existsByIdAndIsDeletedFalse(Integer id);
 }

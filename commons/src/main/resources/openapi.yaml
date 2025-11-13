@@ -393,9 +393,9 @@ components:
     PublicationCategoryRequestDTO:
       type: object
       required:
-        - relevanceLevel
-        - idPublication
-        - idCategory
+        - relevanceScore
+        - publicationId
+        - categoryId
       properties:
         relevanceScore:
           type: integer
@@ -417,6 +417,11 @@ components:
         - $ref: '#/components/schemas/BaseDTO'
         - $ref: '#/components/schemas/PublicationCategoryRequestDTO'
         - type: object
+          properties:
+            publication:
+              $ref: '#/components/schemas/PublicationResponseDTO'
+            category:
+              $ref: '#/components/schemas/CategoryResponseDTO'
 
     BookAuthorRequestDTO:
       type: object
@@ -567,6 +572,16 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/BookAuthorResponseDTO'
+
+    PaginatedPublicationCategoryResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PublicationCategoryResponseDTO'
 
     PaginatedUserResponseDTO:
       allOf:

@@ -4,12 +4,10 @@ import com.library.dtos.PublicationRequestDTO;
 import com.library.dtos.PublicationResponseDTO;
 import com.library.dtos.PaginatedResponseDTO;
 
-import com.library.entities.Category;
 import com.library.entities.Publication;
 import com.library.entities.Publication.PublicationState;
 import com.library.entities.UserProfile;
 
-import com.library.publications.repositories.CategoryRepository;
 import com.library.publications.repositories.PublicationRepository;
 
 import com.library.publications.mappers.PublicationMapper;
@@ -29,13 +27,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class PublicationService {
     private final PublicationRepository publicationRepository;
-    private final CategoryRepository categoryRepository;
     private final PublicationMapper publicationMapper;
     private final Logger logger = LoggerFactory.getLogger(PublicationService.class);
 
@@ -56,13 +52,6 @@ public class PublicationService {
             publication.setTitle(dto.getTitle());
             publication.setDescription(dto.getDescription());
             publication.setState(PublicationState.PENDING);
-
-            // Asignar categorías si existen
-            if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
-                logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id IN :ids AND c.isDeleted = false");
-                List<Category> categories = categoryRepository.findAllByIdInAndIsDeletedFalse(dto.getCategoryIds());
-                publication.setCategories(categories);
-            }
 
             Publication saved = publicationRepository.save(publication);
             return publicationMapper.toResponseDTO(saved);
@@ -158,21 +147,6 @@ public class PublicationService {
     }
 
     @Transactional(readOnly = true)
-    public PaginatedResponseDTO getPaginatedByCategory(Integer cat, Integer page, Integer size) {
-        logger.debug("Consulta a la BD: SELECT p FROM Publication p JOIN p.categories c WHERE c.id = :categoryId AND p.isDeleted = false");
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Publication> publicationsPage = publicationRepository.findByCategoriesIdAndIsDeletedFalse(cat, pageable);
-
-        if (publicationsPage.isEmpty()) {
-            logger.warn("No se encontraron publicaciones con el ID de categoría {}", cat);
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No se encontraron publicaciones con el ID de categoría " + cat);
-        } else
-            logger.info("Se encontraron {} publicaciones con el ID de categoría {}", publicationsPage.getTotalElements(), cat);
-
-        return PaginationUtil.buildPaginatedResponse(publicationsPage, publicationMapper::toResponseDTO);
-    }
-
-    @Transactional(readOnly = true)
     public PublicationResponseDTO getById(Integer id) {
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.id = :id AND p.isDeleted = false");
         Publication publication = publicationRepository.findByIdAndIsDeletedFalse(id)
@@ -204,13 +178,6 @@ public class PublicationService {
         publication.setUserProfile(userProfile);
         publication.setTitle(dto.getTitle());
         publication.setDescription(dto.getDescription());
-
-        // Actualizar categorías si se proporcionan
-        if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
-            logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id IN :ids AND c.isDeleted = false");
-            List<Category> categories = categoryRepository.findAllByIdInAndIsDeletedFalse(dto.getCategoryIds());
-            publication.setCategories(categories);
-        }
 
         publication.setUpdatedAt(LocalDateTime.now());
 
