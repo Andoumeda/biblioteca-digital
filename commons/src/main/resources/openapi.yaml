@@ -364,11 +364,31 @@ components:
       type: object
       required:
         - programatedDate
+        - idProfile
+        - idAnnouncement
+      properties:
+        programmatedDate:
+          type: string
+          format: date-time
+          description: Fecha programada del anuncio para el perfil
+        profileId:
+          type: integer
+          format: int32
+          description: ID del perfil de usuario
+        announcementId:
+          type: integer
+          format: int32
+          description: ID del anuncio
+
+    UpdateProfileAnnouncementRequestDTO:
+      type: object
+      required:
+        - programatedDate
         - isRead
         - idProfile
         - idAnnouncement
       properties:
-        programatedDate:
+        programmatedDate:
           type: string
           format: date-time
           description: Fecha programada del anuncio para el perfil
@@ -387,8 +407,13 @@ components:
     ProfileAnnouncementResponseDTO:
       allOf:
         - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/ProfileAnnouncementRequestDTO'
+        - $ref: '#/components/schemas/UpdateProfileAnnouncementRequestDTO'
         - type: object
+          properties:
+            userProfile:
+              $ref: '#/components/schemas/UserProfileResponseDTO'
+            announcement:
+              $ref: '#/components/schemas/AnnouncementResponseDTO'
 
     PublicationCategoryRequestDTO:
       type: object
@@ -582,6 +607,16 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/PublicationCategoryResponseDTO'
+
+    PaginatedProfileAnnouncementResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseDTO'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileAnnouncementResponseDTO'
 
     PaginatedUserResponseDTO:
       allOf:

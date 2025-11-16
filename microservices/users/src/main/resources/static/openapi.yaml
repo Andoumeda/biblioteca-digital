@@ -13,6 +13,8 @@ servers:
 tags:
   - name: User Profiles
     description: Gestión de perfiles de usuario
+  - name: ProfileAnnouncements
+    description: Gestión de la relación entre perfiles y anuncios
   - name: Announcements
     description: Gestión de anuncios
 
@@ -27,739 +29,144 @@ components:
       bearerFormat: JWT
       description: Autenticación mediante JWT token. Incluir el token en el header Authorization como 'Bearer {token}'
 
-  schemas:
-    BaseDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-          description: Identificador único del registro
-        createdAt:
-          type: string
-          format: date-time
-          description: Fecha de creación del registro
-        updatedAt:
-          type: string
-          format: date-time
-          description: Fecha de última actualización del registro
-        isDeleted:
-          type: boolean
-          description: Indica si el registro fue eliminado lógicamente (soft delete)
-
-    RoleDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        name:
-          type: string
-          description: Nombre del rol (e.g., ADMIN, USER)
-        description:
-          type: string
-
-    UserDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        username:
-          type: string
-          description: Nombre de usuario único
-        email:
-          type: string
-          format: email
-          description: Correo electrónico del usuario
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        enabled:
-          type: boolean
-          description: Indica si el usuario está activo
-
-
-
-    UserRegistrationRequestDTO:
-      type: object
-      required:
-        - username
-        - email
-        - password
-        - roleId
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 50
-        email:
-          type: string
-          format: email
-          maxLength: 100
-        password:
-          type: string
-          format: password
-          minLength: 8
-        roleId:
-          type: integer
-          format: int32
-      example:
-        username: "Zarza"
-        email: "zzz.perez@example.com"
-        password: "password123"
-        roleId: 1
-
-    UserLoginRequestDTO:
-      type: object
-      required:
-        - email
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 100
-        password:
-          type: string
-          format: password
-
-    AuthResponseDTO:
-      type: object
-      properties:
-        token:
-          type: string
-          description: JWT token
-        user:
-          $ref: '#/components/schemas/UserDTO'
-
-    UserProfileRequestDTO:
-      type: object
-      required:
-        - userId
-        - displayName
-      properties:
-        userId:
-          type: integer
-          format: int32
-          description: ID del usuario asociado al perfil
-        displayName:
-          type: string
-          maxLength: 100
-          description: Nombre visible del usuario en la plataforma
-        bio:
-          type: string
-          description: Biografía o información adicional del usuario
-        profilePicture:
-          type: string
-          maxLength: 255
-          description: URL de la foto de perfil del usuario
-
-    UserProfileResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/UserProfileRequestDTO'
-        - type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/UserDTO'
-
-    AnnouncementRequestDTO:
-      type: object
-      required:
-        - title
-        - type
-        - targetAudience
-      properties:
-        title:
-          type: string
-          maxLength: 255
-          description: Título del anuncio
-        message:
-          type: string
-          description: Mensaje o cuerpo del anuncio
-        type:
-          type: string
-          enum:
-            - alert
-            - info
-            - warning
-            - promo
-          description: Tipo de anuncio
-        targetAudience:
-          type: string
-          enum:
-            - all
-            - new_users
-            - admins
-          description: Audiencia objetivo del anuncio
-
-    AnnouncementResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/AnnouncementRequestDTO'
-        - type: object
-
-    FavoriteRequestDTO:
-      type: object
-      required:
-        - userProfileId
-        - publicationId
-      properties:
-        userProfileId:
-          type: integer
-          format: int32
-          description: ID del perfil de usuario
-        publicationId:
-          type: integer
-          format: int32
-          description: ID de la publicación favorita
-
-    FavoriteResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            publication:
-              $ref: '#/components/schemas/PublicationResponseDTO'
-
-    PublicationRequestDTO:
-      type: object
-      required:
-        - userProfileId
-        - title
-        - state
-      properties:
-        userProfileId:
-          type: integer
-          format: int32
-          description: ID del perfil de usuario que crea la publicación
-        title:
-          type: string
-          description: Título de la publicación
-        description:
-          type: string
-          description: Descripción de la publicación
-        state:
-          type: string
-          enum:
-            - pending
-            - approved
-            - rejected
-          description: Estado de la publicación
-        categoryIds:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: IDs de las categorías asociadas
-
-    PublicationResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/PublicationRequestDTO'
-        - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            categories:
-              type: array
-              items:
-                $ref: '#/components/schemas/CategoryResponseDTO'
-            books:
-              type: array
-              items:
-                $ref: '#/components/schemas/BookResponseDTO'
-
-    CategoryRequestDTO:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          maxLength: 100
-          description: Nombre de la categoría
-
-    CategoryResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/CategoryRequestDTO'
-        - type: object
-
-    BookRequestDTO:
-      type: object
-      required:
-        - publicationId
-        - title
-        - bookUrl
-        - numPages
-        - fileSize
-        - authorIds
-      properties:
-        publicationId:
-          type: integer
-          format: int32
-          description: ID de la publicación asociada
-        title:
-          type: string
-          maxLength: 255
-          description: Título del libro
-        description:
-          type: string
-          description: Descripción del libro
-        bookUrl:
-          type: string
-          maxLength: 255
-          description: URL del archivo del libro
-        coverImg:
-          type: string
-          maxLength: 255
-          description: URL de la imagen de portada
-        numPages:
-          type: integer
-          format: int32
-          minimum: 1
-          description: Número de páginas del libro
-        fileSize:
-          type: integer
-          format: int32
-          minimum: 1
-          description: Tamaño del archivo en bytes
-        authorIds:
-          type: array
-          items:
-            type: integer
-            format: int32
-          description: IDs de los autores del libro
-
-    BookResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/BookRequestDTO'
-        - type: object
-          properties:
-            authors:
-              type: array
-              items:
-                $ref: '#/components/schemas/AuthorResponseDTO'
-            ratingAverage:
-              type: number
-              format: float
-              description: Puntuación promedio del libro
-            ratingsCount:
-              type: integer
-              format: int32
-              description: Número total de valoraciones del libro
-
-    AuthorRequestDTO:
-      type: object
-      required:
-        - fullName
-        - bio
-      properties:
-        fullName:
-          type: string
-          maxLength: 150
-          description: Nombre completo del autor
-        bio:
-          type: string
-          description: Biografía del autor
-        birthDate:
-          type: string
-          format: date
-          description: Fecha de nacimiento del autor
-        nationality:
-          type: string
-          maxLength: 100
-          description: Nacionalidad del autor
-
-    AuthorResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/AuthorRequestDTO'
-        - type: object
-
-    RatingRequestDTO:
-      type: object
-      required:
-        - userProfileId
-        - bookId
-        - valoration
-      properties:
-        userProfileId:
-          type: integer
-          format: int32
-          description: ID del perfil de usuario que realiza la valoración
-        bookId:
-          type: integer
-          format: int32
-          description: ID del libro que se está valorando
-        valoration:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 5
-          description: Puntuación otorgada (1-5)
-        comment:
-          type: string
-          description: Comentario adicional sobre el libro
-
-    RatingResponseDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseDTO'
-        - $ref: '#/components/schemas/RatingRequestDTO'
-        - type: object
-          properties:
-            userProfile:
-              $ref: '#/components/schemas/UserProfileResponseDTO'
-            book:
-              $ref: '#/components/schemas/BookResponseDTO'
-
-    ErrorDTO:
-      type: object
-      properties:
-        code:
-          type: string
-          description: Código de error
-        message:
-          type: string
-          description: Mensaje descriptivo del error
-        details:
-          type: array
-          items:
-            type: string
-          description: Detalles adicionales del error
-    ErrorResponseDTO:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-          description: Marca de tiempo del error
-        status:
-          type: integer
-          format: int32
-          description: Código de estado HTTP
-        error:
-          type: string
-          description: Tipo de error HTTP
-        message:
-          type: string
-          description: Mensaje descriptivo del error
-        path:
-          type: string
-          description: Ruta de la solicitud que causó el error
-
-    PaginatedResponseDTO:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserDTO'
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-        total:
-          type: integer
-          format: int32
-        totalPages:
-          type: integer
-          format: int32
-        last:
-          type: boolean
-
-  responses:
-    UnauthorizedError:
-      description: No autorizado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-    BadRequestError:
-      description: Solicitud inválida
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-    NotFoundError:
-      description: Recurso no encontrado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-    ForbiddenError:
-      description: Acceso prohibido
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponseDTO'
-
 paths:
-  # ==========================================
-  # USER PROFILES ENDPOINTS
-  # ==========================================
+  # USER PROFILE ENDPOINTS
   /user-profiles:
-    get:
-      tags:
-        - User Profiles
-      summary: Obtener todos los perfiles de usuario
-      operationId: getAllUserProfiles
-      responses:
-        '200':
-          description: Lista de perfiles encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-
     post:
       tags:
         - User Profiles
-      summary: Crear perfil de usuario
+      summary: Crear nuevo perfil de usuario
       operationId: createUserProfile
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserProfileRequestDTO'
+              $ref: './models/openapi.yaml#/components/schemas/UserProfileRequestDTO'
       responses:
         '201':
           description: Perfil creado exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfileResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-
+                $ref: './models/openapi.yaml#/components/schemas/UserProfileResponseDTO'
   /user-profiles/{id}:
     get:
       tags:
         - User Profiles
-      summary: Obtener perfil por ID
+      summary: Obtener perfil de usuario por ID
       operationId: getUserProfileById
       parameters:
         - name: id
           in: path
           required: true
+          description: ID del perfil de usuario
           schema:
             type: integer
             format: int32
+            example: 0
       responses:
         '200':
           description: Perfil encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfileResponseDTO'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
+                $ref: './models/openapi.yaml#/components/schemas/UserProfileResponseDTO'
     put:
       tags:
         - User Profiles
-      summary: Actualizar perfil
+      summary: Actualizar perfil de usuario
       operationId: updateUserProfile
       parameters:
         - name: id
           in: path
           required: true
+          description: ID del perfil de usuario
           schema:
             type: integer
             format: int32
+            example: 0
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserProfileRequestDTO'
+              $ref: './models/openapi.yaml#/components/schemas/UserProfileRequestDTO'
       responses:
         '200':
           description: Perfil actualizado exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfileResponseDTO'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
+                $ref: './models/openapi.yaml#/components/schemas/UserProfileResponseDTO'
     delete:
       tags:
         - User Profiles
-      summary: Eliminar perfil
+      summary: Eliminar perfil de usuario
       operationId: deleteUserProfile
       parameters:
         - name: id
           in: path
           required: true
+          description: ID del perfil de usuario
           schema:
             type: integer
             format: int32
+            example: 0
       responses:
         '204':
           description: Perfil eliminado exitosamente
-        '404':
-          $ref: '#/components/responses/NotFoundError'
 
-  # ==========================================
-  # ANNOUNCEMENT ENDPOINTS
-  # ==========================================
-  /announcements/page/{page}/size/{size}:
+  /user-profiles/display-name/{displayName}/page/{page}:
     get:
       tags:
-        - Announcements
-      summary: Obtener todos los anuncios
-      description: Lista paginada de todos los anuncios
-      operationId: getAllAnnouncements
+        - User Profiles
+      summary: Listar perfiles por displayName paginado
+      operationId: getUserProfilesByFilters
       parameters:
+        - name: displayName
+          in: path
+          required: true
+          description: Nombre a mostrar del perfil. Use '-' para omitir este filtro.
+          schema:
+            type: string
+            example: '-'
         - name: page
           in: path
           required: true
           description: Número de página (comienza en 0)
           schema:
             type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: path
-          required: true
-          description: Cantidad de elementos por página
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
+            format: int32
+            example: 0
       responses:
         '200':
-          description: Lista de anuncios
+          description: Lista paginada de perfiles encontrada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedUserProfileResponseDTO'
 
+  # ANNOUNCEMENT ENDPOINTS
   /announcements:
     post:
       tags:
         - Announcements
-      summary: Crear anuncio
-      description: Crea un nuevo anuncio (solo administradores)
+      summary: Crear nuevo anuncio
       operationId: createAnnouncement
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnnouncementRequestDTO'
+              $ref: './models/openapi.yaml#/components/schemas/AnnouncementRequestDTO'
       responses:
         '201':
-          description: Anuncio creado
+          description: Anuncio creado exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AnnouncementResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-
-  /announcements/type/{type}/page/{page}/size/{size}:
-    get:
-      tags:
-        - Announcements
-      summary: Obtener anuncios por tipo
-      description: Lista paginada de anuncios filtrados por tipo
-      operationId: getAnnouncementsByType
-      parameters:
-        - name: type
-          in: path
-          required: true
-          description: Tipo de anuncio
-          schema:
-            type: string
-            enum: [alert, info, warning, promo]
-        - name: page
-          in: path
-          required: true
-          description: Número de página (comienza en 0)
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: path
-          required: true
-          description: Cantidad de elementos por página
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-      responses:
-        '200':
-          description: Lista de anuncios del tipo especificado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-
-  /announcements/audience/{targetAudience}/page/{page}/size/{size}:
-    get:
-      tags:
-        - Announcements
-      summary: Obtener anuncios por audiencia objetivo
-      description: Lista paginada de anuncios filtrados por audiencia objetivo
-      operationId: getAnnouncementsByAudience
-      parameters:
-        - name: targetAudience
-          in: path
-          required: true
-          description: Audiencia objetivo del anuncio
-          schema:
-            type: string
-            enum: [all, new_users, admins]
-        - name: page
-          in: path
-          required: true
-          description: Número de página (comienza en 0)
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: path
-          required: true
-          description: Cantidad de elementos por página
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-            maximum: 100
-      responses:
-        '200':
-          description: Lista de anuncios para la audiencia especificada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
+                $ref: './models/openapi.yaml#/components/schemas/AnnouncementResponseDTO'
 
   /announcements/{id}:
     get:
@@ -771,19 +178,18 @@ paths:
         - name: id
           in: path
           required: true
+          description: ID del anuncio
           schema:
             type: integer
             format: int32
+            example: 0
       responses:
         '200':
           description: Anuncio encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AnnouncementResponseDTO'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
+                $ref: './models/openapi.yaml#/components/schemas/AnnouncementResponseDTO'
     put:
       tags:
         - Announcements
@@ -793,50 +199,238 @@ paths:
         - name: id
           in: path
           required: true
+          description: ID del anuncio
           schema:
             type: integer
             format: int32
+            example: 0
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnnouncementRequestDTO'
+              $ref: './models/openapi.yaml#/components/schemas/AnnouncementRequestDTO'
       responses:
         '200':
-          description: Anuncio actualizado
+          description: Anuncio actualizado exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AnnouncementResponseDTO'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
+                $ref: './models/openapi.yaml#/components/schemas/AnnouncementResponseDTO'
     delete:
       tags:
         - Announcements
       summary: Eliminar anuncio
-      description: Elimina permanentemente un anuncio del sistema
       operationId: deleteAnnouncement
       parameters:
         - name: id
           in: path
           required: true
+          description: ID del anuncio
           schema:
             type: integer
             format: int32
+            example: 0
       responses:
         '204':
           description: Anuncio eliminado
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+
+  /announcements/audience/{targetAudience}/type/{type}/page/{page}:
+    get:
+      tags:
+        - Announcements
+      summary: Listar anuncios por tipo paginado
+      operationId: getAnnouncementsByFilters
+      parameters:
+        - name: targetAudience
+          in: path
+          required: true
+          description: Audiencia objetivo del anuncio. Use '-' para omitir este filtro.
+          schema:
+            type: string
+            enum:
+             - ALL
+             - NEW_USERS
+             - ADMINS
+             - '-'
+            example: '-'
+        - name: type
+          in: path
+          required: true
+          description: Tipo de anuncio. Use '-' para omitir este filtro.
+          schema:
+            type: string
+            enum:
+             - ALERT
+             - INFO
+             - WARNING
+             - PROMO
+             - '-'
+            example: '-'
+        - name: page
+          in: path
+          required: true
+          description: Número de página (comienza en 0)
+          schema:
+            type: integer
+            format: int32
+            example: 0
+      responses:
+        '200':
+          description: Lista paginada de anuncios del tipo especificado
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedAnnouncementResponseDTO'
+
+  # PROFILE-ANNOUNCEMENTS ENDPOINTS
+  /profile-announcements:
+    post:
+      tags:
+        - ProfileAnnouncements
+      summary: Crear relación perfil-anuncio
+      operationId: createProfileAnnouncement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/ProfileAnnouncementRequestDTO'
+      responses:
+        '201':
+          description: Relaciones perfil-anuncio creadas
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/ProfileAnnouncementResponseDTO'
+
+  /profile-announcements/{id}:
+    get:
+      tags:
+        - ProfileAnnouncements
+      summary: Obtener relación perfil-anuncio por ID
+      operationId: getProfileAnnouncementById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la relación perfil-anuncio
+          schema:
+            type: integer
+            format: int32
+            example: 0
+      responses:
+        '200':
+          description: Relación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/ProfileAnnouncementResponseDTO'
+    put:
+      tags:
+        - ProfileAnnouncements
+      summary: Actualizar relación perfil-anuncio
+      operationId: updateProfileAnnouncement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la relación perfil-anuncio
+          schema:
+            type: integer
+            format: int32
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi.yaml#/components/schemas/UpdateProfileAnnouncementRequestDTO'
+      responses:
+        '200':
+          description: Relación actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/ProfileAnnouncementResponseDTO'
+    delete:
+      tags:
+        - ProfileAnnouncements
+      summary: Eliminar relación perfil-anuncio
+      operationId: deleteProfileAnnouncement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la relación perfil-anuncio
+          schema:
+            type: integer
+            format: int32
+            example: 0
+      responses:
+        '204':
+          description: Relación eliminada
+
+  /profile-announcements/profile/{profileId}/announcement/{announcementId}/date/{min}/{max}/isRead/{isRead}/page/{page}:
+    get:
+      tags:
+        - ProfileAnnouncements
+      summary: Listar relaciones perfil-anuncio por filtros paginado
+      description: Busca relaciones perfil-anuncio aplicando filtros opcionales
+      operationId: getProfileAnnouncementsByFilters
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          description: ID del perfil. Use 0 para omitir este filtro.
+          schema:
+            type: integer
+            format: int32
+            example: 0
+        - name: announcementId
+          in: path
+          required: true
+          description: ID del anuncio. Use 0 para omitir este filtro.
+          schema:
+            type: integer
+            format: int32
+            example: 0
+        - name: min
+          in: path
+          required: true
+          description: Fecha mínima de relación en formato ISO 8601 (AAAA-MM-DDTHH:MM:SS). Use "0000-01-01T00:00:00Z" para omitir este filtro.
+          schema:
+            type: string
+            format: date-time
+            example: "0000-01-01T00:00:00Z"
+        - name: max
+          in: path
+          required: true
+          description: Fecha máxima de relación en formato ISO 8601 (AAAA-MM-DDTHH:MM:SSZ). Use "0000-01-01T00:00:00Z" para omitir este filtro.
+          schema:
+            type: string
+            format: date-time
+            example: "0000-01-01T00:00:00Z"
+        - name: isRead
+          in: path
+          required: true
+          description: Estado de lectura. Use 'true', 'false' o '-' para omitir este filtro.
+          schema:
+            type: string
+            enum: ['true', 'false', '-']
+            example: '-'
+        - name: page
+          in: path
+          required: true
+          description: Número de página (comienza en 0)
+          schema:
+            type: integer
+            format: int32
+            example: 0
+      responses:
+        '200':
+          description: Lista paginada de relaciones perfil-anuncio filtradas
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi.yaml#/components/schemas/PaginatedProfileAnnouncementResponseDTO'
