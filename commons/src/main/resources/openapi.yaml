@@ -146,17 +146,17 @@ components:
         type:
           type: string
           enum:
-            - alert
-            - info
-            - warning
-            - promo
+            - ALERT
+            - INFO
+            - WARNING
+            - PROMO
           description: Tipo de anuncio
         targetAudience:
           type: string
           enum:
-            - all
-            - new_users
-            - admins
+            - ALL
+            - NEW_USERS
+            - ADMINS
           description: Audiencia objetivo del anuncio
 
     AnnouncementResponseDTO:
