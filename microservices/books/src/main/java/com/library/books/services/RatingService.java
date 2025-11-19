@@ -19,6 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +41,7 @@ public class RatingService {
     /**
      * Crear una nueva valoración
      */
+    @CachePut(value = "ratings", key = "#result.id")
     public RatingResponseDTO createRating(RatingRequestDTO requestDTO) {
         Book book;
         UserProfile userProfile;
@@ -177,6 +181,7 @@ public class RatingService {
      * Obtener valoración por ID
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "ratings", key = "#id")
     public RatingResponseDTO getRatingById(Integer id) {
         log.info("Obteniendo valoración con ID: {}", id);
         
@@ -199,6 +204,7 @@ public class RatingService {
     /**
      * Actualizar valoración
      */
+    @CachePut(value = "ratings", key = "#id")
     public RatingResponseDTO updateRating(Integer id, RatingRequestDTO requestDTO) {
         Book book;
         UserProfile userProfile;
@@ -278,6 +284,7 @@ public class RatingService {
     /**
      * Eliminar valoración (soft delete)
      */
+    @CacheEvict(value = "ratings", key = "#id")
     public void deleteRating(Integer id) {
         log.info("Eliminando valoración con ID: {}", id);
         

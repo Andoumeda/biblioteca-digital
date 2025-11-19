@@ -20,6 +20,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +40,7 @@ public class PublicationCategoryService {
     private final com.library.publications.config.PaginationConfig paginationConfig;
 
     @Transactional
+    @CachePut(value = "publicationCategories", key = "#result.id")
     public PublicationCategoryResponseDTO createPublicationCategory(PublicationCategoryRequestDTO dto) {
         if (dto.getPublicationId() == null || dto.getPublicationId() <= 0) {
             log.error("ID de publicación inválido: {}", dto.getPublicationId());
@@ -82,6 +86,7 @@ public class PublicationCategoryService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "publicationCategories", key = "#id")
     public PublicationCategoryResponseDTO getPublicationCategoryById(Integer id) {
         if (id == null || id <= 0) {
             log.error("ID de relación publicación-categoría inválido: {}", id);
@@ -96,6 +101,7 @@ public class PublicationCategoryService {
     }
 
     @Transactional
+    @CachePut(value = "publicationCategories", key = "#id")
     public PublicationCategoryResponseDTO updatePublicationCategory(Integer id, PublicationCategoryRequestDTO dto) {
         if (id == null || id <= 0) {
             log.error("ID de relación publicación-categoría inválido: {}", id);
@@ -152,6 +158,7 @@ public class PublicationCategoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "publicationCategories", key = "#id")
     public void deletePublicationCategory(Integer id) {
         if (id == null || id <= 0) {
             log.error("ID de relación publicación-categoría inválido: {}", id);

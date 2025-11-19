@@ -18,6 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +40,7 @@ public class BookService {
     /**
      * Crear un nuevo libro
      */
+    @CachePut(value = "books", key = "#result.id")
     public BookResponseDTO createBook(BookRequestDTO requestDTO) {
         Publication publication;
 
@@ -144,6 +148,7 @@ public class BookService {
      * Obtener libro por ID
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "books", key = "#id")
     public BookResponseDTO getBookById(Integer id) {
         log.info("Obteniendo libro con ID: {}", id);
 
@@ -166,6 +171,7 @@ public class BookService {
     /**
      * Actualizar libro
      */
+    @CachePut(value = "books", key = "#id")
     public BookResponseDTO updateBook(Integer id, BookRequestDTO requestDTO) {
         Publication publication;
 
@@ -231,6 +237,7 @@ public class BookService {
     /**
      * Eliminar libro (soft delete)
      */
+    @CacheEvict(value = "books", key = "#id")
     public void deleteBook(Integer id) {
         log.info("Eliminando libro con ID: {}", id);
 

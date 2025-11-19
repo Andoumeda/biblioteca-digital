@@ -19,6 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -38,6 +41,7 @@ public class UserProfileService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    @CachePut(value = "userProfiles", key = "#result.id")
     public UserProfileResponseDTO createProfile(UserProfileRequestDTO dto) {
         log.info("Intentando crear perfil para el usuario ID {}", dto.getUserId());
 
@@ -67,6 +71,7 @@ public class UserProfileService {
         return userProfileMapper.toResponseDTO(profile);
     }
 
+    @Cacheable(value = "userProfiles", key = "#id")
     public UserProfileResponseDTO getProfileById(Integer id) {
         log.info("Buscando perfil con ID {}", id);
         UserProfile profile = repository.findByIdAndIsDeletedFalse(id)
@@ -77,6 +82,7 @@ public class UserProfileService {
         return userProfileMapper.toResponseDTO(profile);
     }
 
+    @CachePut(value = "userProfiles", key = "#id")
     public UserProfileResponseDTO updateProfile(Integer id, UserProfileRequestDTO dto) {
         log.info("Actualizando perfil con ID {}", id);
         UserProfile profile = repository.findByIdAndIsDeletedFalse(id)
@@ -94,6 +100,7 @@ public class UserProfileService {
         return userProfileMapper.toResponseDTO(profile);
     }
 
+    @CacheEvict(value = "userProfiles", key = "#id")
     public void deleteProfile(Integer id) {
         log.info("Eliminando perfil con ID {}", id);
         UserProfile profile = repository.findByIdAndIsDeletedFalse(id)
@@ -133,11 +140,11 @@ public class UserProfileService {
 
         Pageable pageable = PageRequest.of(page, paginationConfig.getPageSize());
         Page<UserProfile> pageResult;
-        if (normalizedDisplayName == null) {
+        if (normalizedDisplayName == null)
             pageResult = repository.findByIsDeletedFalse(pageable);
-        } else {
+        else
             pageResult = repository.findByDisplayNameLike(normalizedDisplayName, pageable);
-        }
+
         List<UserProfileResponseDTO> dtos = pageResult.getContent().stream()
                 .map(userProfileMapper::toResponseDTO)
                 .collect(Collectors.toList());

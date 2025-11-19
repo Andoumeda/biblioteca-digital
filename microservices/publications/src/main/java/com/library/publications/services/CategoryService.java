@@ -23,6 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 
@@ -34,6 +37,7 @@ public class CategoryService {
     private final Logger logger = LoggerFactory.getLogger(CategoryService.class);
 
     @Transactional
+    @CachePut(value = "categories", key = "#result.id")
     public CategoryResponseDTO create(CategoryRequestDTO dto) {
         try {
             // Validar que no exista una categoría con el mismo nombre
@@ -85,6 +89,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "categories", key = "#id")
     public CategoryResponseDTO getById(Integer id) {
         logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id = :id AND c.isDeleted = false");
         Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
@@ -97,6 +102,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @CachePut(value = "categories", key = "#id")
     public CategoryResponseDTO update(Integer id, CategoryRequestDTO dto) {
         logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id = :id AND c.isDeleted = false");
         Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
@@ -122,6 +128,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "categories", key = "#id")
     public void delete(Integer id) {
         logger.debug("Consulta a la BD: SELECT c FROM Category c WHERE c.id = :id AND c.isDeleted = false");
         Category category = categoryRepository.findByIdAndIsDeletedFalse(id)

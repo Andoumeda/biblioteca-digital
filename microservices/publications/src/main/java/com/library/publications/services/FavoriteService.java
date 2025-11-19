@@ -26,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 
@@ -38,6 +41,7 @@ public class FavoriteService {
     private final Logger logger = LoggerFactory.getLogger(FavoriteService.class);
 
     @Transactional
+    @CachePut(value = "favorites", key = "#result.id")
     public FavoriteResponseDTO add(FavoriteRequestDTO dto) {
         try {
             // Verificar que no existe ya el favorito
@@ -122,6 +126,7 @@ public class FavoriteService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "favorites", key = "#id")
     public FavoriteResponseDTO getById(Integer id) {
         logger.debug("Consulta a la BD: SELECT f FROM Favorite f WHERE f.id = :id AND f.isDeleted = false");
         Favorite favorite = favoriteRepository.findByIdAndIsDeletedFalse(id)
@@ -134,6 +139,7 @@ public class FavoriteService {
     }
 
     @Transactional
+    @CacheEvict(value = "favorites", key = "#id")
     public void remove(Integer id) {
         logger.debug("Consulta a la BD: SELECT f FROM Favorite f WHERE f.id = :id AND f.isDeleted = false");
         Favorite favorite = favoriteRepository.findByIdAndIsDeletedFalse(id)

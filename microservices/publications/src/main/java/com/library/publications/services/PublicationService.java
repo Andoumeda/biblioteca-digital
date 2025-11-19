@@ -25,6 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +39,7 @@ public class PublicationService {
     private final Logger logger = LoggerFactory.getLogger(PublicationService.class);
 
     @Transactional
+    @CachePut(value = "publications", key = "#result.id")
     public PublicationResponseDTO create(PublicationRequestDTO dto) {
         try {
             // Verificar si existe el perfil de usuario
@@ -147,6 +151,7 @@ public class PublicationService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "publications", key = "#id")
     public PublicationResponseDTO getById(Integer id) {
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.id = :id AND p.isDeleted = false");
         Publication publication = publicationRepository.findByIdAndIsDeletedFalse(id)
@@ -159,6 +164,7 @@ public class PublicationService {
     }
 
     @Transactional
+    @CachePut(value = "publications", key = "#id")
     public PublicationResponseDTO update(Integer id, PublicationRequestDTO dto) {
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.id = :id AND p.isDeleted = false");
         Publication publication = publicationRepository.findByIdAndIsDeletedFalse(id)
@@ -186,6 +192,7 @@ public class PublicationService {
     }
 
     @Transactional
+    @CacheEvict(value = "publications", key = "#id")
     public void delete(Integer id) {
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.id = :id AND p.isDeleted = false");
         Publication publication = publicationRepository.findByIdAndIsDeletedFalse(id)
@@ -201,6 +208,7 @@ public class PublicationService {
     }
 
     @Transactional
+    @CachePut(value = "publications", key = "#id")
     public PublicationResponseDTO approve(Integer id) {
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.id = :id AND p.isDeleted = false");
         Publication publication = publicationRepository.findByIdAndIsDeletedFalse(id)
@@ -217,6 +225,7 @@ public class PublicationService {
     }
 
     @Transactional
+    @CachePut(value = "publications", key = "#id")
     public PublicationResponseDTO reject(Integer id) {
         logger.debug("Consulta a la BD: SELECT p FROM Publication p WHERE p.id = :id AND p.isDeleted = false");
         Publication publication = publicationRepository.findByIdAndIsDeletedFalse(id)

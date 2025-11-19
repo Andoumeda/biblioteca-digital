@@ -16,6 +16,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +39,7 @@ public class AuthorService {
     /**
      * Crear un nuevo autor
      */
+    @CachePut(value = "authors", key = "#result.id")
     public AuthorResponseDTO createAuthor(AuthorRequestDTO requestDTO) {
         log.info("Creando nuevo autor: {}", requestDTO.getFullName());
         
@@ -150,6 +154,7 @@ public class AuthorService {
      * Obtener autor por ID
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "authors", key = "#id")
     public AuthorResponseDTO getAuthorById(Integer id) {
         log.info("Obteniendo autor con ID: {}", id);
 
@@ -172,6 +177,7 @@ public class AuthorService {
     /**
      * Actualizar autor
      */
+    @CachePut(value = "authors", key = "#id")
     public AuthorResponseDTO updateAuthor(Integer id, AuthorRequestDTO requestDTO) {
         log.info("Actualizando autor con ID: {}", id);
         
@@ -221,6 +227,7 @@ public class AuthorService {
     /**
      * Eliminar autor (soft delete)
      */
+    @CacheEvict(value = "authors", key = "#id")
     public void deleteAuthor(Integer id) {
         log.info("Eliminando autor con ID: {}", id);
         

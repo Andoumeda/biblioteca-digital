@@ -27,6 +27,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +43,7 @@ public class ProfileAnnouncementService {
     private final PaginationConfig paginationConfig;
 
     @Transactional
+    @CachePut(value = "profileAnnouncements", key = "#result.id")
     public ProfileAnnouncementResponseDTO createProfileAnnouncement(ProfileAnnouncementRequestDTO dto) {
         // Validar IDs requeridos y positivos
         if (dto.getProfileId() == null || dto.getProfileId() <= 0) {
@@ -91,6 +95,7 @@ public class ProfileAnnouncementService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "profileAnnouncements", key = "#id")
     public ProfileAnnouncementResponseDTO getProfileAnnouncementById(Integer id) {
         if (id == null || id <= 0) {
             log.error("Error al obtener relación perfil-anuncio: ID inválido: {}", id);
@@ -102,6 +107,7 @@ public class ProfileAnnouncementService {
     }
 
     @Transactional
+    @CachePut(value = "profileAnnouncements", key = "#id")
     public ProfileAnnouncementResponseDTO updateProfileAnnouncement(Integer id, UpdateProfileAnnouncementRequestDTO dto) {
         if (id == null || id <= 0) {
             log.error("Error al actualizar relación perfil-anuncio: ID inválido: {}", id);
@@ -237,6 +243,7 @@ public class ProfileAnnouncementService {
     }
 
     @Transactional
+    @CacheEvict(value = "profileAnnouncements", key = "#id")
     public void deleteProfileAnnouncement(Integer id) {
         if (id == null || id <= 0) {
             log.error("Error al eliminar relación perfil-anuncio: ID inválido: {}", id);

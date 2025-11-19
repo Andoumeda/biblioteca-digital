@@ -22,6 +22,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +42,7 @@ public class BookAuthorService {
     private final PaginationConfig paginationConfig;
 
     @Transactional
+    @CachePut(value = "bookAuthors", key = "#result.id")
     public BookAuthorResponseDTO createBookAuthor(BookAuthorRequestDTO dto) {
         // Validar IDs requeridos y positivos
         if (dto.getBookId() == null || dto.getBookId() <= 0) {
@@ -85,6 +89,7 @@ public class BookAuthorService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "bookAuthors", key = "#id")
     public BookAuthorResponseDTO getBookAuthorById(Integer id) {
         if (id == null || id <= 0) {
             log.error("Error al obtener relación libro-autor: ID inválido: {}", id);
@@ -99,6 +104,7 @@ public class BookAuthorService {
      * Actualiza una relación libro-autor validando todos los datos y reglas de negocio.
      */
     @Transactional
+    @CachePut(value = "bookAuthors", key = "#id")
     public BookAuthorResponseDTO updateBookAuthor(Integer id, BookAuthorRequestDTO dto) {
         // Validar ID de la relación
         if (id == null || id <= 0) {
@@ -161,6 +167,7 @@ public class BookAuthorService {
      * Realiza un soft delete de la relación libro-autor validando el ID y el estado.
      */
     @Transactional
+    @CacheEvict(value = "bookAuthors", key = "#id")
     public void deleteBookAuthor(Integer id) {
         // Validar ID positivo
         if (id == null || id <= 0) {

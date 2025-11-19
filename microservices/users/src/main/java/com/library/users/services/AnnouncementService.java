@@ -17,6 +17,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +38,7 @@ public class AnnouncementService {
      * Crear un nuevo anuncio
      */
     @Transactional
+    @CachePut(value = "announcements", key = "#result.id")
     public AnnouncementResponseDTO createAnnouncement(AnnouncementRequestDTO dto) {
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
             log.error("Error al crear anuncio: El título es obligatorio");
@@ -71,6 +75,7 @@ public class AnnouncementService {
      * Obtener anuncio por ID
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "announcements", key = "#id")
     public AnnouncementResponseDTO getAnnouncementById(Integer id) {
         if (id == null || id <= 0) {
             log.error("Error al obtener anuncio: ID inválido: {}", id);
@@ -85,6 +90,7 @@ public class AnnouncementService {
      * Actualizar anuncio
      */
     @Transactional
+    @CachePut(value = "announcements", key = "#id")
     public AnnouncementResponseDTO updateAnnouncement(Integer id, AnnouncementRequestDTO dto) {
         if (id == null || id <= 0) {
             log.error("Error al actualizar anuncio: ID inválido: {}", id);
@@ -125,6 +131,7 @@ public class AnnouncementService {
      * Eliminar anuncio (soft delete)
      */
     @Transactional
+    @CacheEvict(value = "announcements", key = "#id")
     public void deleteAnnouncement(Integer id) {
         if (id == null || id <= 0) {
             log.error("Error al eliminar anuncio: ID inválido: {}", id);
