@@ -22,7 +22,8 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // Permitir orígenes específicos
-        config.setAllowedOrigins(List.of("http://localhost:8080"));
+        config.setAllowedOrigins(List.of("http://localhost:8080","http://localhost:8085"));
+
 
         // Permitir todos los headers
         config.addAllowedHeader("*");

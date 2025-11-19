@@ -208,8 +208,13 @@ export default {
 
     const loadAnnouncements = async () => {
       try {
-        const response = await announcementsAPI.getAll();
-        announcements.value = response.data?.content || [];
+        const response = await announcementsAPI.getAll({
+          targetAudience: '-',
+          type: '-',
+          page: 0
+        });
+        // El backend devuelve en 'data', no en 'content'
+        announcements.value = response.data?.data || [];
         announcements.value = announcements.value.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } catch (error) {
         console.error('Error loading announcements:', error);

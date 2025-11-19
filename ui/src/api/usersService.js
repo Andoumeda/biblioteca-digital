@@ -1,9 +1,9 @@
 import { usersApiClient } from './apiClient';
 
 export const userProfilesAPI = {
-  // Obtener todos los perfiles de usuario
-  getAllProfiles() {
-    return usersApiClient.get('/user-profiles');
+  getAllProfiles(page = 0, displayName = '-') {
+    const dn = encodeURIComponent(displayName || '-');
+    return usersApiClient.get(`/user-profiles/display-name/${dn}/page/${page}`);
   },
 
   // Obtener perfil por ID
@@ -26,12 +26,12 @@ export const userProfilesAPI = {
     return usersApiClient.delete(`/user-profiles/${id}`);
   },
 
-  // Obtener perfil por userId
+  // Obtener perfil por userId (si el backend no provee un endpoint directo, buscar localmente)
   async getProfileByUserId(userId) {
     try {
-      const response = await this.getAllProfiles();
-      const profiles = response.data || [];
-      return profiles.find(profile => profile.userId === userId);
+      const response = await this.getAllProfiles(0, '-'); // obtener todos sin filtro
+      const profiles = response.data?.content || response.data || [];
+      return (profiles || []).find(profile => profile.userId === userId) || null;
     } catch (error) {
       console.error(`Error getting profile for user ${userId}:`, error);
       return null;
@@ -40,9 +40,9 @@ export const userProfilesAPI = {
 };
 
 export const usersAPI = {
-  // Obtener todos los usuarios
+  // Obtener todos los usuarios (reutiliza user-profiles endpoint sin filtro)
   getAll() {
-    return usersApiClient.get('/user-profiles');
+    return userProfilesAPI.getAllProfiles(0, '-');
   },
 
   // Obtener usuario por ID
@@ -66,10 +66,12 @@ export const usersAPI = {
   }
 };
 
+// API para anuncios
 export const announcementsAPI = {
-  // Obtener todos los anuncios
-  getAll(page = 0, size = 20) {
-    return usersApiClient.get(`/announcements/page/${page}/size/${size}`);
+  getAll({ targetAudience = '-', type = '-', page = 0 } = {}) {
+    const ta = encodeURIComponent(targetAudience || '-');
+    const t = encodeURIComponent(type || '-');
+    return usersApiClient.get(`/announcements/audience/${ta}/type/${t}/page/${page}`);
   },
 
   // Obtener anuncio por ID
@@ -91,4 +93,62 @@ export const announcementsAPI = {
   delete(id) {
     return usersApiClient.delete(`/announcements/${id}`);
   }
+};
+
+// API para la relación many-to-many entre UserProfile y Announcement
+export const profileAnnouncementsAPI = {
+  getAllByFilters({ profileId = 0, announcementId = 0, min = '0000-01-01T00:00:00Z', max = '0000-01-01T00:00:00Z', isRead = '-', page = 0 } = {}) {
+    const p = Number.isInteger(profileId) ? profileId : encodeURIComponent(profileId);
+    const a = Number.isInteger(announcementId) ? announcementId : encodeURIComponent(announcementId);
+    const minEnc = encodeURIComponent(min);
+    const maxEnc = encodeURIComponent(max);
+    const isReadEnc = encodeURIComponent(isRead);
+
+    return usersApiClient.get(`/profile-announcements/profile/${p}/announcement/${a}/date/${minEnc}/${maxEnc}/isRead/${isReadEnc}/page/${page}`);
+  },
+
+  // Obtener relación por ID
+  getById(id) {
+    return usersApiClient.get(`/profile-announcements/${id}`);
+  },
+
+  // Crear relación profile-announcement
+  create(profileAnnouncementData) {
+    return usersApiClient.post('/profile-announcements', profileAnnouncementData);
+  },
+
+  // Actualizar relación (marcar leido, programar fecha, etc.)
+  update(id, updateData) {
+    return usersApiClient.put(`/profile-announcements/${id}`, updateData);
+  },
+
+  // Eliminar relación
+  delete(id) {
+    return usersApiClient.delete(`/profile-announcements/${id}`);
+  }
+};
+
+// Helper para mapear el DTO de profile-announcement a la forma que pide la UI
+export function mapProfileAnnouncementDTO(dto) {
+  if (!dto) return null;
+  return {
+    id: dto.id,
+    createdAt: dto.createdAt || dto.created_at || dto.created, // tolerancia a distintos nombres
+    isDeleted: dto.isDeleted ?? dto.deleted ?? false,
+    updatedAt: dto.updatedAt || dto.updated_at || dto.updated,
+    isRead: dto.isRead ?? dto.read ?? false,
+    programmedDate: dto.programmedDate || dto.programmed_date || dto.programmedAt || null,
+    announcementId: dto.announcementId || dto.announcement_id || (dto.announcement && dto.announcement.id) || null,
+    userProfileId: dto.userProfileId || dto.user_profile_id || (dto.userProfile && dto.userProfile.id) || null,
+    // mantener resto del DTO por si la UI necesita más campos
+    raw: dto
+  };
+}
+
+export default {
+  userProfilesAPI,
+  usersAPI,
+  announcementsAPI,
+  profileAnnouncementsAPI,
+
 };

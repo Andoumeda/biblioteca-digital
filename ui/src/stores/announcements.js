@@ -23,12 +23,17 @@ export const useAnnouncementsStore = defineStore('announcements', {
       console.log('Fetching announcements:', { page, size }); // Debug log
 
       try {
-        const response = await announcementsAPI.getAll(page, size);
+        const response = await announcementsAPI.getAll({
+          targetAudience: '-',
+          type: '-',
+          page: page
+        });
         console.log('Announcements response:', response.data); // Debug log
 
         if (response.data) {
-          this.announcements = response.data.content || [];
-          this.totalItems = response.data.totalElements || 0;
+
+          this.announcements = response.data.data || [];
+          this.totalItems = response.data.totalItems || 0;
           this.totalPages = response.data.totalPages || 1;
           this.currentPage = page;
           this.pageSize = size;
