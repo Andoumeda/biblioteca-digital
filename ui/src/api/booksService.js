@@ -175,3 +175,32 @@ export const authorsAPI = {
     return this.getAuthorsByFilters({}, page);
   }
 };
+
+export const bookAuthorsAPI = {
+  // Obtener relaciones libro-autor con filtros
+  getByFilters({ bookId = 0, authorId = 0, contribution = '-', page = 0 }) {
+    return booksApiClient.get(
+      `/book_authors/book/${bookId}/author/${authorId}/contribution/${contribution}/page/${page}`
+    );
+  },
+
+  // Obtener relación por ID
+  getById(id) {
+    return booksApiClient.get(`/book_authors/${id}`);
+  },
+
+  // Crear relación libro-autor
+  create(data) {
+    return booksApiClient.post('/book_authors', data);
+  },
+
+  // Actualizar relación libro-autor
+  update(id, data) {
+    return booksApiClient.put(`/book_authors/${id}`, data);
+  },
+
+  // Eliminar relación libro-autor
+  delete(id) {
+    return booksApiClient.delete(`/book_authors/${id}`);
+  },
+};

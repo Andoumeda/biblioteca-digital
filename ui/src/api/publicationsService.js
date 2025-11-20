@@ -131,3 +131,32 @@ export const favoritesAPI = {
     return publicationsApiClient.delete(`/favorites/${id}`);
   },
 };
+
+export const publicationCategoriesAPI = {
+  // Obtener todas las relaciones de publicación-categoría con filtros
+  getByFilters({ publicationId = 0, categoryId = 0, min = 0, max = 0, page = 0 }) {
+    return publicationsApiClient.get(
+      `/publication_categories/publication/${publicationId}/category/${categoryId}/relevance/${min}/${max}/page/${page}`
+    );
+  },
+
+  // Obtener relación por ID
+  getById(id) {
+    return publicationsApiClient.get(`/publication_categories/${id}`);
+  },
+
+  // Crear relación publicación-categoría
+  create(data) {
+    return publicationsApiClient.post('/publication_categories', data);
+  },
+
+  // Actualizar relación publicación-categoría
+  update(id, data) {
+    return publicationsApiClient.put(`/publication_categories/${id}`, data);
+  },
+
+  // Eliminar relación publicación-categoría
+  delete(id) {
+    return publicationsApiClient.delete(`/publication_categories/${id}`);
+  },
+};

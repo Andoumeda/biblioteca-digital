@@ -17,17 +17,17 @@ spring:
             - id: book-service
               uri: lb://book-service
               predicates:
-                - Path=/books/**, /authors/**, /ratings/**
+                - Path=/books/**, /authors/**, /ratings/**, /book_authors/**
 
             - id: publication-service
               uri: lb://publication-service
               predicates:
-                - Path=/publications/**, /categories/**, /favorites/**
+                - Path=/publications/**, /categories/**, /favorites/**, /publication_categories/**
 
             - id: user-profile-service
               uri: lb://user-profile-service
               predicates:
-                - Path=/user-profiles/**, /announcements/**
+                - Path=/user-profiles/**, /announcements/**, /profile-announcements/**
 
             # Rutas genéricas para archivos OpenAPI
             - id: security-openapi

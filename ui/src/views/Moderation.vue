@@ -18,6 +18,12 @@
         Categorías
       </button>
       <button
+        :class="['tab-button', { active: activeTab === 'publicationCategories' }]"
+        @click="activeTab = 'publicationCategories'"
+      >
+        Categorías de Publicaciones
+      </button>
+      <button
         :class="['tab-button', { active: activeTab === 'favorites' }]"
         @click="activeTab = 'favorites'"
       >
@@ -36,6 +42,12 @@
         Libros
       </button>
       <button
+        :class="['tab-button', { active: activeTab === 'bookAuthors' }]"
+        @click="activeTab = 'bookAuthors'"
+      >
+        Autores de Libros
+      </button>
+      <button
         :class="['tab-button', { active: activeTab === 'ratings' }]"
         @click="activeTab = 'ratings'"
       >
@@ -46,6 +58,12 @@
         @click="activeTab = 'announcements'"
       >
         Anuncios
+      </button>
+      <button
+        :class="['tab-button', { active: activeTab === 'profileAnnouncements' }]"
+        @click="activeTab = 'profileAnnouncements'"
+      >
+        Anuncios a Perfiles
       </button>
     </div>
 
@@ -166,6 +184,157 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Publication Categories Tab -->
+    <div v-if="activeTab === 'publicationCategories'" class="tab-content">
+      <div class="section-header">
+        <h3>Asignación de Categorías a Publicaciones</h3>
+      </div>
+
+      <div class="pub-cat-container">
+        <!-- Publications List -->
+        <div class="pub-cat-section">
+          <h4 class="section-title">Publicaciones</h4>
+          <div class="search-box">
+            <input
+              v-model="pubCatSearchTerm"
+              type="text"
+              placeholder="Buscar publicación..."
+              class="search-input"
+            />
+          </div>
+          <div class="items-list">
+            <div
+              v-for="pub in filteredPublicationsForCategories"
+              :key="pub.id"
+              class="item-card"
+              :class="{ selected: selectedPublications.includes(pub.id) }"
+            >
+              <label class="item-label">
+                <input
+                  type="checkbox"
+                  :value="pub.id"
+                  v-model="selectedPublications"
+                  class="item-checkbox"
+                />
+                <div class="item-content">
+                  <div class="item-title">{{ pub.title }}</div>
+                  <div class="item-meta">
+                    ID: {{ pub.id }} • Estado: {{ getStatusLabel(pub.state) }}
+                  </div>
+                  <div v-if="pub.categories && pub.categories.length > 0" class="item-existing-cats">
+                    <span class="existing-cats-label">Categorías actuales:</span>
+                    <span v-for="cat in pub.categories" :key="cat.id" class="mini-category-tag">
+                      {{ cat.name }}
+                    </span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="selection-info">
+            {{ selectedPublications.length }} publicación(es) seleccionada(s)
+          </div>
+        </div>
+
+        <!-- Categories List -->
+        <div class="pub-cat-section">
+          <h4 class="section-title">Categorías</h4>
+          <div class="search-box">
+            <input
+              v-model="catSearchTerm"
+              type="text"
+              placeholder="Buscar categoría..."
+              class="search-input"
+            />
+          </div>
+          <div class="items-list">
+            <div
+              v-for="cat in filteredCategoriesForAssignment"
+              :key="cat.id"
+              class="item-card"
+              :class="{ selected: selectedCategories.includes(cat.id) }"
+            >
+              <label class="item-label">
+                <input
+                  type="checkbox"
+                  :value="cat.id"
+                  v-model="selectedCategories"
+                  class="item-checkbox"
+                />
+                <div class="item-content">
+                  <div class="item-title">{{ cat.name }}</div>
+                  <div class="item-meta">ID: {{ cat.id }}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="selection-info">
+            {{ selectedCategories.length }} categoría(s) seleccionada(s)
+          </div>
+        </div>
+      </div>
+
+      <!-- Relevance Assignment Section -->
+      <div v-if="selectedPublications.length > 0 && selectedCategories.length > 0" class="relevance-assignment">
+        <h4 class="section-title">Asignar Relevancia (1-10) para cada Publicación</h4>
+        <div class="relevance-forms">
+          <div
+            v-for="pubId in selectedPublications"
+            :key="pubId"
+            class="relevance-form-card"
+          >
+            <h5 class="pub-title-in-form">
+              {{ getPublicationById(pubId)?.title || `Publicación #${pubId}` }}
+            </h5>
+            <div class="relevance-inputs">
+              <div
+                v-for="catId in selectedCategories"
+                :key="`${pubId}-${catId}`"
+                class="relevance-input-row"
+              >
+                <label class="relevance-label">
+                  {{ getCategoryById(catId)?.name || `Categoría #${catId}` }}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  v-model.number="relevanceScores[`${pubId}-${catId}`]"
+                  class="relevance-input"
+                  placeholder="1-10"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons-center">
+          <button @click="handleSavePublicationCategories" class="btn btn-primary btn-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Guardar Asignaciones
+          </button>
+          <button @click="handleClearSelection" class="btn btn-secondary btn-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Limpiar Selección
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="no-selection-message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <p>Selecciona al menos una publicación y una categoría para comenzar</p>
       </div>
     </div>
 
@@ -400,6 +569,163 @@
       </div>
     </div>
 
+    <!-- Book Authors Tab -->
+    <div v-if="activeTab === 'bookAuthors'" class="tab-content">
+      <div class="section-header">
+        <h3>Asignación de Autores a Libros</h3>
+      </div>
+
+      <div class="pub-cat-container">
+        <!-- Books List -->
+        <div class="pub-cat-section">
+          <h4 class="section-title">Libros</h4>
+          <div class="search-box">
+            <input
+              v-model="bookAuthorSearchTerm"
+              type="text"
+              placeholder="Buscar libro..."
+              class="search-input"
+            />
+          </div>
+          <div class="items-list">
+            <div
+              v-for="book in filteredBooksForAuthors"
+              :key="book.id"
+              class="item-card"
+              :class="{ selected: selectedBooks.includes(book.id) }"
+            >
+              <label class="item-label">
+                <input
+                  type="checkbox"
+                  :value="book.id"
+                  v-model="selectedBooks"
+                  class="item-checkbox"
+                />
+                <div class="item-content">
+                  <div class="item-title">{{ book.title }}</div>
+                  <div class="item-meta">
+                    ID: {{ book.id }}
+                  </div>
+                  <div v-if="book.authors && book.authors.length > 0" class="item-existing-cats">
+                    <span class="existing-cats-label">Autores actuales:</span>
+                    <span v-for="author in book.authors" :key="author.id" class="mini-category-tag">
+                      {{ author.fullName }}
+                    </span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="selection-info">
+            {{ selectedBooks.length }} libro(s) seleccionado(s)
+          </div>
+        </div>
+
+        <!-- Authors List -->
+        <div class="pub-cat-section">
+          <h4 class="section-title">Autores</h4>
+          <div class="search-box">
+            <input
+              v-model="authorSearchTerm"
+              type="text"
+              placeholder="Buscar autor..."
+              class="search-input"
+            />
+          </div>
+          <div class="items-list">
+            <div
+              v-for="author in filteredAuthorsForAssignment"
+              :key="author.id"
+              class="item-card"
+              :class="{ selected: selectedAuthors.includes(author.id) }"
+            >
+              <label class="item-label">
+                <input
+                  type="checkbox"
+                  :value="author.id"
+                  v-model="selectedAuthors"
+                  class="item-checkbox"
+                />
+                <div class="item-content">
+                  <div class="item-title">{{ author.fullName }}</div>
+                  <div class="item-meta">
+                    ID: {{ author.id }}
+                    <span v-if="author.nationality"> • {{ author.nationality }}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="selection-info">
+            {{ selectedAuthors.length }} autor(es) seleccionado(s)
+          </div>
+        </div>
+      </div>
+
+      <!-- Contribution Type Assignment Section -->
+      <div v-if="selectedBooks.length > 0 && selectedAuthors.length > 0" class="relevance-assignment">
+        <h4 class="section-title">Asignar Tipo de Contribución para cada Libro</h4>
+        <div class="relevance-forms">
+          <div
+            v-for="bookId in selectedBooks"
+            :key="bookId"
+            class="relevance-form-card"
+          >
+            <h5 class="pub-title-in-form">
+              {{ getBookById(bookId)?.title || `Libro #${bookId}` }}
+            </h5>
+            <div class="relevance-inputs">
+              <div
+                v-for="authorId in selectedAuthors"
+                :key="`${bookId}-${authorId}`"
+                class="relevance-input-row"
+              >
+                <label class="relevance-label">
+                  {{ getAuthorById(authorId)?.fullName || `Autor #${authorId}` }}
+                </label>
+                <select
+                  v-model="contributionTypes[`${bookId}-${authorId}`]"
+                  class="contribution-select"
+                >
+                  <option value="">Seleccionar tipo...</option>
+                  <option value="PRINCIPAL">Principal</option>
+                  <option value="COAUTHOR">Coautor</option>
+                  <option value="EDITOR">Editor</option>
+                  <option value="TRADUCTOR">Traductor</option>
+                  <option value="ILLUSTRATOR">Ilustrador</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons-center">
+          <button @click="handleSaveBookAuthors" class="btn btn-primary btn-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Guardar Asignaciones
+          </button>
+          <button @click="handleClearBookAuthorsSelection" class="btn btn-secondary btn-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Limpiar Selección
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="no-selection-message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <p>Selecciona al menos un libro y un autor para comenzar</p>
+      </div>
+    </div>
+
     <!-- Ratings Tab -->
     <div v-if="activeTab === 'ratings'" class="tab-content">
       <div class="section-header">
@@ -578,6 +904,151 @@
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
+      </div>
+    </div>
+
+    <!-- Profile Announcements Tab -->
+    <div v-if="activeTab === 'profileAnnouncements'" class="tab-content">
+      <div class="section-header">
+        <h3>Asignación de Anuncios a Perfiles de Usuarios</h3>
+      </div>
+
+      <div class="pub-cat-container">
+        <!-- User Profiles List -->
+        <div class="pub-cat-section">
+          <h4 class="section-title">Perfiles de Usuarios</h4>
+          <div class="search-box">
+            <input
+              v-model="profileSearchTerm"
+              type="text"
+              placeholder="Buscar perfil..."
+              class="search-input"
+            />
+          </div>
+          <div class="items-list">
+            <div
+              v-for="profile in filteredProfilesForAnnouncements"
+              :key="profile.id"
+              class="item-card"
+              :class="{ selected: selectedProfiles.includes(profile.id) }"
+            >
+              <label class="item-label">
+                <input
+                  type="checkbox"
+                  :value="profile.id"
+                  v-model="selectedProfiles"
+                  class="item-checkbox"
+                />
+                <div class="item-content">
+                  <div class="item-title">{{ profile.displayName || profile.user?.username || 'Sin nombre' }}</div>
+                  <div class="item-meta">
+                    ID: {{ profile.id }}
+                    <span v-if="profile.user?.username"> • @{{ profile.user.username }}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="selection-info">
+            {{ selectedProfiles.length }} perfil(es) seleccionado(s)
+          </div>
+        </div>
+
+        <!-- Announcements List -->
+        <div class="pub-cat-section">
+          <h4 class="section-title">Anuncios</h4>
+          <div class="search-box">
+            <input
+              v-model="announcementSearchTerm"
+              type="text"
+              placeholder="Buscar anuncio..."
+              class="search-input"
+            />
+          </div>
+          <div class="items-list">
+            <div
+              v-for="announcement in filteredAnnouncementsForAssignment"
+              :key="announcement.id"
+              class="item-card"
+              :class="{ selected: selectedAnnouncementsForProfiles.includes(announcement.id) }"
+            >
+              <label class="item-label">
+                <input
+                  type="checkbox"
+                  :value="announcement.id"
+                  v-model="selectedAnnouncementsForProfiles"
+                  class="item-checkbox"
+                />
+                <div class="item-content">
+                  <div class="item-title">{{ announcement.title }}</div>
+                  <div class="item-meta">
+                    ID: {{ announcement.id }} • {{ getAnnouncementTypeLabel(announcement.type) }}
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="selection-info">
+            {{ selectedAnnouncementsForProfiles.length }} anuncio(s) seleccionado(s)
+          </div>
+        </div>
+      </div>
+
+      <!-- Programmed Date Assignment Section -->
+      <div v-if="selectedProfiles.length > 0 && selectedAnnouncementsForProfiles.length > 0" class="relevance-assignment">
+        <h4 class="section-title">Asignar Fecha Programada para cada Perfil</h4>
+        <div class="relevance-forms">
+          <div
+            v-for="profileId in selectedProfiles"
+            :key="profileId"
+            class="relevance-form-card"
+          >
+            <h5 class="pub-title-in-form">
+              {{ getProfileById(profileId)?.displayName || getProfileById(profileId)?.user?.username || `Perfil #${profileId}` }}
+            </h5>
+            <div class="relevance-inputs">
+              <div
+                v-for="announcementId in selectedAnnouncementsForProfiles"
+                :key="`${profileId}-${announcementId}`"
+                class="relevance-input-row"
+              >
+                <label class="relevance-label">
+                  {{ getAnnouncementById(announcementId)?.title || `Anuncio #${announcementId}` }}
+                </label>
+                <input
+                  type="datetime-local"
+                  v-model="programmedDates[`${profileId}-${announcementId}`]"
+                  class="datetime-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons-center">
+          <button @click="handleSaveProfileAnnouncements" class="btn btn-primary btn-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Guardar Asignaciones
+          </button>
+          <button @click="handleClearProfileAnnouncementsSelection" class="btn btn-secondary btn-large">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Limpiar Selección
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="no-selection-message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <p>Selecciona al menos un perfil y un anuncio para comenzar</p>
       </div>
     </div>
 
@@ -1002,8 +1473,9 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { publicationsAPI } from '../api/publicationsService';
-import { categoriesAPI, favoritesAPI } from '../api/publicationsService';
-import { booksAPI, ratingsAPI, authorsAPI } from '../api/booksService';
+import { categoriesAPI, favoritesAPI, publicationCategoriesAPI } from '../api/publicationsService';
+import { booksAPI, ratingsAPI, authorsAPI, bookAuthorsAPI } from '../api/booksService';
+import { userProfilesAPI, profileAnnouncementsAPI } from '../api/usersService';
 import { useAnnouncementsStore } from '../stores/announcements';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 import BookDetailModal from '../components/BookDetailModal.vue';
@@ -1063,6 +1535,28 @@ export default {
     const ratingsPagination = ref({ currentPage: 0, totalPages: 1, pageSize: 20 });
     const manualBooksPage = ref(1);
 
+    // Publication Categories states
+    const selectedPublications = ref([]);
+    const selectedCategories = ref([]);
+    const relevanceScores = ref({});
+    const pubCatSearchTerm = ref('');
+    const catSearchTerm = ref('');
+
+    // Book Authors states
+    const selectedBooks = ref([]);
+    const selectedAuthors = ref([]);
+    const contributionTypes = ref({});
+    const bookAuthorSearchTerm = ref('');
+    const authorSearchTerm = ref('');
+
+    // Profile Announcements states
+    const userProfiles = ref([]);
+    const selectedProfiles = ref([]);
+    const selectedAnnouncementsForProfiles = ref([]);
+    const programmedDates = ref({});
+    const profileSearchTerm = ref('');
+    const announcementSearchTerm = ref('');
+
     // Watch for books page changes to update manual page input
     watch(() => booksPagination.value.currentPage, (newPage) => {
       manualBooksPage.value = newPage + 1;
@@ -1076,6 +1570,91 @@ export default {
       }
 
       return pubs;
+    });
+
+    const filteredPublicationsForCategories = computed(() => {
+      let pubs = publications.value;
+
+      if (pubCatSearchTerm.value.trim()) {
+        const term = pubCatSearchTerm.value.toLowerCase();
+        pubs = pubs.filter(pub =>
+          pub.title.toLowerCase().includes(term) ||
+          pub.id.toString().includes(term)
+        );
+      }
+
+      return pubs;
+    });
+
+    const filteredCategoriesForAssignment = computed(() => {
+      let cats = categories.value;
+
+      if (catSearchTerm.value.trim()) {
+        const term = catSearchTerm.value.toLowerCase();
+        cats = cats.filter(cat =>
+          cat.name.toLowerCase().includes(term) ||
+          cat.id.toString().includes(term)
+        );
+      }
+
+      return cats;
+    });
+
+    const filteredBooksForAuthors = computed(() => {
+      let bks = books.value;
+
+      if (bookAuthorSearchTerm.value.trim()) {
+        const term = bookAuthorSearchTerm.value.toLowerCase();
+        bks = bks.filter(book =>
+          book.title.toLowerCase().includes(term) ||
+          book.id.toString().includes(term)
+        );
+      }
+
+      return bks;
+    });
+
+    const filteredAuthorsForAssignment = computed(() => {
+      let auths = authors.value;
+
+      if (authorSearchTerm.value.trim()) {
+        const term = authorSearchTerm.value.toLowerCase();
+        auths = auths.filter(author =>
+          author.fullName.toLowerCase().includes(term) ||
+          author.id.toString().includes(term)
+        );
+      }
+
+      return auths;
+    });
+
+    const filteredProfilesForAnnouncements = computed(() => {
+      let profiles = userProfiles.value;
+
+      if (profileSearchTerm.value.trim()) {
+        const term = profileSearchTerm.value.toLowerCase();
+        profiles = profiles.filter(profile =>
+          (profile.displayName && profile.displayName.toLowerCase().includes(term)) ||
+          (profile.user?.username && profile.user.username.toLowerCase().includes(term)) ||
+          profile.id.toString().includes(term)
+        );
+      }
+
+      return profiles;
+    });
+
+    const filteredAnnouncementsForAssignment = computed(() => {
+      let anns = announcements.value;
+
+      if (announcementSearchTerm.value.trim()) {
+        const term = announcementSearchTerm.value.toLowerCase();
+        anns = anns.filter(announcement =>
+          announcement.title.toLowerCase().includes(term) ||
+          announcement.id.toString().includes(term)
+        );
+      }
+
+      return anns;
     });
 
     const loadPublications = async () => {
@@ -1093,6 +1672,15 @@ export default {
         categories.value = response.data?.data || [];
       } catch (error) {
         console.error('Error loading categories:', error);
+      }
+    };
+
+    const loadUserProfiles = async () => {
+      try {
+        const response = await userProfilesAPI.getAllProfiles(0, '-');
+        userProfiles.value = response.data?.data || response.data?.content || [];
+      } catch (error) {
+        console.error('Error loading user profiles:', error);
       }
     };
 
@@ -1606,6 +2194,307 @@ export default {
       return labelMap[audience] || audience;
     };
 
+    // Publication Categories functions
+    const getPublicationById = (id) => {
+      return publications.value.find(pub => pub.id === id);
+    };
+
+    const getCategoryById = (id) => {
+      return categories.value.find(cat => cat.id === id);
+    };
+
+    const handleClearSelection = () => {
+      selectedPublications.value = [];
+      selectedCategories.value = [];
+      relevanceScores.value = {};
+      pubCatSearchTerm.value = '';
+      catSearchTerm.value = '';
+    };
+
+    const handleSavePublicationCategories = async () => {
+      // Validate that all relevance scores are filled
+      const missingScores = [];
+      for (const pubId of selectedPublications.value) {
+        for (const catId of selectedCategories.value) {
+          const key = `${pubId}-${catId}`;
+          const score = relevanceScores.value[key];
+          if (!score || score < 1 || score > 10) {
+            missingScores.push(key);
+          }
+        }
+      }
+
+      if (missingScores.length > 0) {
+        alert('Por favor, completa todos los campos de relevancia con valores entre 1 y 10');
+        return;
+      }
+
+      if (!confirm(`¿Desea guardar las asignaciones para ${selectedPublications.value.length} publicación(es) y ${selectedCategories.value.length} categoría(s)?`)) {
+        return;
+      }
+
+      try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        // For each publication, delete existing categories and create new ones
+        for (const pubId of selectedPublications.value) {
+          try {
+            // Get existing publication-category relationships for this publication
+            const existingResponse = await publicationCategoriesAPI.getByFilters({
+              publicationId: pubId,
+              page: 0
+            });
+
+            const existingRelations = existingResponse.data?.data || [];
+
+            // Delete existing relationships
+            for (const relation of existingRelations) {
+              try {
+                await publicationCategoriesAPI.delete(relation.id);
+              } catch (delError) {
+                console.error(`Error deleting relation ${relation.id}:`, delError);
+              }
+            }
+
+            // Create new relationships
+            for (const catId of selectedCategories.value) {
+              const key = `${pubId}-${catId}`;
+              const relevanceScore = relevanceScores.value[key];
+
+              try {
+                await publicationCategoriesAPI.create({
+                  publicationId: pubId,
+                  categoryId: catId,
+                  relevanceScore: relevanceScore
+                });
+                successCount++;
+              } catch (createError) {
+                console.error(`Error creating relation for pub ${pubId} cat ${catId}:`, createError);
+                errorCount++;
+              }
+            }
+          } catch (error) {
+            console.error(`Error processing publication ${pubId}:`, error);
+            errorCount++;
+          }
+        }
+
+        // Reload publications to get updated categories
+        await loadPublications();
+
+        alert(`Proceso completado. ${successCount} asignación(es) creada(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`);
+
+        // Clear selection
+        handleClearSelection();
+      } catch (error) {
+        console.error('Error saving publication categories:', error);
+        alert('Error al guardar las asignaciones de categorías');
+      }
+    };
+
+    // Book Authors functions
+    const getBookById = (id) => {
+      return books.value.find(book => book.id === id);
+    };
+
+    const getAuthorById = (id) => {
+      return authors.value.find(author => author.id === id);
+    };
+
+    const handleClearBookAuthorsSelection = () => {
+      selectedBooks.value = [];
+      selectedAuthors.value = [];
+      contributionTypes.value = {};
+      bookAuthorSearchTerm.value = '';
+      authorSearchTerm.value = '';
+    };
+
+    const handleSaveBookAuthors = async () => {
+      // Validate that all contribution types are selected
+      const validTypes = ['PRINCIPAL', 'COAUTHOR', 'EDITOR', 'TRADUCTOR', 'ILLUSTRATOR'];
+      const missingTypes = [];
+
+      for (const bookId of selectedBooks.value) {
+        for (const authorId of selectedAuthors.value) {
+          const key = `${bookId}-${authorId}`;
+          const type = contributionTypes.value[key];
+          if (!type || !validTypes.includes(type)) {
+            missingTypes.push(key);
+          }
+        }
+      }
+
+      if (missingTypes.length > 0) {
+        alert('Por favor, selecciona un tipo de contribución válido para todos los autores');
+        return;
+      }
+
+      if (!confirm(`¿Desea guardar las asignaciones para ${selectedBooks.value.length} libro(s) y ${selectedAuthors.value.length} autor(es)?`)) {
+        return;
+      }
+
+      try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        // For each book, delete existing authors and create new ones
+        for (const bookId of selectedBooks.value) {
+          try {
+            // Get existing book-author relationships for this book
+            const existingResponse = await bookAuthorsAPI.getByFilters({
+              bookId: bookId,
+              page: 0
+            });
+
+            const existingRelations = existingResponse.data?.data || [];
+
+            // Delete existing relationships
+            for (const relation of existingRelations) {
+              try {
+                await bookAuthorsAPI.delete(relation.id);
+              } catch (delError) {
+                console.error(`Error deleting relation ${relation.id}:`, delError);
+              }
+            }
+
+            // Create new relationships
+            for (const authorId of selectedAuthors.value) {
+              const key = `${bookId}-${authorId}`;
+              const contributionType = contributionTypes.value[key];
+
+              try {
+                await bookAuthorsAPI.create({
+                  bookId: bookId,
+                  authorId: authorId,
+                  contributionType: contributionType
+                });
+                successCount++;
+              } catch (createError) {
+                console.error(`Error creating relation for book ${bookId} author ${authorId}:`, createError);
+                errorCount++;
+              }
+            }
+          } catch (error) {
+            console.error(`Error processing book ${bookId}:`, error);
+            errorCount++;
+          }
+        }
+
+        // Reload books to get updated authors
+        await loadBooksPage(booksPagination.value.currentPage);
+
+        alert(`Proceso completado. ${successCount} asignación(es) creada(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`);
+
+        // Clear selection
+        handleClearBookAuthorsSelection();
+      } catch (error) {
+        console.error('Error saving book authors:', error);
+        alert('Error al guardar las asignaciones de autores');
+      }
+    };
+
+    // Profile Announcements functions
+    const getProfileById = (id) => {
+      return userProfiles.value.find(profile => profile.id === id);
+    };
+
+    const getAnnouncementById = (id) => {
+      return announcements.value.find(announcement => announcement.id === id);
+    };
+
+    const handleClearProfileAnnouncementsSelection = () => {
+      selectedProfiles.value = [];
+      selectedAnnouncementsForProfiles.value = [];
+      programmedDates.value = {};
+      profileSearchTerm.value = '';
+      announcementSearchTerm.value = '';
+    };
+
+    const handleSaveProfileAnnouncements = async () => {
+      // Validate that all programmed dates are filled
+      const missingDates = [];
+
+      for (const profileId of selectedProfiles.value) {
+        for (const announcementId of selectedAnnouncementsForProfiles.value) {
+          const key = `${profileId}-${announcementId}`;
+          const date = programmedDates.value[key];
+          if (!date || date.trim() === '') {
+            missingDates.push(key);
+          }
+        }
+      }
+
+      if (missingDates.length > 0) {
+        alert('Por favor, completa todos los campos de fecha programada');
+        return;
+      }
+
+      if (!confirm(`¿Desea guardar las asignaciones para ${selectedProfiles.value.length} perfil(es) y ${selectedAnnouncementsForProfiles.value.length} anuncio(s)?`)) {
+        return;
+      }
+
+      try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        // For each profile, delete existing profile-announcement relationships and create new ones
+        for (const profileId of selectedProfiles.value) {
+          try {
+            // Get existing profile-announcement relationships for this profile
+            const existingResponse = await profileAnnouncementsAPI.getAllByFilters({
+              profileId: profileId,
+              page: 0
+            });
+
+            const existingRelations = existingResponse.data?.data || existingResponse.data?.content || [];
+
+            // Delete existing relationships
+            for (const relation of existingRelations) {
+              try {
+                await profileAnnouncementsAPI.delete(relation.id);
+              } catch (delError) {
+                console.error(`Error deleting relation ${relation.id}:`, delError);
+              }
+            }
+
+            // Create new relationships
+            for (const announcementId of selectedAnnouncementsForProfiles.value) {
+              const key = `${profileId}-${announcementId}`;
+              const programmedDate = programmedDates.value[key];
+
+              // Convert datetime-local format to ISO format
+              const isoDate = new Date(programmedDate).toISOString();
+
+              try {
+                await profileAnnouncementsAPI.create({
+                  profileId: profileId,
+                  announcementId: announcementId,
+                  programmatedDate: isoDate,
+                  isRead: false
+                });
+                successCount++;
+              } catch (createError) {
+                console.error(`Error creating relation for profile ${profileId} announcement ${announcementId}:`, createError);
+                errorCount++;
+              }
+            }
+          } catch (error) {
+            console.error(`Error processing profile ${profileId}:`, error);
+            errorCount++;
+          }
+        }
+
+        alert(`Proceso completado. ${successCount} asignación(es) creada(s)${errorCount > 0 ? `, ${errorCount} error(es)` : ''}`);
+
+        // Clear selection
+        handleClearProfileAnnouncementsSelection();
+      } catch (error) {
+        console.error('Error saving profile announcements:', error);
+        alert('Error al guardar las asignaciones de anuncios a perfiles');
+      }
+    };
+
     onMounted(async () => {
       await loadPublications();
       await loadCategories();
@@ -1614,6 +2503,7 @@ export default {
       await loadBooksPage(0);
       await loadRatingsPage(0);
       await loadAnnouncementsPage(0);
+      await loadUserProfiles();
     });
 
     return {
@@ -1692,7 +2582,44 @@ export default {
       getAnnouncementTypeClass,
       getAnnouncementTypeLabel,
       getAnnouncementAudienceClass,
-      getAnnouncementAudienceLabel
+      getAnnouncementAudienceLabel,
+      // Publication Categories
+      selectedPublications,
+      selectedCategories,
+      relevanceScores,
+      pubCatSearchTerm,
+      catSearchTerm,
+      filteredPublicationsForCategories,
+      filteredCategoriesForAssignment,
+      getPublicationById,
+      getCategoryById,
+      handleClearSelection,
+      handleSavePublicationCategories,
+      // Book Authors
+      selectedBooks,
+      selectedAuthors,
+      contributionTypes,
+      bookAuthorSearchTerm,
+      authorSearchTerm,
+      filteredBooksForAuthors,
+      filteredAuthorsForAssignment,
+      getBookById,
+      getAuthorById,
+      handleClearBookAuthorsSelection,
+      handleSaveBookAuthors,
+      // Profile Announcements
+      userProfiles,
+      selectedProfiles,
+      selectedAnnouncementsForProfiles,
+      programmedDates,
+      profileSearchTerm,
+      announcementSearchTerm,
+      filteredProfilesForAnnouncements,
+      filteredAnnouncementsForAssignment,
+      getProfileById,
+      getAnnouncementById,
+      handleClearProfileAnnouncementsSelection,
+      handleSaveProfileAnnouncements
     };
   }
 };
@@ -2631,6 +3558,309 @@ export default {
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
+}
+
+/* Publication Categories Tab Styles */
+.pub-cat-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.pub-cat-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 16px 0;
+}
+
+.search-box {
+  margin-bottom: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.items-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.item-card {
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.item-card:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.item-card.selected {
+  background: #ebf4ff;
+  border-color: #667eea;
+}
+
+.item-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.item-checkbox {
+  margin-top: 4px;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.item-content {
+  flex: 1;
+}
+
+.item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.item-meta {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 4px;
+}
+
+.item-existing-cats {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.existing-cats-label {
+  font-size: 11px;
+  color: #718096;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.mini-category-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #e6fffa;
+  color: #234e52;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.selection-info {
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: #edf2f7;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.relevance-assignment {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.relevance-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.relevance-form-card {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.pub-title-in-form {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.relevance-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.relevance-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.relevance-label {
+  flex: 1;
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.relevance-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.relevance-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.relevance-input:invalid {
+  border-color: #fc8181;
+}
+
+.contribution-select {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.contribution-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.contribution-select option[value=""] {
+  color: #a0aec0;
+}
+
+.datetime-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background-color: white;
+  cursor: pointer;
+}
+
+.datetime-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.datetime-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.action-buttons-center {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.btn-large {
+  padding: 12px 32px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #2d3748;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.no-selection-message {
+  background: white;
+  border-radius: 12px;
+  padding: 48px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #718096;
+}
+
+.no-selection-message svg {
+  margin-bottom: 16px;
+  color: #cbd5e0;
+}
+
+.no-selection-message p {
+  font-size: 16px;
+  margin: 0;
 }
 </style>
 
