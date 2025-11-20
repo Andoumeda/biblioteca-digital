@@ -1,7 +1,10 @@
 package com.library.users.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -21,13 +24,26 @@ import java.time.Duration;
 @EnableCaching
 public class RedisConfig {
 
-    @Bean
-    public ObjectMapper redisObjectMapper() {
+    /**
+     * Crea un ObjectMapper solo para Redis, con defaultTyping activado
+     * para poder reconstruir correctamente los tipos al leer del caché.
+     * Este mapper NO se expone como ObjectMapper global de Spring MVC,
+     * por lo que las peticiones HTTP no requerirán el campo "@class".
+     */
+    private ObjectMapper redisObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        // Soporte para java.time.*
         mapper.registerModule(new JavaTimeModule());
-        // Importante: serializar fechas como strings ISO-8601, no como timestamps/arrays
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // Activar default typing solo para tipos del dominio de la app, para que Redis pueda
+        // reconstruir correctamente DTOs (UserProfileResponseDTO, etc.) al leer del caché.
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType("com.library")
+                .allowIfSubType("java.util")
+                .allowIfSubType("java.time")
+                .build();
+        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+
         return mapper;
     }
 
