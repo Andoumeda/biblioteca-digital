@@ -185,7 +185,7 @@
             />
           </div>
           <div class="favorite-content">
-            <h4 class="favorite-title">{{ favorite.publication?.title || 'Publicación #' + favorite.publicationId }}</h4>
+            <h4 class="favorite-title">{{ favorite.publication?.title || 'Publicación #' + favorite.publication.id }}</h4>
             <p class="favorite-user">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
@@ -1108,7 +1108,7 @@ export default {
         // Enrich with publication data
         for (const fav of favs) {
           try {
-            const pubResponse = await publicationsAPI.getById(fav.publicationId);
+            const pubResponse = await publicationsAPI.getById(fav.publication.id);
             fav.publication = pubResponse.data;
           } catch (error) {
             console.error('Error loading publication:', error);
@@ -1210,19 +1210,23 @@ export default {
 
     const handleApprove = async (publicationId) => {
       try {
-        await publicationsAPI.updateState(publicationId, 'APPROVED');
+        await publicationsAPI.approvePublication(publicationId);
         await loadPublications();
+        alert('Publicación aprobada exitosamente');
       } catch (error) {
         console.error('Error approving publication:', error);
+        alert('Error al aprobar la publicación');
       }
     };
 
     const handleReject = async (publicationId) => {
       try {
-        await publicationsAPI.updateState(publicationId, 'REJECTED');
+        await publicationsAPI.rejectPublication(publicationId);
         await loadPublications();
+        alert('Publicación rechazada exitosamente');
       } catch (error) {
         console.error('Error rejecting publication:', error);
+        alert('Error al rechazar la publicación');
       }
     };
 

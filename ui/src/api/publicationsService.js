@@ -36,9 +36,14 @@ export const publicationsAPI = {
     return publicationsApiClient.post('/publications', publicationData);
   },
 
-  // Actualizar estado de publicación
-  updateState(publicationId, newState) {
-    return publicationsApiClient.put(`/publications/${publicationId}/state/${newState}`);
+  // Aprobar publicación (PATCH /publications/{id}/approve)
+  approvePublication(publicationId) {
+    return publicationsApiClient.patch(`/publications/${publicationId}/approve`);
+  },
+
+  // Rechazar publicación (PATCH /publications/{id}/reject)
+  rejectPublication(publicationId) {
+    return publicationsApiClient.patch(`/publications/${publicationId}/reject`);
   },
 
   // Obtener publicación por ID

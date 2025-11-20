@@ -509,12 +509,12 @@ export default {
           // Enriquecer cada favorito con los datos de la publicación
           for (const favorite of favorites) {
             try {
-              const pubResponse = await publicationsAPI.getById(favorite.publicationId);
+              const pubResponse = await publicationsAPI.getById(favorite.publication.id);
               if (pubResponse.data) {
                 favorite.publication = pubResponse.data;
 
                 // Cargar libros de la publicación
-                const booksResponse = await booksAPI.getBooksByPublication(favorite.publicationId, 0);
+                const booksResponse = await booksAPI.getBooksByPublication(favorite.publication.id, 0);
                 favorite.publication.books = booksResponse.data?.data || [];
 
                 // Calcular rating promedio
