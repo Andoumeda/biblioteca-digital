@@ -494,7 +494,6 @@
           v-for="announcement in announcements"
           :key="announcement.id"
           class="announcement-card"
-          @click="goToAnnouncementDetail(announcement.id)"
         >
           <div :class="['announcement-icon', `icon-${getAnnouncementTypeClass(announcement.type)}`]">
             <svg v-if="announcement.type === 'ALERT'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -537,6 +536,21 @@
               <span class="announcement-date">{{ formatDate(announcement.createdAt) }}</span>
               <span class="announcement-author">Por: {{ announcement.userProfile?.displayName || 'Administrador' }}</span>
             </div>
+          </div>
+          <div class="announcement-actions">
+            <button @click="handleEditAnnouncement(announcement)" class="btn-icon" title="Editar anuncio">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+              </svg>
+            </button>
+            <button @click="handleDeleteAnnouncement(announcement.id)" class="btn-icon danger" title="Eliminar anuncio">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <line x1="10" x2="10" y1="11" y2="17"/>
+                <line x1="14" x2="14" y1="11" y2="17"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -903,6 +917,76 @@
       </div>
     </div>
 
+    <!-- Edit Announcement Modal -->
+    <div v-if="showEditAnnouncementModal" class="modal-overlay" @click="showEditAnnouncementModal = false">
+      <div class="modal-content" @click.stop>
+        <h3>Editar Anuncio</h3>
+        <form @submit.prevent="handleUpdateAnnouncement" class="announcement-form">
+          <div class="form-group">
+            <label for="editAnnouncementTitle">Título *</label>
+            <input
+              id="editAnnouncementTitle"
+              v-model="editingAnnouncement.title"
+              type="text"
+              placeholder="Título del anuncio"
+              required
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editAnnouncementMessage">Mensaje *</label>
+            <textarea
+              id="editAnnouncementMessage"
+              v-model="editingAnnouncement.message"
+              placeholder="Escribe el mensaje del anuncio..."
+              rows="6"
+              required
+              class="form-input form-textarea"
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editAnnouncementType">Tipo *</label>
+              <select
+                id="editAnnouncementType"
+                v-model="editingAnnouncement.type"
+                required
+                class="form-input form-select"
+              >
+                <option value="">Selecciona un tipo</option>
+                <option value="ALERT">Alerta</option>
+                <option value="INFO">Información</option>
+                <option value="WARNING">Advertencia</option>
+                <option value="PROMO">Promoción</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editAnnouncementTargetAudience">Audiencia *</label>
+              <select
+                id="editAnnouncementTargetAudience"
+                v-model="editingAnnouncement.targetAudience"
+                required
+                class="form-input form-select"
+              >
+                <option value="">Selecciona una audiencia</option>
+                <option value="ALL">Todos</option>
+                <option value="NEW_USERS">Nuevos usuarios</option>
+                <option value="ADMINS">Administradores</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" @click="showEditAnnouncementModal = false" class="btn btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" :disabled="isSubmittingAnnouncement">
+              {{ isSubmittingAnnouncement ? 'Actualizando...' : 'Guardar Cambios' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Book Detail Modal -->
     <BookDetailModal
       v-if="selectedBook"
@@ -957,6 +1041,7 @@ export default {
     const showBookDetailModal = ref(false);
     const showEditRatingModal = ref(false);
     const showCreateAnnouncementModal = ref(false);
+    const showEditAnnouncementModal = ref(false);
     const selectedBook = ref(null);
 
     // Form states
@@ -967,6 +1052,7 @@ export default {
     const editingBook = ref({ id: null, title: '', description: '', bookUrl: '', coverImg: '' });
     const editingRating = ref({ id: null, valoration: 0, comment: '', bookId: null, userProfileId: null });
     const newAnnouncement = ref({ title: '', message: '', type: '', targetAudience: '' });
+    const editingAnnouncement = ref({ id: null, title: '', message: '', type: '', targetAudience: '' });
     const isSubmittingAnnouncement = ref(false);
 
     // Pagination states
@@ -1083,6 +1169,20 @@ export default {
         ratings.value = ratingsData;
       } catch (error) {
         console.error('Error loading ratings:', error);
+      }
+    };
+
+    const loadAnnouncementsPage = async (page = 0) => {
+      announcementsLoading.value = true;
+      try {
+        await announcementsStore.fetchAnnouncements(page);
+        announcements.value = announcementsStore.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        announcementsPagination.value.currentPage = announcementsStore.currentPage;
+        announcementsPagination.value.totalPages = announcementsStore.totalPages;
+      } catch (error) {
+        console.error('Error loading announcements:', error);
+      } finally {
+        announcementsLoading.value = false;
       }
     };
 
@@ -1383,20 +1483,6 @@ export default {
     };
 
     // Announcements functions
-    const loadAnnouncementsPage = async (page = 0) => {
-      announcementsLoading.value = true;
-      try {
-        await announcementsStore.fetchAnnouncements(page);
-        announcements.value = announcementsStore.announcements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        announcementsPagination.value.currentPage = announcementsStore.currentPage;
-        announcementsPagination.value.totalPages = announcementsStore.totalPages;
-      } catch (error) {
-        console.error('Error loading announcements:', error);
-      } finally {
-        announcementsLoading.value = false;
-      }
-    };
-
     const handleCreateAnnouncement = async () => {
       if (!newAnnouncement.value.title || !newAnnouncement.value.message || !newAnnouncement.value.type || !newAnnouncement.value.targetAudience) {
         alert('Por favor completa todos los campos');
@@ -1431,6 +1517,46 @@ export default {
         alert('Error al crear el anuncio. Por favor intenta de nuevo.');
       } finally {
         isSubmittingAnnouncement.value = false;
+      }
+    };
+
+    const handleEditAnnouncement = (announcement) => {
+      editingAnnouncement.value = { ...announcement };
+      showEditAnnouncementModal.value = true;
+    };
+
+    const handleUpdateAnnouncement = async () => {
+      try {
+        const announcementData = {
+          title: editingAnnouncement.value.title,
+          message: editingAnnouncement.value.message,
+          type: editingAnnouncement.value.type,
+          targetAudience: editingAnnouncement.value.targetAudience,
+          userProfileId: HARDCODED_USER_PROFILE_ID
+        };
+
+        await announcementsStore.updateAnnouncement(editingAnnouncement.value.id, announcementData);
+        alert('¡Anuncio actualizado exitosamente!');
+
+        showEditAnnouncementModal.value = false;
+        editingAnnouncement.value = { id: null, title: '', message: '', type: '', targetAudience: '' };
+        await loadAnnouncementsPage(announcementsPagination.value.currentPage);
+      } catch (error) {
+        console.error('Error updating announcement:', error);
+        alert('Error al actualizar el anuncio. Por favor intenta de nuevo.');
+      }
+    };
+
+    const handleDeleteAnnouncement = async (announcementId) => {
+      if (confirm('¿Está seguro de eliminar este anuncio?')) {
+        try {
+          await announcementsStore.deleteAnnouncement(announcementId);
+          await loadAnnouncementsPage(announcementsPagination.value.currentPage);
+          alert('Anuncio eliminado exitosamente');
+        } catch (error) {
+          console.error('Error deleting announcement:', error);
+          alert('Error al eliminar el anuncio');
+        }
       }
     };
 
@@ -1510,6 +1636,7 @@ export default {
       showBookDetailModal,
       showEditRatingModal,
       showCreateAnnouncementModal,
+      showEditAnnouncementModal,
       selectedBook,
       newCategoryName,
       editingCategory,
@@ -1518,6 +1645,7 @@ export default {
       editingBook,
       editingRating,
       newAnnouncement,
+      editingAnnouncement,
       isSubmittingAnnouncement,
       manualBooksPage,
       formatDate,
@@ -1553,6 +1681,9 @@ export default {
       loadRatingsPage,
       loadAnnouncementsPage,
       handleCreateAnnouncement,
+      handleEditAnnouncement,
+      handleUpdateAnnouncement,
+      handleDeleteAnnouncement,
       goToAnnouncementDetail,
       getAnnouncementTypeClass,
       getAnnouncementTypeLabel,
@@ -2498,3 +2629,4 @@ export default {
   padding-right: 36px;
 }
 </style>
+
