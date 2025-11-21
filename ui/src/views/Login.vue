@@ -336,6 +336,7 @@ export default {
   data() {
     return {
       isLogin: true,
+      name: '',
       username: '',
       email: '',
       password: '',
@@ -395,7 +396,8 @@ export default {
           const result = await authStore.register({
             username: this.username,
             email: this.email,
-            password: this.password
+            password: this.password,
+            displayName: this.name.trim() || this.username
           });
 
           if (result.success) {
@@ -415,6 +417,7 @@ export default {
 
     toggleMode() {
       this.isLogin = !this.isLogin;
+      this.name = '';
       this.username = '';
       this.email = '';
       this.password = '';

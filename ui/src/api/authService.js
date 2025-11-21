@@ -31,13 +31,19 @@ export const authAPI = {
    * @param {string} userData.username - Nombre de usuario
    * @param {string} userData.email - Email del usuario
    * @param {string} userData.password - Contraseña del usuario
+   * @param {string} [userData.displayName] - Nombre a mostrar del usuario
+   * @param {string} [userData.bio] - Biografía del usuario
+   * @param {string} [userData.profilePicture] - URL de imagen de perfil
    * @returns {Promise} Respuesta con el token JWT
    */
   register(userData) {
     return authClient.post('/auth/register', {
       username: userData.username,
       email: userData.email,
-      password: userData.password
+      password: userData.password,
+      displayName: userData.displayName || userData.username,
+      bio: userData.bio || '',
+      profilePicture: userData.profilePicture || ''
     });
   },
 
