@@ -28,57 +28,13 @@
         Moderación
       </router-link>
     </nav>
-
-    <!-- Sección de Categorías -->
-    <div class="categories-section">
-      <h3>Categorías</h3>
-      <div v-if="loading" class="loading">Cargando...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else class="categories-list">
-        <button
-          @click="selectCategory(null)"
-          :class="{ active: selectedCategory === null }"
-          class="category-item"
-        >
-          📚 Todas
-        </button>
-        <button
-          v-for="category in categories"
-          :key="category.id"
-          @click="selectCategory(category.id)"
-          :class="{ active: selectedCategory === category.id }"
-          class="category-item"
-        >
-          {{ category.name }}
-        </button>
-      </div>
-    </div>
   </aside>
 </template>
 
 <script setup>
-import { useCategories } from '../composables/useCategories';
-import { usePublicationsStore } from '../stores/publicationsStore';
 import { useAuthStore } from '../stores/authStore';
-import { ref } from 'vue';
 
-const { categories, loading, error } = useCategories();
-const store = usePublicationsStore();
 const authStore = useAuthStore();
-const selectedCategory = ref(null);
-
-const selectCategory = async (categoryId) => {
-  selectedCategory.value = categoryId;
-
-  if (categoryId) {
-    await store.fetchPublicationsByCategory(categoryId);
-  } else {
-    await store.fetchPublications();
-  }
-
-  // Cargar favoritos después de obtener las publicaciones
-  await store.fetchCurrentPublicationsFavorites();
-};
 </script>
 
 <style scoped>
@@ -86,8 +42,6 @@ const selectCategory = async (categoryId) => {
   background: white;
   border-right: 1px solid #e2e8f0;
   height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 nav {
@@ -122,64 +76,5 @@ nav {
 
 .nav-link svg {
   flex-shrink: 0;
-}
-
-.categories-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.categories-section h3 {
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  padding: 0 1rem;
-  color: #718096;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.categories-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.category-item {
-  padding: 0.65rem 1rem;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #4a5568;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  border-left: 3px solid transparent;
-  border-radius: 6px;
-}
-
-.category-item:hover {
-  background-color: #f7fafc;
-  color: #667eea;
-}
-
-.category-item.active {
-  background-color: #edf2f7;
-  color: #667eea;
-  font-weight: 500;
-  border-left-color: #667eea;
-}
-
-.loading, .error {
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  color: #718096;
-}
-
-.error {
-  color: #ef4444;
 }
 </style>
