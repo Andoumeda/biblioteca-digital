@@ -795,6 +795,7 @@ export default {
 
 <style scoped>
 .my-library-container {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
@@ -913,7 +914,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  width: 56.25rem;
+  width: 100%;
 }
 
 .publication-card {

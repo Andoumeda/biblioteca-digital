@@ -83,33 +83,35 @@
         <div
           v-for="publication in filteredPublications"
           :key="publication.id"
-          class="moderation-card"
+          class="moderation-card moderation-card-flex"
         >
-          <div class="card-header">
-            <div class="publication-info">
-              <h3 class="publication-title">{{ publication.title }}</h3>
-              <p class="publication-meta">
-                Por: <strong>@{{ publication.userProfile?.user?.username || 'Desconocido' }}</strong>
-                • {{ formatDate(publication.createdAt) }}
-              </p>
-            </div>
-            <span :class="['status-badge', publication.state?.toLowerCase()]">
-              {{ getStatusLabel(publication.state) }}
-            </span>
-          </div>
+          <div class="card-main-content">
+              <div class="card-header">
+                <h3 class="publication-title">{{ publication.title }}</h3>
+                <span :class="['status-badge', publication.state?.toLowerCase()]">
+                  {{ getStatusLabel(publication.state) }}
+                </span>
+              </div>
 
-          <p class="publication-description">{{ publication.description }}</p>
+              <p class="publication-description">{{ publication.description }}</p>
 
-          <div class="publication-details">
-            <div class="detail-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-              </svg>
-              <span>{{ publication.books?.length || 0 }} libro(s)</span>
-            </div>
-          </div>
+              <div class="publication-details">
+                <div class="detail-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                  </svg>
+                  <span>{{ publication.books?.length || 0 }} libro(s)</span>
+                </div>
+              </div>
 
-          <div class="categories">
+              <div class="publication-info">
+                <p class="publication-meta">
+                  Por: <strong>@{{ publication.userProfile?.user?.username || 'Desconocido' }}</strong>
+                  • {{ formatDate(publication.createdAt) }}
+                </p>
+              </div>
+
+              <div class="categories">
             <span
               v-for="category in publication.categories"
               :key="category.id"
@@ -119,22 +121,23 @@
             </span>
           </div>
 
-          <div class="action-buttons">
+          </div>
+          <div class="action-buttons action-buttons-right">
             <button
               v-if="publication.state === 'PENDING' || publication.state === 'pending'"
               @click="handleApprove(publication.id)"
-              class="btn btn-approve"
+              class="btn btn-approve btn-action"
             >
               Aprobar
             </button>
             <button
               v-if="publication.state === 'PENDING' || publication.state === 'pending'"
               @click="handleReject(publication.id)"
-              class="btn btn-reject"
+              class="btn btn-reject btn-action"
             >
               Rechazar
             </button>
-            <button @click="handleViewDetails(publication)" class="btn btn-view">
+            <button @click="handleViewDetails(publication)" class="btn btn-view btn-action">
               Ver detalles
             </button>
           </div>
@@ -159,16 +162,16 @@
         <table class="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Acciones</th>
+<th>ID</th>
+               <th>Nombre</th>
+               <th style="text-align: right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="category in categories" :key="category.id">
-              <td>{{ category.id }}</td>
-              <td>{{ category.name }}</td>
-              <td>
+<td>{{ category.id }}</td>
+               <td>{{ category.name }}</td>
+               <td style="text-align: right;">
                 <button @click="handleEditCategory(category)" class="btn-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -341,7 +344,7 @@
     <!-- Favorites Tab -->
     <div v-if="activeTab === 'favorites'" class="tab-content">
       <div class="section-header">
-        <h3>Gestión de Favoritos de todos los usuarios</h3>
+        <h3>Favoritos de todos los usuarios</h3>
       </div>
 
       <div class="favorites-grid">
@@ -425,7 +428,7 @@
               <th>Nombre Completo</th>
               <th>Fecha de Nacimiento</th>
               <th>Nacionalidad</th>
-              <th>Acciones</th>
+              <th style="text-align: right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -434,7 +437,7 @@
               <td>{{ author.fullName }}</td>
               <td>{{ author.birthDate ? formatDate(author.birthDate) : 'N/A' }}</td>
               <td>{{ author.nationality || 'N/A' }}</td>
-              <td>
+              <td style="text-align: right;">
                 <button @click="handleEditAuthor(author)" class="btn-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -2644,11 +2647,54 @@ export default {
 
 .tabs {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   margin-bottom: 2rem;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 0.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: #667eea #f5f5f5;
 }
+
+.tab-button {
+  flex: 0 0 auto;
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-button.active {
+  background: #667eea;
+  color: white;
+}
+
+.tab-button {
+  flex: 0 0 auto;
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-button.active {
+  background: #667eea;
+  color: white;
+}
+
+.tab-button:not(.active):hover {
+  background: #e0e0e0;
+}
+
 
 .tab-button {
   padding: 0.75rem 1.5rem;
@@ -2685,6 +2731,28 @@ export default {
   background: white;
 }
 
+.moderation-card-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-main-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.action-buttons-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 140px;
+}
 .moderation-card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -2695,7 +2763,8 @@ export default {
 
 .card-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: left;
+  gap: 5%;
   align-items: flex-start;
   margin-bottom: 1rem;
 }
@@ -2743,7 +2812,6 @@ export default {
 .publication-details {
   display: flex;
   gap: 1.5rem;
-  margin-bottom: 1rem;
 }
 
 .detail-item {
@@ -2770,9 +2838,55 @@ export default {
 }
 
 .action-buttons {
-  display: flex;
-  gap: 0.75rem;
+  margin-top: 0;
 }
+
+.moderation-card-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-main-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.action-buttons-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 140px;
+}
+
+.moderation-card-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-main-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.action-buttons-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 140px;
+}
+
 
 .btn {
   padding: 0.5rem 1rem;
@@ -3861,6 +3975,16 @@ export default {
 .no-selection-message p {
   font-size: 16px;
   margin: 0;
+}
+.btn-action {
+  width: 120px;
+  min-width: 120px;
+  text-align: center;
+  padding: 0.5rem 0;
+  font-size: 15px;
+  font-weight: 500;
+  box-sizing: border-box;
+  display: inline-block;
 }
 </style>
 
