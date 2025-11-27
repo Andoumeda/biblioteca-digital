@@ -1,25 +1,39 @@
 <template>
   <div class="explore-container">
-    <div class="explore-header">
-      <h2 class="explore-title">Explorar Publicaciones</h2>
-      <p class="explore-subtitle">Descubre las mejores publicaciones de la comunidad</p>
-    </div>
-
-    <!-- Searchbar y Filtros en una sola sección -->
-    <div class="search-filter-section">
-      <div class="search-box">
-        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input
-          v-model="searchTerm"
-          type="text"
-          placeholder="Buscar publicaciones por título, descripción o autor..."
-          class="search-input"
-        />
+    <div>
+      <div class="explore-header">
+        <h2 class="explore-title">Explorar Publicaciones</h2>
+        <p class="explore-subtitle">Descubre las mejores publicaciones de la comunidad</p>
       </div>
 
+      <!-- Searchbar y Filtros en una sola sección -->
+      <div class="search-filter-section">
+        <div class="search-box">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            v-model="searchTerm"
+            type="text"
+            placeholder="Buscar publicaciones por título, descripción o autor..."
+            class="search-input"
+          />
+        </div>
+
+      <div class="category-filter-container">
+        <select v-model="selectedCategory" @change="onCategoryChange" class="select-input">
+          <option :value="null">Todas las categorías</option>
+          <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+        </select>
+        <button v-if="selectedCategory" @click="clearCategoryFilter" class="clear-category-btn">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;">
+    <line x1="4" y1="4" x2="12" y2="12"/>
+    <line x1="12" y1="4" x2="4" y2="12"/>
+  </svg>
+  Quitar filtro
+</button>
+      </div>
       <div class="filters-container">
         <select v-model="sortBy" class="select-input">
           <option value="trending">Más populares</option>
@@ -28,23 +42,23 @@
           <option value="popular">Más favoritos</option>
         </select>
       </div>
-    </div>
+      </div>
 
-    <div class="results-info">
-      {{ store.loading ? 'Cargando...' : `${sortedPublications.length} publicaciones encontradas` }}
-    </div>
+      <div class="results-info">
+        {{ store.loading ? 'Cargando...' : `${sortedPublications.length} publicaciones encontradas` }}
+      </div>
 
-    <div v-if="store.error" class="error-message">
-      {{ store.error }}
-    </div>
+      <div v-if="store.error" class="error-message">
+        {{ store.error }}
+      </div>
 
-    <div class="publications-grid">
-      <div
-        v-for="publication in sortedPublications"
-        :key="publication.id"
-        class="publication-card"
-        @click="handlePublicationClick(publication)"
-      >
+      <div class="publications-grid">
+        <div
+          v-for="publication in sortedPublications"
+          :key="publication.id"
+          class="publication-card"
+          @click="handlePublicationClick(publication)"
+        >
         <!-- Imagen de portada -->
         <div class="cover-image">
           <img
@@ -196,6 +210,7 @@
       :is-open="showPublicationModal"
       @close="closePublicationModal"
     />
+    </div>
   </div>
 </template>
 
@@ -204,6 +219,7 @@ import { usePublicationsStore } from '../stores/publicationsStore';
 import { useFavoritesStore } from '../stores/favorites';
 import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 
@@ -212,73 +228,104 @@ export default {
   components: {
     PublicationDetailModal
   },
-  setup() {
-    const store = usePublicationsStore();
-    const favoritesStore = useFavoritesStore();
-    const booksStore = useBooksStore();
-    const searchTerm = ref('');
-    const sortBy = ref('trending');
-    const selectedPublication = ref(null);
-    const showPublicationModal = ref(false);
-    const manualPage = ref(1);
-    const pageSize = ref(20);
+    setup() {
+      const route = useRoute();
+      const router = useRouter();
+      const store = usePublicationsStore();
+      const favoritesStore = useFavoritesStore();
+      const booksStore = useBooksStore();
+      const searchTerm = ref('');
+      const sortBy = ref('trending');
+      const selectedPublication = ref(null);
+      const showPublicationModal = ref(false);
+      const manualPage = ref(1);
+      const pageSize = ref(20);
+      const selectedCategory = ref(null);
 
-    // Watch for store page changes to update manual page input
-    watch(() => store.currentPage, (newPage) => {
-      manualPage.value = newPage + 1;
-    });
+      // Sincroniza el filtro con la query al montar
+      onMounted(() => {
+        if (route.query.category) {
+          selectedCategory.value = Number(route.query.category);
+        }
+        fetchPublications();
+      });
 
-    // Watch for store page size changes
-    watch(() => store.pageSize, (newSize) => {
-      pageSize.value = newSize;
-    });
+      // Si la query cambia (por navegación interna), actualiza el filtro
+      watch(() => route.query.category, (newCategory) => {
+        if (newCategory) {
+          selectedCategory.value = Number(newCategory);
+          manualPage.value = 1;
+          fetchPublications();
+        }
+      });
+
+      // Eliminado watcher de route.query.category, ahora el filtro se maneja localmente
+
+      // Watch for page size changes
+      watch(pageSize, () => {
+        manualPage.value = 1;
+        fetchPublications();
+      });
+
+      // Watch for manual page changes
+      watch(manualPage, (newPage) => {
+        fetchPublications();
+      });
+
+      // Fetch publications depending on category
+      const fetchPublications = async () => {
+        const page = manualPage.value - 1;
+        if (selectedCategory.value) {
+          await store.fetchPublicationsByCategoryRelevance(selectedCategory.value, page);
+        } else {
+          await store.fetchPublicationsByState('APPROVED', page, pageSize.value);
+        }
+        await store.fetchCurrentPublicationsFavorites();
+        await loadBooksRatings();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const onCategoryChange = () => {
+        manualPage.value = 1;
+        fetchPublications();
+      };
+
+      const clearCategoryFilter = () => {
+        selectedCategory.value = null;
+        manualPage.value = 1;
+        fetchPublications();
+      };
+
+
+      // Watch for store page changes to update manual page input
+      watch(() => store.currentPage, (newPage) => {
+        manualPage.value = newPage + 1;
+      });
+
+      // Watch for store page size changes
+      watch(() => store.pageSize, (newSize) => {
+        pageSize.value = newSize;
+      });
 
     const filteredPublications = computed(() => {
-      // Backend already filters by APPROVED state, so we only need to filter by search term
-      let pubs = store.publications.filter(pub => {
-        const matchesSearch =
-          pub.title?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-          pub.description?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-          pub.userProfile?.displayName?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-          pub.userProfile?.user?.username?.toLowerCase().includes(searchTerm.value.toLowerCase());
-        return matchesSearch;
-      });
-
-      // Add favorites count and book ratings
-      return pubs.map(pub => {
-        const books = pub.books || [];
-        const totalBooksRating = books.reduce((sum, book) => {
-          const rating = booksStore.getBookRating(book.id);
-          return sum + (rating.average || 0);
-        }, 0);
-        const averageRating = books.length > 0 ? totalBooksRating / books.length : 0;
-
-        return {
-          ...pub,
-          favoritesCount: favoritesStore.getFavoriteCountByPublication(pub.id),
-          coverImage: books[0]?.coverImg || DEFAULT_BOOK_COVER,
-          averageRating: parseFloat(averageRating.toFixed(1)),
-          totalRatings: books.reduce((sum, book) => {
-            const rating = booksStore.getBookRating(book.id);
-            return sum + (rating.count || 0);
-          }, 0)
-        };
-      });
+      if (!searchTerm.value) return store.publications;
+      const term = searchTerm.value.toLowerCase();
+      return store.publications.filter(pub =>
+        pub.title?.toLowerCase().includes(term) ||
+        pub.description?.toLowerCase().includes(term) ||
+        pub.userProfile?.displayName?.toLowerCase().includes(term) ||
+        pub.userProfile?.user?.username?.toLowerCase().includes(term)
+      );
     });
 
     const sortedPublications = computed(() => {
       const pubs = [...filteredPublications.value];
-
       switch (sortBy.value) {
         case 'recent':
           return pubs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        case 'rating':
-          return pubs.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
-        case 'popular':
-          return pubs.sort((a, b) => (b.favoritesCount || 0) - (a.favoritesCount || 0));
-        case 'trending':
+        // Puedes agregar otros criterios si lo necesitas
         default:
-          return pubs.sort((a, b) => (b.books?.length || 0) - (a.books?.length || 0));
+          return pubs;
       }
     });
 
@@ -338,19 +385,15 @@ export default {
 
     const goToPreviousPage = async () => {
       if (store.currentPage > 0) {
-        await store.fetchPublicationsByState('APPROVED', store.currentPage - 1, pageSize.value);
-        await store.fetchCurrentPublicationsFavorites();
-        await loadBooksRatings();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        manualPage.value = store.currentPage;
+        await fetchPublications();
       }
     };
 
     const goToNextPage = async () => {
       if (store.hasMore) {
-        await store.fetchPublicationsByState('APPROVED', store.currentPage + 1, pageSize.value);
-        await store.fetchCurrentPublicationsFavorites();
-        await loadBooksRatings();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        manualPage.value = store.currentPage + 2;
+        await fetchPublications();
       }
     };
 
@@ -364,54 +407,60 @@ export default {
         manualPage.value = store.totalPages;
         return;
       }
-
-      const targetPage = manualPage.value - 1; // Convert to 0-indexed
-      if (targetPage !== store.currentPage) {
-        await store.fetchPublicationsByState('APPROVED', targetPage, pageSize.value);
-        await store.fetchCurrentPublicationsFavorites();
-        await loadBooksRatings();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      await fetchPublications();
     };
 
     const changePageSize = async () => {
-      // Reset to first page when changing page size
-      await store.fetchPublicationsByState('APPROVED', 0, pageSize.value);
-      await store.fetchCurrentPublicationsFavorites();
-      await loadBooksRatings();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      manualPage.value = 1;
+      await fetchPublications();
     };
 
     onMounted(async () => {
-      await store.fetchPublicationsByState('APPROVED', 0, pageSize.value);
       await store.fetchCategories();
       await favoritesStore.fetchFavorites();
-      await store.fetchCurrentPublicationsFavorites();
-      await loadBooksRatings();
+      await fetchPublications();
     });
 
-    return {
-      store,
-      searchTerm,
-      sortBy,
-      selectedPublication,
-      showPublicationModal,
-      manualPage,
-      pageSize,
-      sortedPublications,
-      formatDate,
-      handlePublicationClick,
-      closePublicationModal,
-      handleBookmark,
-      isPublicationFavorited,
-      handleImageError,
-      goToPreviousPage,
-      goToNextPage,
-      goToManualPage,
-      changePageSize
-    };
+      const categories = ref([
+        { id: 1, name: 'Programación' },
+        { id: 2, name: 'Cocina Vegana' },
+        { id: 3, name: 'Mindfulness' },
+        { id: 4, name: 'Misterio' }
+      ])
+
+      // Simulación de función asíncrona para obtener el conteo
+      const getCount = async (categoryId) => {
+        await new Promise(res => setTimeout(res, 1000 + Math.random() * 1000))
+        return Math.floor(Math.random() * 100)
+      }
+
+      return {
+        store,
+        searchTerm,
+        sortBy,
+        selectedPublication,
+        showPublicationModal,
+        manualPage,
+        pageSize,
+        sortedPublications,
+        formatDate,
+        handlePublicationClick,
+        closePublicationModal,
+        handleBookmark,
+        isPublicationFavorited,
+        handleImageError,
+        goToPreviousPage,
+        goToNextPage,
+        goToManualPage,
+        changePageSize,
+        categories,
+        getCount,
+        selectedCategory,
+        onCategoryChange,
+        clearCategoryFilter
+      };
+    }
   }
-}
 </script>
 
 <style scoped>
@@ -878,5 +927,26 @@ export default {
 .pagination-info {
   font-weight: 500;
   color: #4a5568;
+}
+.clear-category-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.08);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  margin-left: 12px;
+}
+.clear-category-btn:hover {
+  background: #c53030;
+  box-shadow: 0 4px 16px rgba(229, 62, 62, 0.15);
+  transform: translateY(-2px) scale(1.04);
 }
 </style>

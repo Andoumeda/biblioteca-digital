@@ -143,11 +143,8 @@
           class="category-card"
           @click="handleCategoryClick(category)"
         >
-          <div class="category-icon">
-            {{ getCategoryEmoji(category.name) }}
-          </div>
-          <h3 class="category-name">{{ category.name }}</h3>
-          <p class="category-count">{{ getCategoryCount(category.id) }} publicaciones</p>
+
+           <h3 class="category-name">{{ category.name }}</h3>
         </div>
       </div>
     </div>
@@ -159,6 +156,9 @@
       :is-open="showPublicationModal"
       @close="closePublicationModal"
     />
+
+    <!-- PublicationCategory Section -->
+
   </div>
 </template>
 
@@ -170,12 +170,14 @@ import { useBooksStore } from '../stores/books';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
+
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 
 export default {
   name: 'Home',
   components: {
-    PublicationDetailModal
+    PublicationDetailModal,
+
   },
   setup() {
     const router = useRouter();
@@ -187,6 +189,7 @@ export default {
     const showUploadModal = ref(false);
     const selectedPublication = ref(null);
     const showPublicationModal = ref(false);
+
 
     const stats = computed(() => ({
       totalPublications: publicationsStore.totalItems || 0,
@@ -207,29 +210,9 @@ export default {
 
     const categories = computed(() => publicationsStore.categories || []);
 
-    const getCategoryEmoji = (name) => {
-      const emojis = {
-        'Tecnología': '💻',
-        'Ficción': '📚',
-        'Ciencia': '🔬',
-        'Historia': '📜',
-        'Arte': '🎨',
-        'Cocina': '🍳',
-        'Deportes': '⚽',
-        'Música': '🎵',
-        'Programación': '👨‍💻',
-        'Ciencia Ficción': '🚀',
-        'Fantasía': '🧙‍♂️',
-        'Comedia': '😄'
-      };
-      return emojis[name] || '📖';
-    };
 
-    const getCategoryCount = (categoryId) => {
-      return publicationsStore.publications.filter(pub =>
-        pub.categories?.some(cat => cat.id === categoryId)
-      ).length;
-    };
+
+
 
     const handlePublicationClick = (publication) => {
       selectedPublication.value = publication;
@@ -241,10 +224,8 @@ export default {
       selectedPublication.value = null;
     };
 
-    const handleCategoryClick = async (category) => {
-      // Apply category filter in the store
-      await publicationsStore.fetchPublicationsByCategory(category.id);
-      router.push('/explore');
+    const handleCategoryClick = (category) => {
+      router.push({ path: '/explore', query: { category: category.id } });
     };
 
     const handleImageError = (event) => {
@@ -277,8 +258,8 @@ export default {
       stats,
       featuredPublications,
       categories,
-      getCategoryEmoji,
-      getCategoryCount,
+  
+
       handlePublicationClick,
       closePublicationModal,
       handleCategoryClick,
