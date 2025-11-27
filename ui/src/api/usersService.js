@@ -60,6 +60,11 @@ export const usersAPI = {
     return usersApiClient.put(`/user-profiles/${id}`, userData);
   },
 
+  // Actualizar datos de usuario en /auth/users/{id}
+  updateAuthUser(id, userData) {
+    return usersApiClient.put(`/auth/users/${id}`, userData);
+  },
+
   // Eliminar usuario
   delete(id) {
     return usersApiClient.delete(`/user-profiles/${id}`);

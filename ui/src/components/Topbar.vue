@@ -1,5 +1,5 @@
 <template>
-  <div class="topbar">
+  <div class="topbar" :class="{ 'admin-topbar': isAdmin }">
     <div class="topbar-content">
       <div class="topbar-left">
         <div class="logo-section">
@@ -16,7 +16,10 @@
           >
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
-          <h1 class="app-name">DigiBooks Source</h1>
+          <h1 class="app-name">
+  DigiBooks Source
+  <span v-if="isAdmin" class="admin-label">(ADMIN)</span>
+</h1>
         </div>
       </div>
 
@@ -310,6 +313,7 @@ export default {
       document.removeEventListener('click', closeMenuOnClickOutside);
     });
 
+    const isAdmin = computed(() => authStore.isAdmin);
     return {
       showUserMenu,
       showNotifications,
@@ -328,13 +332,28 @@ export default {
       getTypeClass,
       getTypeLabel,
       getAudienceClass,
-      getAudienceLabel
+      getAudienceLabel,
+      isAdmin
     };
   }
 };
 </script>
 
 <style scoped>
+.topbar {
+}
+.admin-topbar {
+  background: linear-gradient(135deg, #667eea 0%, #a855f7 60%, #ef4444 100%) !important;
+  color: white !important;
+  border-bottom: 2px solid #991b1b !important;
+}
+.admin-label {
+  color: #ef4444;
+  font-weight: bold;
+  margin-left: 8px;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
 .topbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;

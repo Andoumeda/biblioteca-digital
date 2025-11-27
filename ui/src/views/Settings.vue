@@ -51,7 +51,6 @@
               type="text"
               class="form-input"
               placeholder="@usuario"
-              disabled
             />
             <small class="form-help">El nombre de usuario no se puede cambiar</small>
           </div>
@@ -64,7 +63,6 @@
               type="email"
               class="form-input"
               placeholder="tu@email.com"
-              disabled
             />
             <small class="form-help">El correo electrónico no se puede cambiar</small>
           </div>
@@ -80,51 +78,32 @@
             ></textarea>
           </div>
 
-          <button @click="saveProfile" class="btn-primary" :disabled="loading">
-            {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
-          </button>
+            <div class="form-group">
+              <label for="password">Contraseña (Puedes usar nueva contraseña)</label>
+              <input
+                id="password"
+                v-model="userProfile.password"
+                type="password"
+                class="form-input"
+                placeholder="Contraseña"
+              />
+            </div>
+
+           <div class="form-group">
+             <label for="confirmPassword">Confirmar Contraseña</label>
+             <input
+               id="confirmPassword"
+               v-model="userProfile.confirmPassword"
+               type="password"
+               class="form-input"
+               placeholder="Confirma la contraseña"
+             />
+           </div>
+
+           <button @click="saveProfile" class="btn-primary" :disabled="loading">
+             {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
+           </button>
         </div>
-
-        <!-- Seguridad -->
-        <div v-show="activeSection === 'security'" class="settings-section">
-          <h3 class="section-title">Seguridad</h3>
-
-          <div class="form-group">
-            <label for="currentPassword">Contraseña Actual</label>
-            <input
-              id="currentPassword"
-              v-model="security.currentPassword"
-              type="password"
-              class="form-input"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="newPassword">Nueva Contraseña</label>
-            <input
-              id="newPassword"
-              v-model="security.newPassword"
-              type="password"
-              class="form-input"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="confirmPassword">Confirmar Nueva Contraseña</label>
-            <input
-              id="confirmPassword"
-              v-model="security.confirmPassword"
-              type="password"
-              class="form-input"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button @click="changePassword" class="btn-primary">Cambiar Contraseña</button>
-        </div>
-
 
         <!-- Privacidad -->
         <div v-show="activeSection === 'privacy'" class="settings-section">
@@ -143,7 +122,7 @@
 
 <script>
 import { ref, h, onMounted, computed } from 'vue';
-import { userProfilesAPI } from '../api/usersService';
+import { userProfilesAPI, usersAPI } from '../api/usersService';
 import { useAuthStore } from '../stores/authStore';
 
 // Iconos simples como componentes funcionales
@@ -170,27 +149,22 @@ export default {
     const currentUserProfile = ref(null);
 
     const sections = [
-      { id: 'profile', name: 'Perfil', icon: UserIcon },
-      { id: 'security', name: 'Seguridad', icon: LockIcon },
-      { id: 'privacy', name: 'Privacidad', icon: ShieldIcon }
+       { id: 'profile', name: 'Perfil', icon: UserIcon },
+       { id: 'privacy', name: 'Privacidad', icon: ShieldIcon }
     ];
 
-    const userProfile = ref({
-      displayName: '',
-      username: '',
-      email: '',
-      bio: ''
-    });
+     const userProfile = ref({
+        displayName: '',
+        username: '',
+        email: '',
+        bio: '',
+        password: '',
+        confirmPassword: ''
+     });
 
     // Computed property para obtener la inicial del displayName
     const userInitial = computed(() => {
       return userProfile.value.displayName?.[0]?.toUpperCase() || 'U';
-    });
-
-    const security = ref({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
     });
 
     // Cargar datos del UserProfile del usuario autenticado
@@ -235,39 +209,51 @@ export default {
       loading.value = true;
       try {
         const userProfileId = authStore.currentUserProfileId;
+        const userId = currentUserProfile.value.user.id;
 
-        // Preparar los datos para la petición PUT según el formato requerido
-        const updateData = {
-          userId: currentUserProfile.value.user.id, // Mantener el mismo userId
+        // Actualizar datos del perfil (displayName, bio, foto)
+        const updateProfileData = {
+          userId: userId,
           displayName: userProfile.value.displayName,
           bio: userProfile.value.bio || '',
-          profilePicture: currentUserProfile.value.profilePicture || '' // Mantener la misma foto
+          profilePicture: currentUserProfile.value.profilePicture || ''
         };
+        await userProfilesAPI.updateProfile(userProfileId, updateProfileData);
 
-        await userProfilesAPI.updateProfile(userProfileId, updateData);
+         // Validar nueva contraseña si se proporciona
+         if (userProfile.value.password || userProfile.value.confirmPassword) {
+           if (!userProfile.value.password || !userProfile.value.confirmPassword) {
+             alert('Debes completar ambos campos de nueva contraseña');
+             loading.value = false;
+             return;
+           }
+           if (userProfile.value.password !== userProfile.value.confirmPassword) {
+             alert('Las nuevas contraseñas no coinciden');
+             loading.value = false;
+             return;
+           }
+         }
+         const updateUserData = {
+           username: userProfile.value.username,
+           email: userProfile.value.email
+         };
+         // Si se proporciona nueva contraseña, incluirla en el payload
+         if (userProfile.value.password) {
+           updateUserData.password = userProfile.value.password;
+         }
+         await usersAPI.updateAuthUser(userId, updateUserData);
 
-        // Recargar el perfil para obtener los datos actualizados
-        await loadUserProfile();
-
-        alert('Perfil actualizado correctamente');
+         // Recargar el perfil para obtener los datos actualizados
+         await loadUserProfile();
+         userProfile.value.password = '';
+         userProfile.value.confirmPassword = '';
+         alert('Perfil actualizado correctamente');
       } catch (error) {
         console.error('Error updating profile:', error);
         alert('Error al actualizar el perfil: ' + (error.response?.data?.message || error.message));
       } finally {
         loading.value = false;
       }
-    };
-
-    const changePassword = () => {
-      if (security.value.newPassword !== security.value.confirmPassword) {
-        alert('Las contraseñas no coinciden');
-        return;
-      }
-      console.log('Cambiar contraseña');
-      alert('Contraseña actualizada correctamente');
-      security.value.currentPassword = '';
-      security.value.newPassword = '';
-      security.value.confirmPassword = '';
     };
 
     const deleteAccount = () => {
@@ -288,9 +274,7 @@ export default {
       userProfile,
       userInitial,
       loading,
-      security,
       saveProfile,
-      changePassword,
       deleteAccount
     };
   }
@@ -299,6 +283,7 @@ export default {
 
 <style scoped>
 .settings-container {
+  width: 85%;
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;

@@ -5,7 +5,7 @@
     <div class="layout">
       <Sidebar />
 
-      <div class="main">
+      <div class="main" :class="{ 'admin-main': isAdmin }">
         <router-view />
       </div>
     </div>

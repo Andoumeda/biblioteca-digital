@@ -1484,9 +1484,6 @@ import { DEFAULT_BOOK_COVER } from '../utils/constants';
 import BookDetailModal from '../components/BookDetailModal.vue';
 import RatingSystem from '../components/RatingSystem.vue';
 
-// Hardcoded UserProfile ID (por ahora, hasta implementar login)
-const HARDCODED_USER_PROFILE_ID = 1;
-
 export default {
   name: 'Moderation',
   components: {
@@ -2092,7 +2089,6 @@ export default {
           message: newAnnouncement.value.message,
           type: newAnnouncement.value.type,
           targetAudience: newAnnouncement.value.targetAudience,
-          userProfileId: HARDCODED_USER_PROFILE_ID
         };
 
         await announcementsStore.createAnnouncement(announcementData);
@@ -2746,13 +2742,7 @@ export default {
   flex-direction: column;
   justify-content: center;
 }
-.action-buttons-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
-  min-width: 140px;
-}
+
 .moderation-card {
   background: white;
   border: 1px solid #e5e7eb;
