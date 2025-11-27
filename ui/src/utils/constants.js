@@ -1,25 +1,7 @@
 // Constantes de la aplicación
 
-// ID del usuario actual (hardcodeado)
-export const CURRENT_USER_ID = 1;
-export const CURRENT_USER_PROFILE_ID = 1;
-
 // Imagen por defecto
 export const DEFAULT_BOOK_COVER = '/programming-book-cover.jpg';
-
-// Estados de publicación
-export const PUBLICATION_STATES = {
-  APPROVED: 'APPROVED',
-  PENDING: 'PENDING',
-  REJECTED: 'REJECTED'
-};
-
-// Configuración de paginación
-export const PAGINATION = {
-  DEFAULT_PAGE: 0,
-  DEFAULT_SIZE: 20,
-  MAX_SIZE: 100
-};
 
 // Timeouts
 export const TIMEOUTS = {
@@ -45,12 +27,6 @@ export const API_ENDPOINTS = {
   USERS: '/users'
 };
 
-// Configuración de la aplicación
-export const APP_CONFIG = {
-  NAME: 'DigiBooks Source',
-  VERSION: '1.0.0',
-  DESCRIPTION: 'Biblioteca Digital'
-};
 // Utilidades para formatear datos de la API
 
 /**

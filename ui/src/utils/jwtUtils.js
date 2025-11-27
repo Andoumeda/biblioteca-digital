@@ -67,3 +67,13 @@ export function getUserIdFromToken(token) {
   const decoded = parseJwt(token);
   return decoded?.userId || null;
 }
+
+/**
+ * Extrae el userProfileId del token JWT
+ * @param {string} token - Token JWT
+ * @returns {number|null} User Profile ID o null
+ */
+export function getUserProfileIdFromToken(token) {
+  const decoded = parseJwt(token);
+  return decoded?.userProfileId || null;
+}

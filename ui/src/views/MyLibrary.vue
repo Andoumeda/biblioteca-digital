@@ -391,13 +391,14 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import PublicationUploadModal from '../components/PublicationUploadModal.vue';
 import PublicationDetailModal from '../components/PublicationDetailModal.vue';
 import RatingSystem from '../components/RatingSystem.vue';
 import { publicationsAPI, favoritesAPI } from '../api/publicationsService';
 import { booksAPI, ratingsAPI } from '../api/booksService';
-import { CURRENT_USER_PROFILE_ID, DEFAULT_BOOK_COVER } from '../utils/constants';
+import { DEFAULT_BOOK_COVER } from '../utils/constants';
+import { useAuthStore } from '../stores/authStore';
 
 export default {
   name: 'MyLibrary',
@@ -407,6 +408,9 @@ export default {
     RatingSystem
   },
   setup() {
+    const authStore = useAuthStore();
+    const currentUserProfileId = computed(() => authStore.currentUserProfileId);
+
     const activeTab = ref('publications');
     const showUploadModal = ref(false);
     const showDetailModal = ref(false);
@@ -443,7 +447,7 @@ export default {
       try {
         isLoading.value = true;
         console.log(`Cargando publicaciones... (página ${page}, tamaño ${size})`);
-        const response = await publicationsAPI.getByUser(CURRENT_USER_PROFILE_ID, page, size);
+        const response = await publicationsAPI.getByUser(currentUserProfileId.value, page, size);
         console.log('Respuesta de publicaciones:', response);
 
         if (response?.data?.data) {
@@ -500,7 +504,7 @@ export default {
       try {
         isLoadingFavorites.value = true;
         console.log('Cargando favoritos...');
-        const response = await favoritesAPI.getByUser(CURRENT_USER_PROFILE_ID, 0, 100);
+        const response = await favoritesAPI.getByUser(currentUserProfileId.value, 0, 100);
         console.log('Respuesta de favoritos:', response);
 
         if (response?.data?.data) {
@@ -555,7 +559,7 @@ export default {
     const loadUserComments = async () => {
       try {
         isLoadingComments.value = true;
-        const response = await ratingsAPI.getRatingsByUserProfile(CURRENT_USER_PROFILE_ID, 0);
+        const response = await ratingsAPI.getRatingsByUserProfile(currentUserProfileId.value, 0);
 
         if (response.data && response.data.data) {
           const ratings = response.data.data;
