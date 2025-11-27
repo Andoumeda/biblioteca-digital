@@ -34,7 +34,8 @@ export const useUsersStore = defineStore('users', {
 
       try {
         const response = await usersAPI.getAll();
-        this.users = response.data || [];
+        // La respuesta es paginada, los datos están en response.data.data
+        this.users = response.data?.data || [];
       } catch (error) {
         this.error = error.message || 'Error al cargar usuarios';
         console.error('Error fetching users:', error);
@@ -49,7 +50,8 @@ export const useUsersStore = defineStore('users', {
 
       try {
         const response = await userProfilesAPI.getAllProfiles();
-        this.userProfiles = response.data || [];
+        // La respuesta es paginada, los datos están en response.data.data
+        this.userProfiles = response.data?.data || [];
       } catch (error) {
         this.error = error.message || 'Error al cargar perfiles de usuario';
         console.error('Error fetching user profiles:', error);
