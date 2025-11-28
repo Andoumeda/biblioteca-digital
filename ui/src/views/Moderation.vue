@@ -1469,6 +1469,14 @@
       @close="showBookDetailModal = false"
       @rating-added="handleRatingAdded"
     />
+
+    <!-- Publication Detail Modal -->
+    <PublicationDetailModal
+      v-if="showPublicationDetailModal && selectedPublicationForDetail"
+      :publication="selectedPublicationForDetail"
+      :is-open="showPublicationDetailModal"
+      @close="showPublicationDetailModal = false; selectedPublicationForDetail = null"
+    />
   </div>
 </template>
 
@@ -1482,12 +1490,14 @@ import { userProfilesAPI, profileAnnouncementsAPI } from '../api/usersService';
 import { useAnnouncementsStore } from '../stores/announcements';
 import { DEFAULT_BOOK_COVER } from '../utils/constants';
 import BookDetailModal from '../components/BookDetailModal.vue';
+import PublicationDetailModal from '../components/PublicationDetailModal.vue';
 import RatingSystem from '../components/RatingSystem.vue';
 
 export default {
   name: 'Moderation',
   components: {
     BookDetailModal,
+    PublicationDetailModal,
     RatingSystem
   },
   setup() {
@@ -1511,10 +1521,12 @@ export default {
     const showEditAuthorModal = ref(false);
     const showEditBookModal = ref(false);
     const showBookDetailModal = ref(false);
+    const showPublicationDetailModal = ref(false);
     const showEditRatingModal = ref(false);
     const showCreateAnnouncementModal = ref(false);
     const showEditAnnouncementModal = ref(false);
     const selectedBook = ref(null);
+    const selectedPublicationForDetail = ref(null);
 
     // Form states
     const newCategoryName = ref('');
@@ -1818,8 +1830,28 @@ export default {
       }
     };
 
-    const handleViewDetails = (publication) => {
+    const handleViewDetails = async (publication) => {
       console.log('View details:', publication);
+      console.log('Publication books:', publication.books);
+
+      try {
+        // Cargar los libros de la publicación si no están cargados
+        if (!publication.books || publication.books.length === 0) {
+          console.log('Loading books for publication:', publication.id);
+          const booksResponse = await booksAPI.getBooksByFilters({ publicationId: publication.id }, 0);
+          console.log('Books response:', booksResponse);
+          publication.books = booksResponse.data?.data || [];
+        }
+
+        console.log('Setting selectedPublicationForDetail');
+        selectedPublicationForDetail.value = publication;
+        console.log('Setting showPublicationDetailModal to true');
+        showPublicationDetailModal.value = true;
+        console.log('Modal state:', showPublicationDetailModal.value, selectedPublicationForDetail.value);
+      } catch (error) {
+        console.error('Error loading publication details:', error);
+        alert('Error al cargar los detalles de la publicación');
+      }
     };
 
     const handleEditCategory = (category) => {
@@ -2527,10 +2559,12 @@ export default {
       showEditAuthorModal,
       showEditBookModal,
       showBookDetailModal,
+      showPublicationDetailModal,
       showEditRatingModal,
       showCreateAnnouncementModal,
       showEditAnnouncementModal,
       selectedBook,
+      selectedPublicationForDetail,
       newCategoryName,
       editingCategory,
       newAuthor,

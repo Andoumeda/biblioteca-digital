@@ -165,6 +165,46 @@ public class UserService {
         return responseDTO;
     }
 
+    public AuthResponseDTO refreshToken(String oldToken) {
+        try {
+            // Verificar que el token no haya expirado todavía
+            if (jwtTokenProvider.isTokenExpired(oldToken)) {
+                throw new UnauthorizedException("Token expirado, debe iniciar sesión nuevamente");
+            }
+
+            // Extraer username del token actual
+            String username = jwtTokenProvider.getUsernameFromToken(oldToken);
+
+            // Buscar el usuario
+            User user = userRepository.findByUsernameAndIsDeletedFalse(username)
+                .orElseThrow(() -> new NoResourceFoundException("Usuario no encontrado"));
+
+            // Obtener el UserProfile asociado
+            UserProfile userProfile = user.getUserProfile();
+            if (userProfile == null) {
+                throw new NoResourceFoundException("No se encontró el perfil de usuario asociado");
+            }
+
+            // Generar un nuevo token con la misma información
+            org.springframework.security.core.userdetails.User springUser =
+                new org.springframework.security.core.userdetails.User(
+                    user.getUsername(), user.getPassword(),
+                    List.of(new SimpleGrantedAuthority(user.getRole().getName()))
+                );
+            UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(springUser, null, springUser.getAuthorities());
+            String newJwt = jwtTokenProvider.generateToken(authToken, user.getId(), userProfile.getId());
+
+            // Retornar el nuevo token
+            AuthResponseDTO responseDTO = new AuthResponseDTO();
+            responseDTO.setTokenType("Bearer");
+            responseDTO.setAccessToken(newJwt);
+            return responseDTO;
+        } catch (Exception e) {
+            throw new UnauthorizedException("Error al refrescar el token: " + e.getMessage());
+        }
+    }
+
     public UserResponseDTO updateUser(Integer id, UpdateRequestDTO updateRequestDTO) {
 
         if (id == null || id <= 0)

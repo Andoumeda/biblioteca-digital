@@ -43,6 +43,11 @@ export const booksAPI = {
   // Búsqueda por título
   searchByTitle(title, page = 0) {
     return this.getBooksByFilters({ title }, page);
+  },
+
+  // Crear relación libro-autor (delega a bookAuthorsAPI)
+  createBookAuthor(data) {
+    return booksApiClient.post('/book_authors', data);
   }
 };
 

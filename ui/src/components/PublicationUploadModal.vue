@@ -339,6 +339,7 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import { categoriesAPI, publicationsAPI } from '../api/publicationsService';
 import { booksAPI, authorsAPI } from '../api/booksService';
+import { useAuthStore } from '../stores/authStore';
 
 export default {
   name: 'PublicationUploadModal',
@@ -354,12 +355,15 @@ export default {
   },
   emits: ['close', 'success'],
   setup(props, { emit }) {
+    const authStore = useAuthStore();
+    const currentUserProfileId = computed(() => authStore.currentUserProfileId);
+
     const publicationData = ref({
       id: null,
       title: '',
       description: '',
       selectedCategories: [],
-      userProfileId: 1 // TODO: Obtener del usuario autenticado
+      userProfileId: currentUserProfileId.value
     });
 
     const selectedCategoryToAdd = ref('');
@@ -437,7 +441,7 @@ export default {
           title: props.publicationData.title || '',
           description: props.publicationData.description || '',
           selectedCategories: props.publicationData.categories || [],
-          userProfileId: props.publicationData.userProfileId || 1
+          userProfileId: props.publicationData.userProfileId || currentUserProfileId.value
         };
 
         // Cargar libros si están disponibles
@@ -632,23 +636,50 @@ export default {
 
           for (let i = 0; i < books.value.length; i++) {
             const book = books.value[i];
+
+            // Payload del libro sin authorIds (el backend no lo procesa)
             const bookPayload = {
               title: book.title,
               description: book.description,
               bookUrl: book.bookUrl,
               coverImg: book.coverImg,
-              publicationId: publicationId,
-              authorIds: book.selectedAuthors.map(author => author.id)
+              publicationId: publicationId
             };
+
+            let bookId;
 
             // Si el ID es numérico, es un libro existente que se debe actualizar
             if (!isNaN(parseInt(book.id))) {
               console.log('Actualizando libro:', book.id, bookPayload);
               await booksAPI.updateBook(parseInt(book.id), bookPayload);
+              bookId = parseInt(book.id);
             } else {
               // Si no es numérico, es un libro nuevo
               console.log('Creando nuevo libro:', bookPayload);
-              await booksAPI.createBook(bookPayload);
+              const bookResponse = await booksAPI.createBook(bookPayload);
+              bookId = bookResponse.data.id;
+            }
+
+            // Manejar relaciones libro-autor
+            // Nota: En modo edición, sería ideal eliminar las relaciones antiguas y crear las nuevas
+            // Por simplicidad, aquí solo creamos las nuevas relaciones si es un libro nuevo
+            // Para un libro existente, las relaciones deberían manejarse en un flujo más complejo
+            if (isNaN(parseInt(book.id))) {
+              // Solo crear relaciones para libros nuevos
+              for (const author of book.selectedAuthors) {
+                const bookAuthorPayload = {
+                  bookId: bookId,
+                  authorId: author.id,
+                  contributionType: 'PRINCIPAL'
+                };
+
+                try {
+                  await booksAPI.createBookAuthor(bookAuthorPayload);
+                  console.log(`Relación libro-autor creada: libro ${bookId}, autor ${author.id}`);
+                } catch (error) {
+                  console.error(`Error al crear relación libro-autor:`, error);
+                }
+              }
             }
 
             uploadProgress.value = 40 + ((i + 1) * progressPerBook);
@@ -682,13 +713,13 @@ export default {
           for (let i = 0; i < books.value.length; i++) {
             const book = books.value[i];
 
+            // Crear el libro sin authorIds (el backend no lo procesa)
             const bookPayload = {
               title: book.title,
               description: book.description,
               bookUrl: book.bookUrl,
               coverImg: book.coverImg,
-              publicationId: publicationId,
-              authorIds: book.selectedAuthors.map(author => author.id)
+              publicationId: publicationId
             };
 
             console.log('Creando libro:', bookPayload);
@@ -698,6 +729,23 @@ export default {
               console.error('Error al crear libro:', book.title);
             } else {
               console.log('Libro creado con ID:', bookResponse.data.id);
+
+              // Crear las relaciones libro-autor
+              const createdBookId = bookResponse.data.id;
+              for (const author of book.selectedAuthors) {
+                const bookAuthorPayload = {
+                  bookId: createdBookId,
+                  authorId: author.id,
+                  contributionType: 'PRINCIPAL' // Tipo de contribución por defecto
+                };
+
+                try {
+                  await booksAPI.createBookAuthor(bookAuthorPayload);
+                  console.log(`Relación libro-autor creada: libro ${createdBookId}, autor ${author.id}`);
+                } catch (error) {
+                  console.error(`Error al crear relación libro-autor:`, error);
+                }
+              }
             }
 
             uploadProgress.value = 40 + ((i + 1) * progressPerBook);
@@ -722,7 +770,7 @@ export default {
         title: '',
         description: '',
         selectedCategories: [],
-        userProfileId: 1
+        userProfileId: currentUserProfileId.value
       };
       books.value = [
         {

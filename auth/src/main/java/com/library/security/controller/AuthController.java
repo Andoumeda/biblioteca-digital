@@ -27,6 +27,21 @@ public class AuthController implements AuthApi {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * Refresh token endpoint - generates a new token from a valid existing token
+     */
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<AuthResponseDTO> refreshToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // Extract token from Bearer header
+            String token = authHeader.replace("Bearer ", "");
+            AuthResponseDTO response = userService.refreshToken(token);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
     @Override
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<UserResponseDTO> updateUser(Integer id, UpdateRequestDTO updateRequestDTO) {

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { authAPI } from '../api/authService';
 import { parseJwt, isTokenExpired } from '../utils/jwtUtils';
+import { scheduleTokenRefresh, cancelTokenRefresh } from '../utils/tokenRefresh';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -148,6 +149,13 @@ export const useAuthStore = defineStore('auth', {
 
       // Eliminamos currentUser si existe (migración)
       localStorage.removeItem('currentUser');
+
+      // Programar auto-refresh del token
+      scheduleTokenRefresh(token, (newToken) => {
+        // Callback cuando se refresca el token
+        this.token = newToken;
+        console.log('Token actualizado en el store');
+      });
     },
 
     /**
@@ -172,6 +180,9 @@ export const useAuthStore = defineStore('auth', {
     clearAuth() {
       this.token = null;
       this.error = null;
+
+      // Cancelar auto-refresh programado
+      cancelTokenRefresh();
 
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser'); // Por si quedó de versiones anteriores
@@ -203,7 +214,17 @@ export const useAuthStore = defineStore('auth', {
           localStorage.removeItem('currentUser');
 
           // Verificar si el token está expirado
-          return !this.checkTokenExpiration();
+          const isValid = !this.checkTokenExpiration();
+
+          // Si el token es válido, programar auto-refresh
+          if (isValid) {
+            scheduleTokenRefresh(token, (newToken) => {
+              this.token = newToken;
+              console.log('Token actualizado en el store');
+            });
+          }
+
+          return isValid;
 
         } catch (error) {
           console.error('Error inicializando autenticación:', error);

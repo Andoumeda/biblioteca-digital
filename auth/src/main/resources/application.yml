@@ -77,4 +77,4 @@ eureka:
 
 jwt:
   secret: ${SECURITY_KEY}
-  expiration: 600000
+  expiration: 300000

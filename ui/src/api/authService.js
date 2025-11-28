@@ -71,5 +71,18 @@ export const authAPI = {
         Authorization: `Bearer ${token}`
       }
     });
+  },
+
+  /**
+   * Refresca el token JWT actual
+   * @param {string} token - Token JWT actual
+   * @returns {Promise} Respuesta con el nuevo token JWT
+   */
+  refreshToken(token) {
+    return authClient.post('/auth/refresh', null, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
 };
